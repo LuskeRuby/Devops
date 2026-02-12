@@ -1,0 +1,53 @@
+name: Kids Planner CI
+
+on:
+  push:
+    branches: [ main ]      # Runs when code is pushed to 'main'
+  pull_request:
+    branches: [ main ]      # Runs when a Pull Request is created for 'main'
+
+# --- NOTE ON PARALLELISM ---
+# In GitHub Actions, all "jobs" run at the same time (In Parallel) by default.
+# This means 'backend-build' and 'frontend-build' start together on two 
+# different virtual machines to save time.
+# ---------------------------
+
+jobs:
+  # JOB 1: Handles Java/Maven (Backend)
+  backend-build:
+    runs-on: ubuntu-latest  # Use a fresh Linux virtual machine
+    steps:
+      - uses: actions/checkout@v4   # Step 1: Copy code to the virtual machine
+      
+      - name: Set up JDK 25         # Step 2: Install Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'            # Speeds up future builds
+          
+      - name: Build Backend (Skip Tests) # Step 3: Build without needing a database
+  
+        run: chmod +x mvnw && ./mvnw package -DskipTests
+        working-directory: ./backend
+
+  # JOB 2: Handles Angular/Node.js (Frontend)
+  frontend-build:
+    runs-on: ubuntu-latest  # Use another fresh Linux machine
+    steps:
+      - uses: actions/checkout@v4   # Step 1: Copy code for this job
+      
+      - name: Set up Node.js         # Step 2: Install Node.js (version 22)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'              # Speeds up future builds
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies  # Step 3: Clean install of all libraries
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Build Angular App     # Step 4: Just build to check for errors
+        run: npm run build --configuration=production
+        working-directory: ./frontend
