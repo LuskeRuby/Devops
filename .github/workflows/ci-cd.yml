@@ -1,0 +1,62 @@
+name: VoresPlan CI
+
+on:
+  push:
+    branches: [ main ]      # Runs when code is pushed to 'main'
+  pull_request:
+    branches: [ main ]      # Runs when a Pull Request is created for 'main'
+
+# --- NOTE ON PARALLELISM ---
+# In GitHub Actions, all "jobs" run at the same time (In Parallel) by default.
+# This means 'backend-build' and 'frontend-build' start together on two 
+# different virtual machines to save time.
+# ---------------------------
+
+jobs:
+  # JOB 1: Handles Java/Maven (Backend)
+  backend-build:
+    runs-on: ubuntu-latest  # Use a fresh Linux virtual machine
+    steps:
+      - uses: actions/checkout@v4   # Step 1: Copy code to the virtual machine
+      
+      - name: Set up JDK 25         # Step 2: Install Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'            # Speeds up future builds
+          
+      - name: Run Backend Tests     # Step 3: Run JUnit and JPA tests
+        # This ensures your API and Database logic is working correctly
+        run: chmod +x mvnw && ./mvnw test
+        working-directory: ./backend
+
+      - name: Build Backend JAR     # Step 4: Create the final executable file
+        run: ./mvnw package -DskipTests # Tests already passed, so we skip them here to save time
+        working-directory: ./backend
+
+  # JOB 2: Handles Angular/Node.js (Frontend)
+  frontend-build:
+    runs-on: ubuntu-latest  # Use another fresh Linux machine
+    steps:
+      - uses: actions/checkout@v4   # Step 1: Copy code for this job
+      
+      - name: Set up Node.js         # Step 2: Install Node.js (version 20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'              # Speeds up future builds
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install Dependencies  # Step 3: Clean install of all libraries
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Run Frontend Tests    # Step 4: Run Angular unit tests
+       
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+        working-directory: ./frontend
+          
+      - name: Build Angular App     
+        run: npm run build --configuration=production
+        working-directory: ./frontend
