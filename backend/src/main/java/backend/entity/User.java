@@ -11,14 +11,17 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "users") // "user" is a reserved keyword in some databases, so we use "users"
 public class User {
     
     @Id
@@ -26,7 +29,6 @@ public class User {
     private Long id;
     private String name;
     private String email;
-    private Long imageId;
     private String role;
     private String pincode;
 
