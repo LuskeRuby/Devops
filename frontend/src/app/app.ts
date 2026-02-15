@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { PointsInputComponent } from './points-input/points-input';
+import { PointsInputComponent } from './components/points-input/points-input';
 
 @Component({
   selector: 'app-root',
