@@ -1,4 +1,4 @@
-package com.example.messagingstompwebsocket;
+package backend.messagess;
 
 public class HelloMessage {
 

@@ -1,4 +1,4 @@
-package com.example.messagingstompwebsocket;
+package backend.messagess;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
