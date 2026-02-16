@@ -1,7 +1,11 @@
-package backend.entity;
+package backend.user;
 
 import java.util.List;
 
+import backend.family.Family;
+import backend.image.Image;
+import backend.message.Message;
+import backend.task.Task;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
