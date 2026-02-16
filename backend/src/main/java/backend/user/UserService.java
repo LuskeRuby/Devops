@@ -18,9 +18,4 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
-
-    public UserDto convertToDto(User user) {
-        // Convert User entity to UserDto
-        return new UserDto(user.getId(), user.getName(), user.getEmail());
-    }
 }

@@ -1,7 +1,8 @@
-package backend.entity;
+package backend.message;
 
 import java.time.LocalDateTime;
 
+import backend.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
