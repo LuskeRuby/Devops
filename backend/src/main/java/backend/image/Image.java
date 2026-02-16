@@ -1,13 +1,12 @@
-package backend.entity;
+package backend.image;
 
-import java.time.LocalDateTime;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,16 +15,14 @@ import lombok.Setter;
 @Getter 
 @Setter 
 @NoArgsConstructor
-public class Message {
+@Table
+public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String content;
-    private LocalDateTime timestamp;
-
-    @ManyToOne
-    @JoinColumn(name = "User_ID")
-    private User user;
+    @Lob
+    @Column(name = "image", columnDefinition="BLOB")
+    private byte[] image;
 }

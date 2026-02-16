@@ -1,6 +1,5 @@
-package backend.repository;
+package backend.family;
 
-import backend.entity.Family;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,8 @@
-package backend.entity;
+package backend.family;
 
 import java.util.List;
 
+import backend.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
