@@ -1,8 +1,10 @@
-package backend.entity;
+package backend.task;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import backend.image.Image;
+import backend.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
