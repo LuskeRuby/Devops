@@ -2,6 +2,8 @@ package backend.user;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -17,5 +19,8 @@ public class UserService {
         // We also handle the case where the user doesn't exist in the database.
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+    public List<User> getUsersByFamilyId(Long familyId) {
+        return userRepository.findByFamilyId(familyId);
     }
 }
