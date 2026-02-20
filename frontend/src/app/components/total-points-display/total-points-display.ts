@@ -12,14 +12,16 @@ export class TotalPointsDisplayComponent {
   @Input() totalPoints: number = 0; 
   @Input() targetPoints: number = 100;
 
-  get totalRewards(): number {
-    // Denne stiger med 1 for hver 100 point
+ get totalRewards(): number {
+    // This increases by 1 for every 100 points earned (Milestone reach)
     return Math.floor(this.totalPoints / this.targetPoints);
   }
 
   get progress(): number {
-    // Denne sørger for at baren nulstilles og starter forfra
-    this.currentLevelPoints = this.totalPoints % this.targetPoints;
-    return (this.currentLevelPoints / this.targetPoints) * 100;
+    // This calculates the points remaining in the current level (0-99 range)
+    this.currentLevelPoints = this.totalPoints % this.targetPoints; 
+    
+    // This converts the current level points into a percentage to control the progress bar width
+    return (this.currentLevelPoints / this.targetPoints) * 100; 
   }
 }
