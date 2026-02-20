@@ -1,17 +1,17 @@
 <div class="points-card">
   <div class="top-row">
-    <span>⭐ {{ currentLevelPoints }}</span>
-    <span class="gift-icon" [class.shake]="progress >= 99">🎁</span>
+    <span>⭐ {{ currentLevelPoints() }}</span>
+    <span class="gift-icon" [class.shake]="progress() >= 99">🎁</span>
   </div>
 
   <div class="progress-container">
-    <div class="progress-bar" [style.width.%]="progress"></div>
+    <div class="progress-bar" [style.width.%]="progress()"></div>
   </div>
 
   <div class="rewards-row">
     <span class="reward-text">Total Rewards 🎁</span>
     <div class="reward-box">
-      <span>{{ totalRewards }}</span>
+      <span>{{ totalRewards() }}</span>
     </div>
   </div>
 </div>
