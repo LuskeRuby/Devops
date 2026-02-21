@@ -1,12 +1,17 @@
-<h2>WebSocket Demo</h2>
+<h2>Chat</h2>
+
 <button (click)="connect()" [disabled]="isConnected">Connect</button>
 <button (click)="disconnect()" [disabled]="!isConnected">Disconnect</button>
 
-<input [(ngModel)]="name" placeholder="Your name">
-<button (click)="send()" [disabled]="!isConnected">Send</button>
+<div>
+  <input [(ngModel)]="messageText" placeholder="Write message">
+  <button (click)="send()" [disabled]="!isConnected">Send</button>
+</div>
 
 <ul>
   <li *ngFor="let msg of messages">
-    {{ msg }}
+    <strong>{{ msg.user?.name }}</strong>:
+    {{ msg.content }}
+    <small>({{ msg.timestamp }})</small>
   </li>
 </ul>

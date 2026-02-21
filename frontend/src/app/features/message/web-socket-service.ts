@@ -13,41 +13,32 @@ export class WebSocketService {
     this.client = new Client({
       brokerURL: 'ws://localhost:8080/gs-guide-websocket',
       reconnectDelay: 5000,
-      debug: (msg) => console.log(msg)
+      debug: (msg) => console.log('STOMP:', msg)
     });
   }
 
-  isConnected() {
-    return this.connected;
-  }
+  connect(onMessage: (msg: any) => void) {
 
-  connect(onMessage: (msg: string) => void) {
     this.client.onConnect = () => {
       console.log('Connected to backend');
       this.connected = true;
 
-      this.client.subscribe('/topic/greetings', message => {
+      this.client.subscribe('/topic/messages', message => {
         const body = JSON.parse(message.body);
-        onMessage(body.content);
+        console.log('Received:', body);
+        onMessage(body);
       });
-    };
-
-    this.client.onStompError = (frame) => {
-      console.error('Broker error:', frame);
     };
 
     this.client.activate();
   }
 
-  send(name: string) {
-    if (!this.connected) {
-      console.warn('Not connected');
-      return;
-    }
+  send(userId: number, content: string) {
+    if (!this.connected) return;
 
     this.client.publish({
-      destination: '/app/hello',
-      body: JSON.stringify({ name })
+      destination: '/app/chat',
+      body: JSON.stringify({ userId, content })
     });
   }
 

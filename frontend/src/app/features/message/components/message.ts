@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../web-socket-service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-message',
@@ -12,17 +13,19 @@ import { WebSocketService } from '../web-socket-service';
 })
 export class MessageComponent {
 
-  name = '';
-  messages: string[] = [];
-
-  constructor(private ws: WebSocketService) {}
-
+  userId = 1; //USE LOGGED IN USER LATER'"!!!!!!
+  messageText = '';
+  messages: any[] = [];
   isConnected = false;
 
+  constructor(private ws: WebSocketService, private cd: ChangeDetectorRef) {}
+
   connect() {
-    this.ws.connect((msg: string) => {
-      this.messages.push(msg);
+    this.ws.connect((msg: any) => {
+      this.messages = [...this.messages, msg];
+      this.cd.detectChanges(); //Force update
     });
+
     this.isConnected = true;
   }
 
@@ -32,9 +35,9 @@ export class MessageComponent {
   }
 
   send() {
-    if (this.name.trim()) {
-      this.ws.send(this.name);
-      this.name = '';
+    if (this.messageText.trim()) {
+      this.ws.send(this.userId, this.messageText);
+      this.messageText = '';
     }
   }
 }
