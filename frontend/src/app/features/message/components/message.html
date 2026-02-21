@@ -1,17 +1,24 @@
 <h2>Chat</h2>
 
-<button (click)="connect()" [disabled]="isConnected">Connect</button>
-<button (click)="disconnect()" [disabled]="!isConnected">Disconnect</button>
+<button (click)="connectAsUser(1)">
+  Connect as User1
+</button>
+
+<button (click)="connectAsUser(2)">
+  Connect as User2
+</button>
 
 <div>
   <input [(ngModel)]="messageText" placeholder="Write message">
-  <button (click)="send()" [disabled]="!isConnected">Send</button>
+  <button (click)="send()" [disabled]="!isConnected">
+    Send
+  </button>
 </div>
 
 <ul>
-  <li *ngFor="let msg of messages">
-    <strong>{{ msg.user?.name }}</strong>:
-    {{ msg.content }}
-    <small>({{ msg.timestamp }})</small>
+  <li *ngFor="let message of messages">
+    <strong>{{ message.username }}</strong>:
+    {{ message.content }}
+    ({{ message.timestamp | date:'HH:mm:ss' }})
   </li>
 </ul>

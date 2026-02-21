@@ -1,5 +1,9 @@
-package backend.message;
+package backend.message.controller;
 
+import backend.message.Message;
+import backend.message.DTO.MessageRequestDto;
+import backend.message.DTO.MessageResponseDto;
+import backend.message.MessageService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -16,7 +20,8 @@ public class MessageSocketController {
 
     @MessageMapping("/chat")
     @SendTo("/topic/messages")
-    public Message handleChat(ChatMessageDto dto) {
-        return messageService.saveMessage(dto);
+    public MessageResponseDto handleChat(MessageRequestDto dto) {
+        Message saved = messageService.saveMessage(dto);
+        return new MessageResponseDto(saved);
     }
 }

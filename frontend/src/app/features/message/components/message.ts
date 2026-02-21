@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../web-socket-service';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-message',
@@ -11,33 +10,41 @@ import { ChangeDetectorRef } from '@angular/core';
   templateUrl: './message.html',
   styleUrls: ['./message.scss']
 })
-export class MessageComponent {
+export class MessageComponent implements OnInit, OnDestroy {
 
-  userId = 1; //USE LOGGED IN USER LATER'"!!!!!!
+  selectedUserId: number | null = null;
   messageText = '';
   messages: any[] = [];
   isConnected = false;
 
-  constructor(private ws: WebSocketService, private cd: ChangeDetectorRef) {}
+  constructor(
+    private ws: WebSocketService,
+    private cd: ChangeDetectorRef
+  ) {}
 
-  connect() {
+  //connect when component loads
+  ngOnInit() {
     this.ws.connect((msg: any) => {
       this.messages = [...this.messages, msg];
-      this.cd.detectChanges(); //Force update
+      this.cd.detectChanges(); // if needed
     });
 
     this.isConnected = true;
   }
 
-  disconnect() {
-    this.ws.disconnect();
-    this.isConnected = false;
+  //select user1/user2
+  connectAsUser(userId: number) {
+    this.selectedUserId = userId;
   }
 
   send() {
-    if (this.messageText.trim()) {
-      this.ws.send(this.userId, this.messageText);
+    if (this.messageText.trim() && this.selectedUserId) {
+      this.ws.send(this.selectedUserId, this.messageText);
       this.messageText = '';
     }
+  }
+
+  ngOnDestroy() {
+    //do nothing
   }
 }
