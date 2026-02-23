@@ -57,18 +57,6 @@
   justify-content: center;
 }
 
-.shake {
-  animation: shake 0.5s infinite;
-}
-
-@keyframes shake {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(5deg); }
-  50% { transform: rotate(0deg); }
-  75% { transform: rotate(-5deg); }
-  100% { transform: rotate(0deg); }
-}
-
 .gift-icon {
   font-size: 0.9rem;
 }
