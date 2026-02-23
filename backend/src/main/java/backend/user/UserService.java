@@ -2,6 +2,8 @@ package backend.user;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -25,5 +27,9 @@ public class UserService {
         user.setTotalPoints(user.getTotalPoints() + points);
         
         return userRepository.save(user);
+    }
+    
+    public List<User> getUsersByFamilyEmail(String familyEmail) {
+        return userRepository.findByFamilyEmail(familyEmail);
     }
 }
