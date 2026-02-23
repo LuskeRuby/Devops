@@ -28,4 +28,15 @@ public class UserController {
         // 2. Controller wraps the result in an HTTP 200 OK response
         return ResponseEntity.ok(user); 
     }
+
+    // Listens for GET /api/users/family/{familyEmail}
+    @GetMapping("/family/{familyEmail}")
+    public ResponseEntity<java.util.List<User>> getUsersByFamily(@PathVariable String familyEmail) {
+
+        // 1. Controller receives the request and calls the Service
+        java.util.List<User> users = userService.getUsersByFamilyEmail(familyEmail);
+
+        // 2. Controller wraps the result in an HTTP 200 OK response
+        return ResponseEntity.ok(users);
+    }
 }

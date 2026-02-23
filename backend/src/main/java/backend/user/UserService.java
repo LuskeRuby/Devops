@@ -20,7 +20,7 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
-    public List<User> getUsersByFamilyId(Long familyId) {
-        return userRepository.findByFamilyId(familyId);
+    public List<User> getUsersByFamilyEmail(String familyEmail) {
+        return userRepository.findByFamilyEmail(familyEmail);
     }
 }

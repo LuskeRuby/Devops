@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    List<User> findByFamilyId(Long familyId);
+    List<User> findByFamilyEmail(String familyEmail);
 
 }

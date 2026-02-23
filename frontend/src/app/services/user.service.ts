@@ -17,7 +17,7 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  getUsersByFamilyId(familyId: number): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/families/${familyId}/users`);
-  }
+ getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {
+   return this.http.get<User[]>(`${this.apiUrl}/family/${familyEmail}`);
+ }
 }

@@ -12,7 +12,7 @@ import { UserService, User } from '../../services/user.service';
 })
 export class SelectMemberPageComponent implements OnInit {
   users: User[] = [];
-  familyId = 1; // Replace with actual family ID
+  familyEmail = "fam1@gmail.com"; // Replace with actual family email
 
   constructor(
     private router: Router,
@@ -24,7 +24,7 @@ export class SelectMemberPageComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.userService.getUsersByFamilyId(this.familyId).subscribe({
+    this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
       next: (users) => {
         this.users = users;
       },
@@ -36,12 +36,11 @@ export class SelectMemberPageComponent implements OnInit {
 
   selectUser(user: User): void {
     console.log('Selected user:', user);
-    this.router.navigate(['/home']); // Replace with actual navigation to home page with selected user context
+    this.router.navigate(['/home']);
   }
 
   addMember(): void {
     console.log('Add member clicked');
-    this.router.navigate(['/home']); // Replace with actual navigation to add member page
+    this.router.navigate(['/home']);
   }
 }
-
