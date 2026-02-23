@@ -7,15 +7,23 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    // Constructor injection (Best practice over @Autowired)
+  
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public User getUserById(Long id) {
-        // Here we call the repository. 
-        // We also handle the case where the user doesn't exist in the database.
+   
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    public User addPoints(Long id, int points) {
+    
+        User user = getUserById(id);
+        
+        user.setTotalPoints(user.getTotalPoints() + points);
+        
+        return userRepository.save(user);
     }
 }

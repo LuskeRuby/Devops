@@ -3,5 +3,6 @@ package backend.user;
 public record UserDto(
     Long id,
     String username,
-    String email
+    String email,
+    int totalPoints
 ) {}
