@@ -11,7 +11,7 @@ export class WebSocketService {
 
   constructor() {
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/gs-guide-websocket',
+      brokerURL: 'ws://localhost:8080/websocket',
       reconnectDelay: 5000,
       debug: (msg) => console.log('STOMP:', msg)
     });

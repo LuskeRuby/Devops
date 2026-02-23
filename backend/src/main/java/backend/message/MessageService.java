@@ -1,11 +1,14 @@
 package backend.message;
 
-import backend.message.DTO.MessageRequestDto;
+import backend.message.dto.MessageRequestDto;
 import backend.user.User;
 import backend.user.UserService;
 import org.springframework.stereotype.Service;
-
+import backend.message.dto.MessageResponseDto;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class MessageService {
 
@@ -18,7 +21,7 @@ public class MessageService {
         this.userService = userService;
     }
 
-    public Message saveMessage(MessageRequestDto dto) {
+    public MessageResponseDto saveMessage(MessageRequestDto dto) {
 
         User user = userService.getUserById(dto.getUserId());
 
@@ -27,6 +30,16 @@ public class MessageService {
         message.setContent(dto.getContent());
         message.setTimestamp(LocalDateTime.now());
 
-        return messageRepository.save(message);
+        Message saved = messageRepository.save(message);
+        return new MessageResponseDto(saved);
+    }
+
+    public List<MessageResponseDto> getAllMessages() {
+
+        return messageRepository
+                .findAllByOrderByTimestampAsc()
+                .stream()
+                .map(MessageResponseDto::new)
+                .collect(Collectors.toList());
     }
 }

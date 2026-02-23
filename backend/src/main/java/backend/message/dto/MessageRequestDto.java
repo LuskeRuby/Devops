@@ -1,4 +1,4 @@
-package backend.message.DTO;
+package backend.message.dto;
 
 import lombok.Getter;
 import lombok.Setter;
