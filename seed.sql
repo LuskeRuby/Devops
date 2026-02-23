@@ -1,6 +1,6 @@
 -- Families
 INSERT INTO familie (email, password) VALUES
-  ('test@test.dk', 'test'),
+  ('johnson@family.com', 'hashed_password_1'),
   ('smith@family.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lHHG');
 
 -- Images
