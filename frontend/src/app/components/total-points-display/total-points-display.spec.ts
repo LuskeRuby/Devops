@@ -12,7 +12,7 @@ describe('TotalPointsDisplayComponent', () => {
 
     fixture = TestBed.createComponent(TotalPointsDisplayComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // calculation ko initialize karne ke liye zaroori hai
+    fixture.detectChanges(); 
   });
 
   it('should create', () => {
@@ -20,8 +20,9 @@ describe('TotalPointsDisplayComponent', () => {
   });
 
   it('should calculate progress correctly', () => {
-    component.totalPoints = 50;
-    component.targetPoints = 100;
+    fixture.componentRef.setInput('totalPoints', 50);
+    fixture.componentRef.setInput('targetPoints', 100);
+    fixture.detectChanges();
     expect(component.progress).toBe(50);
   });
 });
