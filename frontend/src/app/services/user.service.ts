@@ -2,6 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,4 +26,8 @@ export class UserService {
   addPoints(id: number, points: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/add-points/${points}`, {});
   }
+
+ getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {
+   return this.http.get<User[]>(`${this.apiUrl}/family/${familyEmail}`);
+ }
 }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div class="container">
+  <h1>Vælg medlem</h1>
+  <div class="user-grid">
+    <div *ngFor="let user of users" class="user-card" (click)="selectUser(user)">
+      <div class="avatar">
+        <img [src]="user.avatarUrl || 'assets/default-avatar.png'" [alt]="user.name">
+      </div>
+      <span class="user-name">{{user.name}}</span>
+    </div>
+    <div class="user-card add-member-card" (click)="addMember()">
+      <div class="avatar add-avatar">
+        <span class="plus-icon">+</span>
+      </div>
+      <span class="user-name">Add Member</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
