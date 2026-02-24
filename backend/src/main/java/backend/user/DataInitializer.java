@@ -13,6 +13,7 @@ public class DataInitializer implements CommandLineRunner {
         this.userRepository = userRepository;
     }
 
+    // CHANGES HERE MIGHT CAUSE TaskControllerTest TO FAIL.
     @Override
     public void run(String... args) throws Exception {
         // Check if the database is empty

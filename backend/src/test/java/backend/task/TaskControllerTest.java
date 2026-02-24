@@ -8,14 +8,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import jakarta.transaction.Transactional;
 
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class TaskControllerTest {
 
     @Autowired
@@ -24,6 +30,10 @@ class TaskControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    // currenly using the user/DataInitializer for test
     @Test
     void shouldCreateTaskForExistingUser() throws Exception {
 
@@ -48,5 +58,94 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldFetchTasksForUser() throws Exception {
+
+        // Get existing user
+        User user = userRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No users found"));
+
+        // Create task assigned to that user
+        String createJson = """
+    {
+      "task": {
+        "name": "Do homework",
+        "description": "Math exercises",
+        "points": 15,
+        "timestamp": "2026-02-15T18:00:00",
+        "repeatEvery": "Daily"
+      },
+      "userIds": [%d]
+    }
+    """.formatted(user.getId());
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson))
+                .andExpect(status().isOk());
+
+        // Fetch tasks for that user
+        mockMvc.perform(get("/api/tasks/user/" + user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void shouldMarkTaskAsCompleted() throws Exception {
+
+        // Get existing user
+        User user = userRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No users found"));
+
+        // Create task
+        String createJson = """
+                {
+                  "task": {
+                    "name": "Clean room",
+                    "description": "Bedroom cleanup",
+                    "points": 20,
+                    "timestamp": "2026-02-15T18:00:00",
+                    "repeatEvery": "Daily"
+                  },
+                  "userIds": [%d]
+                }
+                """.formatted(user.getId());
+
+        String response = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // Extract task ID from response
+        Task createdTask = objectMapper.readValue(response, Task.class);
+
+        // Mark as completed
+        mockMvc.perform(put("/api/tasks/" + createdTask.getId() + "/complete"))
+                .andExpect(status().isOk());
+
+        // Verify it is completed
+        String fetchResponse = mockMvc.perform(get("/api/tasks/user/" + user.getId()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Task[] tasks = objectMapper.readValue(fetchResponse, Task[].class);
+
+        boolean foundCompleted = false;
+        for (Task t : tasks) {
+            if (t.getId().equals(createdTask.getId())
+                    && Boolean.TRUE.equals(t.getChecked())) {
+                foundCompleted = true;
+                break;
+            }
+        }
+
+        assertTrue(foundCompleted, "Task should be marked as completed");
     }
 }
