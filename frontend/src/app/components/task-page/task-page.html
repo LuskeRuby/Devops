@@ -1,7 +1,41 @@
 <div class="task-container">
+
+  <h2>Opret Opgave</h2>
+
+  <form [formGroup]="taskForm" (ngSubmit)="createTask()">
+
+    <div>
+      <label>Navn</label>
+      <input type="text" formControlName="name">
+    </div>
+
+    <div>
+      <label>Beskrivelse</label>
+      <input type="text" formControlName="description">
+    </div>
+
+    <div>
+      <label>Point</label>
+      <input type="number" formControlName="points">
+    </div>
+
+    <div>
+      <label>Gentag</label>
+      <select formControlName="repeatEvery">
+        <option value="Daily">Dagligt</option>
+        <option value="Weekly">Ugentligt</option>
+        <option value="Monthly">Månedligt</option>
+      </select>
+    </div>
+
+    <button type="submit">Gem Opgave</button>
+
+  </form>
+
+  <hr>
+
   <h2>Opgaver</h2>
 
-  <button (click)="createTask()">Opret opgave</button>
   <button (click)="loadTasks()">Indlæs opgaver</button>
 
   <div *ngFor="let task of tasks" class="task-card">
@@ -14,4 +48,5 @@
       Markér som færdig
     </button>
   </div>
+
 </div>
