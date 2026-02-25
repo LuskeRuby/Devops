@@ -1,32 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
 <div class="chat-page">
 
   <div class="chat-header">
     <h2>Chat</h2>
 
-    <div class="user-buttons">
-      <button (click)="connectAsUser(1)">
-        Connect as User1
-      </button>
-
-      <button (click)="connectAsUser(2)">
-        Connect as User2
-      </button>
-    </div>
+    <button (click)="connectAsUser(1)">Connect as Mark</button>
+    <button (click)="connectAsUser(2)">Connect as Sarah</button>
   </div>
 
   <div class="chat-messages">
     <div *ngFor="let message of messages"
          class="message-wrapper"
          [ngClass]="{
-           'mine': message.username === (selectedUserId === 1 ? 'User1' : 'User2'),
-           'other': message.username !== (selectedUserId === 1 ? 'User1' : 'User2')
+           'mine': message.senderId === selectedUserId,
+           'other': message.senderId !== selectedUserId
          }">
 
       <div class="timestamp">
@@ -54,5 +40,3 @@
   </div>
 
 </div>
-</body>
-</html>

@@ -1,15 +1,15 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { WebSocketService } from '../web-socket-service';
+import { WebSocketService } from './web-socket-service';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-message',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './message.html',
-  styleUrls: ['./message.scss']
+  templateUrl: './message-page.component.html',
+  styleUrls: ['./message-page.component.scss']
 })
 export class MessageComponent implements OnInit, OnDestroy {
 

@@ -1,12 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PointsInputComponent } from './components/points-input/points-input';
-import { MessageComponent } from './features/message/components/message';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, PointsInputComponent, MessageComponent],
+  imports: [RouterOutlet, PointsInputComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
