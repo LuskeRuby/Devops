@@ -1,0 +1,17 @@
+<div class="task-container">
+  <h2>Opgaver</h2>
+
+  <button (click)="createTask()">Opret opgave</button>
+  <button (click)="loadTasks()">Indlæs opgaver</button>
+
+  <div *ngFor="let task of tasks" class="task-card">
+    <p>
+      {{ task.name }} - {{ task.points }} point
+      <strong *ngIf="task.checked">✔ Færdig</strong>
+    </p>
+
+    <button *ngIf="!task.checked" (click)="completeTask(task.id!)">
+      Markér som færdig
+    </button>
+  </div>
+</div>
