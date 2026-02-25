@@ -22,9 +22,7 @@ import lombok.Setter;
 
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
+
 @Table(name = "users") // "user" is a reserved keyword in some databases, so we use "users"
 public class User {
     
@@ -35,6 +33,7 @@ public class User {
     private String email;
     private String role;
     private String pincode;
+    private int totalPoints; // Reward points storage
 
     @ManyToOne
     @JoinColumn(name = "Family_Email", referencedColumnName = "Email")
@@ -55,4 +54,22 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "Task_ID")
     )
     private List<Task> tasks;
+
+    
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public int getTotalPoints() { return totalPoints; }
+    public void setTotalPoints(int totalPoints) { this.totalPoints = totalPoints; }
+
+    public User() {}
 }
