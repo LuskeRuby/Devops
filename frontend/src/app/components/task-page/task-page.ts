@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskService, Task } from '../../services/task';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { UserService, User } from '../../services/user.service';
 
 @Component({
   selector: 'app-task-page',
@@ -10,13 +11,20 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
   templateUrl: './task-page.html',
   styleUrl: './task-page.scss'
 })
-export class TaskPageComponent {
+export class TaskPageComponent implements OnInit {
 
   tasks: Task[] = [];
   taskForm: FormGroup;
 
+  users: User[] = [];
+  selectedUserIds: number[] = [];
+
+  // TEMP hardcoded family email
+  familyEmail = 'Asma@test.com';
+
   constructor(
     private taskService: TaskService,
+    private userService: UserService,
     private fb: FormBuilder
   ) {
     this.taskForm = this.fb.group({
@@ -26,8 +34,28 @@ export class TaskPageComponent {
       repeatEvery: ['Daily']
     });
   }
+  ngOnInit(): void {
+    console.log("TaskPage initialized");
+    this.loadUsers();
+  }
 
-  createTask() {
+  loadUsers(): void {
+    this.userService
+      .getUsersByFamilyEmail(this.familyEmail)
+      .subscribe(res => {
+        this.users = res;
+      });
+  }
+
+  toggleUser(userId: number): void {
+    if (this.selectedUserIds.includes(userId)) {
+      this.selectedUserIds = this.selectedUserIds.filter(id => id !== userId);
+    } else {
+      this.selectedUserIds.push(userId);
+    }
+  }
+
+  createTask(): void {
 
     const formValue = this.taskForm.value;
 
@@ -39,7 +67,7 @@ export class TaskPageComponent {
         timestamp: new Date().toISOString(),
         repeatEvery: formValue.repeatEvery
       },
-      [1] // still hardcoded user for now
+      this.selectedUserIds
     ).subscribe(() => {
       this.taskForm.reset({
         name: '',
@@ -47,17 +75,22 @@ export class TaskPageComponent {
         points: 0,
         repeatEvery: 'Daily'
       });
+      this.selectedUserIds = [];
       this.loadTasks();
     });
   }
 
-  loadTasks() {
-    this.taskService.getTasksForUser(1).subscribe(res => {
-      this.tasks = res;
-    });
+  loadTasks(): void {
+    if (this.selectedUserIds.length === 0) return;
+
+    this.taskService
+      .getTasksForUser(this.selectedUserIds[0])
+      .subscribe(res => {
+        this.tasks = res;
+      });
   }
 
-  completeTask(id: number) {
+  completeTask(id: number): void {
     this.taskService.completeTask(id).subscribe(() => {
       this.loadTasks();
     });
