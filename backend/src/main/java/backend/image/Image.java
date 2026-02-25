@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Getter 
-@Setter 
+@Getter
+@Setter
 @NoArgsConstructor
 @Table
 public class Image {
@@ -23,6 +23,6 @@ public class Image {
     private Long id;
 
     @Lob
-    @Column(name = "image", columnDefinition="BLOB")
+    @Column(name = "image")
     private byte[] image;
 }
