@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div class="chat-page">
+
+  <div class="chat-header">
+    <h2>Chat</h2>
+
+    <div class="user-buttons">
+      <button (click)="connectAsUser(1)">
+        Connect as User1
+      </button>
+
+      <button (click)="connectAsUser(2)">
+        Connect as User2
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-messages">
+    <div *ngFor="let message of messages"
+         class="message-wrapper"
+         [ngClass]="{
+           'mine': message.username === (selectedUserId === 1 ? 'User1' : 'User2'),
+           'other': message.username !== (selectedUserId === 1 ? 'User1' : 'User2')
+         }">
+
+      <div class="timestamp">
+        {{ message.timestamp | date:'HH:mm:ss' }}
+      </div>
+
+      <div class="bubble">
+        <strong>{{ message.username }}</strong><br>
+        {{ message.content }}
+      </div>
+
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <input
+      [(ngModel)]="messageText"
+      placeholder="Write message..."
+      (keyup.enter)="send()"
+    />
+
+    <button (click)="send()" [disabled]="!isConnected">
+      Send
+    </button>
+  </div>
+
+</div>
+</body>
+</html>
