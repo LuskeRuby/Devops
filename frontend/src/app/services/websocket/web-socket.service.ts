@@ -17,11 +17,13 @@ export class WebSocketService {
     });
   }
 
-  connect(onMessage: (msg: any) => void) {
-
+  //onMessage: called when message arrives
+  //onConnected: called whern the socket handshake complete
+  connect(onMessage: (msg: any) => void, onConnected: () => void) {
     this.client.onConnect = () => {
       console.log('Connected to backend');
       this.connected = true;
+      onConnected();
 
       this.client.subscribe('/topic/messages', message => {
         const body = JSON.parse(message.body);

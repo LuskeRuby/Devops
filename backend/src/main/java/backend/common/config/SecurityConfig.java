@@ -35,26 +35,24 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/families/register").permitAll()
-                    .anyRequest().authenticated());
-                    //Replace with code below for local test without auth
-                    //   .authorizeHttpRequests(auth -> auth
-                    //        .anyRequest().permitAll());
+                        .requestMatchers("/api/families/register").permitAll()
+                        .anyRequest().authenticated());
+                //Replace with code below for local test without auth
+                //.authorizeHttpRequests(auth -> auth
+                //    .anyRequest().permitAll());
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of("http://localhost"));
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
