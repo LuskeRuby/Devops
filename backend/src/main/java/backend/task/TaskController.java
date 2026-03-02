@@ -29,4 +29,5 @@ public class TaskController {
     public Task completeTask(@PathVariable Long taskId) {
         return taskService.markAsCompleted(taskId);
     }
+
 }

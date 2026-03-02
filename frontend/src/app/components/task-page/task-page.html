@@ -1,41 +1,60 @@
-<form [formGroup]="taskForm" (ngSubmit)="createTask()">
+<div class="task-form-container">
+  <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="task-form">
+    <h2>Opret Opgave</h2>
 
-  <div>
-    <label>Navn</label>
-    <input type="text" formControlName="name">
-  </div>
-
-  <div>
-    <label>Beskrivelse</label>
-    <input type="text" formControlName="description">
-  </div>
-
-  <div>
-    <label>Point</label>
-    <input type="number" formControlName="points">
-  </div>
-
-  <div>
-    <label>Gentag</label>
-    <select formControlName="repeatEvery">
-      <option value="Daily">Dagligt</option>
-      <option value="Weekly">Ugentligt</option>
-      <option value="Monthly">Månedligt</option>
-    </select>
-  </div>
-
-  <!-- 👇 ADD THIS BLOCK -->
-  <div>
-    <label>Tildel Brugere</label>
-
-    <div *ngFor="let user of users">
+    <div class="form-group">
+      <label for="name" class="form-label">Navn</label>
       <input
-        type="checkbox"
-        (change)="toggleUser(user.id)">
-      {{ user.name }}
+        id="name"
+        type="text"
+        formControlName="name"
+        class="form-input"
+        placeholder="Indtast opgavens navn">
     </div>
-  </div>
 
-  <button type="submit">Gem Opgave</button>
+    <div class="form-group">
+      <label for="description" class="form-label">Beskrivelse</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="form-input form-textarea"
+        placeholder="Indtast opgavens beskrivelse"
+        rows="4"></textarea>
+    </div>
 
-</form>
+    <div class="form-group">
+      <label for="points" class="form-label">Point</label>
+      <input
+        id="points"
+        type="number"
+        formControlName="points"
+        class="form-input"
+        placeholder="0">
+    </div>
+
+    <div class="form-group">
+      <label for="repeatEvery" class="form-label">Gentag</label>
+      <select id="repeatEvery" formControlName="repeatEvery" class="form-input">
+        <option value="">Vælg hyppighed</option>
+        <option value="Daily">Dagligt</option>
+        <option value="Weekly">Ugentligt</option>
+        <option value="Monthly">Månedligt</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Tildel Brugere</label>
+      <div class="users-container">
+        <div *ngFor="let user of users" class="user-checkbox">
+          <input
+            type="checkbox"
+            [id]="'user-' + user.id"
+            (change)="toggleUser(user.id)">
+          <label [for]="'user-' + user.id" class="checkbox-label">{{ user.name }}</label>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit">Gem Opgave</button>
+  </form>
+</div>

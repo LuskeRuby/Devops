@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskService, Task } from '../../services/task';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, User } from '../../services/user.service';
 
 @Component({
@@ -19,7 +19,6 @@ export class TaskPageComponent implements OnInit {
   users: User[] = [];
   selectedUserIds: number[] = [];
 
-  // TEMP hardcoded family email
   familyEmail = 'Asma@test.com';
 
   constructor(
@@ -28,12 +27,13 @@ export class TaskPageComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.taskForm = this.fb.group({
-      name: [''],
+      name: ['', Validators.required],
       description: [''],
-      points: [0],
+      points: [0, Validators.required],
       repeatEvery: ['Daily']
     });
   }
+
   ngOnInit(): void {
     console.log("TaskPage initialized");
     this.loadUsers();
@@ -56,6 +56,15 @@ export class TaskPageComponent implements OnInit {
   }
 
   createTask(): void {
+    if (this.selectedUserIds.length === 0) {
+      console.error("Please select at least one user");
+      return;
+    }
+
+    if (this.taskForm.invalid) {
+      console.error("Please fill in all required fields");
+      return;
+    }
 
     const formValue = this.taskForm.value;
 
@@ -81,10 +90,8 @@ export class TaskPageComponent implements OnInit {
   }
 
   loadTasks(): void {
-    if (this.selectedUserIds.length === 0) return;
-
     this.taskService
-      .getTasksForUser(this.selectedUserIds[0])
+      .getTasksForFamily(this.familyEmail)
       .subscribe(res => {
         this.tasks = res;
       });
