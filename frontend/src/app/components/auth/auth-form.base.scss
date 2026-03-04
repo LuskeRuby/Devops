@@ -10,6 +10,11 @@ $grey-3:    #888;
 $grey-4:    #ccc;
 $radius:    8px;
 
+.error-slot {
+  min-height: 4rem;
+  overflow: hidden;
+}
+
 .card-header {
   margin-bottom: 2rem;
 

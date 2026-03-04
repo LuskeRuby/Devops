@@ -37,9 +37,9 @@ export class AuthInterceptor implements HttpInterceptor {
           }
 
           this.refreshing = true;
-          // call refresh endpoint which expects cookie; backend sets new access token in body
+          // call the refresh endpoint which uses an HttpOnly cookie
           return this.auth
-            .login({ email: '', password: '' } as any) // placeholder to call backend refresh flow if needed
+            .refresh()
             .pipe(
               switchMap((res) => {
                 this.refreshing = false;

@@ -15,7 +15,7 @@ export class App {
   constructor(private auth: AuthService) {}
 
   get isAuthenticated() {
-    return this.auth.getAccessToken() !== null;
+    return this.auth.isAuthenticated();
   }
 
   logout() {

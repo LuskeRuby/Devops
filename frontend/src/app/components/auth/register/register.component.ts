@@ -3,7 +3,6 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { form, FormField, required, email, minLength } from '@angular/forms/signals';
 import { AuthFormBase } from '../auth-form.base';
-import {SpinnerComponent} from '../../spinner/spinner.component';
 import {ErrorBannerComponent} from '../../error-banner/error-banner.component';
 
 interface RegisterData {
@@ -17,7 +16,7 @@ interface RegisterData {
   styleUrls: ['./register.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormField, SpinnerComponent, ErrorBannerComponent],
+  imports: [RouterLink, FormField, ErrorBannerComponent],
 })
 export class RegisterComponent extends AuthFormBase {
   readonly registerModel = signal<RegisterData>({ email: '', password: '' });
@@ -34,10 +33,10 @@ export class RegisterComponent extends AuthFormBase {
   }
 
   submit(): void {
+    if (this.isLoading()) return;
     if (this.registerForm().invalid()) return;
 
     this.setLoading(true);
-    this.setError(null);
 
     const { email, password } = this.registerModel();
 

@@ -6,7 +6,7 @@ import{RegisterComponent} from './components/auth/register/register.component';
 import{AuthGuard} from './auth/auth.guard';
 
 export const routes: Routes = [
-  {path:'',redirectTo:'/select-member',pathMatch:'full'},
+  {path:'',redirectTo:'/login',pathMatch:'full'},
   {path:'select-member',component:SelectMemberPageComponent},
   {path:'home',component:HomePageComponent, canActivate: [AuthGuard]},
   {path:'login', component: LoginComponent},

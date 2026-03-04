@@ -24,11 +24,11 @@
         <p>New here? <a routerLink="/register">Create an account</a></p>
       </header>
 
-      @if (error()) {
-        <app-error-banner [message]="error()!" />
-      }
+      <div class="error-slot">
+        <app-error-banner [style.visibility]="error() ? 'visible' : 'hidden'" [message]="error() ?? ' '" />
+      </div>
 
-      <form (submit)="submit()" novalidate>
+      <form novalidate>
 
         <div class="field" [class.field--error]="loginForm.email().touched() && loginForm.email().invalid()">
           <label for="email">Email</label>
@@ -94,15 +94,8 @@
           </label>
         </div>
 
-        <button type="submit" class="btn-submit" [disabled]="isLoading()">
-          @if (isLoading()) {
-            <span class="loading-text">
-              <app-spinner />
-              Signing in
-            </span>
-          } @else {
-            Sign in
-          }
+        <button type="button" class="btn-submit" (click)="submit()">
+          Sign in
         </button>
 
       </form>

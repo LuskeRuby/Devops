@@ -3,7 +3,6 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { form, FormField, required, email, minLength } from '@angular/forms/signals';
 import { AuthFormBase } from '../auth-form.base';
-import { SpinnerComponent } from '../../spinner/spinner.component';
 import { ErrorBannerComponent } from '../../error-banner/error-banner.component';
 
 interface LoginData {
@@ -17,7 +16,7 @@ interface LoginData {
   styleUrls: ['./login.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormField, SpinnerComponent, ErrorBannerComponent],
+  imports: [RouterLink, FormField, ErrorBannerComponent],
 })
 export class LoginComponent extends AuthFormBase {
   readonly loginModel = signal<LoginData>({ email: '', password: '' });
@@ -33,6 +32,9 @@ export class LoginComponent extends AuthFormBase {
 
   constructor(private auth: AuthService, private router: Router) {
     super();
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/select-member']);
+    }
   }
 
   onRememberMeChange(event: Event): void {
@@ -40,15 +42,15 @@ export class LoginComponent extends AuthFormBase {
   }
 
   submit(): void {
+    if (this.isLoading()) return;
     if (this.loginForm().invalid()) return;
 
     this.setLoading(true);
-    this.setError(null);
 
     const { email, password } = this.loginModel();
 
     this.auth.login({ email, password }).subscribe({
-      next:  () => this.router.navigate(['/home']),
+      next:  () => this.router.navigate(['/select-member']),
       error: () => {
         this.setError('Login failed. Please check your credentials.');
         this.setLoading(false);
