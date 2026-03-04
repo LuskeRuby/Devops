@@ -45,3 +45,11 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties

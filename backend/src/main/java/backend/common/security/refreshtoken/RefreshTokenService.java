@@ -26,6 +26,7 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(Family family) {
         refreshTokenRepository.deleteByFamily(family);
+        refreshTokenRepository.flush();
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(UUID.randomUUID().toString());
