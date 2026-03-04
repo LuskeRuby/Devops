@@ -1,7 +1,7 @@
 ---
 name: User Story
 about: Define a vertically sliced feature with clear acceptance criteria and priority
-title: "[Epic Name]: Short Action Description"
+title: "[User Story]: Short Action Description"
 labels: user story
 assignees: ''
 
