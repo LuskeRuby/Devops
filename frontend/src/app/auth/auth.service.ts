@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, switchMap } from 'rxjs';
 import { FamilyAuthResponseDto, LoginRequest, RegisterRequest } from './token.model';
 
@@ -17,6 +18,7 @@ export class AuthService {
 
   /** Key used to store the access token in localStorage. */
   private accessTokenKey = 'auth.accessToken';
+  private persistFlagKey = 'auth.persist';
 
   /** Internal signal tracking whether an access token is present. */
   private _isAuthenticated = signal<boolean>(!!this.getAccessToken());
@@ -27,14 +29,14 @@ export class AuthService {
    */
   public isAuthenticated$ = new BehaviorSubject<boolean>(this._isAuthenticated());
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   /**
    * Read the current access token from localStorage.
    * @returns The stored access token, or `null` if none exists.
    */
   getAccessToken(): string | null {
-    return localStorage.getItem(this.accessTokenKey);
+    return localStorage.getItem(this.accessTokenKey) ?? sessionStorage.getItem(this.accessTokenKey);
   }
 
   /**
@@ -42,12 +44,23 @@ export class AuthService {
    * @param token The access token to store, or `null` to clear it.
    * @private
    */
-  private setAccessToken(token: string | null) {
+  private setAccessToken(token: string | null, remember = true) {
     if (token) {
-      localStorage.setItem(this.accessTokenKey, token);
+      if (remember) {
+        localStorage.setItem(this.accessTokenKey, token);
+        localStorage.setItem(this.persistFlagKey, '1');
+        sessionStorage.removeItem(this.accessTokenKey);
+      } else {
+        sessionStorage.setItem(this.accessTokenKey, token);
+        localStorage.removeItem(this.accessTokenKey);
+        localStorage.removeItem(this.persistFlagKey);
+      }
     } else {
       localStorage.removeItem(this.accessTokenKey);
+      sessionStorage.removeItem(this.accessTokenKey);
+      localStorage.removeItem(this.persistFlagKey);
     }
+
     this._isAuthenticated.set(!!token);
     this.isAuthenticated$.next(this._isAuthenticated());
   }
@@ -59,10 +72,10 @@ export class AuthService {
    * @param payload Credentials for login (email + password).
    * @returns An observable that emits the backend auth response.
    */
-  login(payload: LoginRequest): Observable<FamilyAuthResponseDto> {
+  login(payload: LoginRequest, remember = true): Observable<FamilyAuthResponseDto> {
     return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/login`, payload, { withCredentials: true }).pipe(
       switchMap((res) => {
-        this.setAccessToken(res.accessToken);
+        this.setAccessToken(res.accessToken, remember);
         return of(res);
       })
     );
@@ -75,9 +88,10 @@ export class AuthService {
    * browser includes the HttpOnly cookie.
    */
   refresh(): Observable<FamilyAuthResponseDto> {
+    const remember = !!localStorage.getItem(this.persistFlagKey);
     return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/refresh`, {}, { withCredentials: true }).pipe(
       switchMap((res) => {
-        this.setAccessToken(res.accessToken);
+        this.setAccessToken(res.accessToken, remember);
         return of(res);
       })
     );
@@ -93,13 +107,12 @@ export class AuthService {
   }
 
   /**
-   * Clear authentication state locally.
-   * If the backend exposes a logout endpoint you may call it here as well.
+   * Clear authentication state locally and redirect to the login page.
+   * Called on explicit logout or when token refresh fails after expiry.
    */
   logout() {
     this.setAccessToken(null);
-    // The backend issues refresh token in HttpOnly cookie; if the backend also
-    // has a logout endpoint, call it here.
+    this.router.navigate(['/login']);
   }
 
   /**
@@ -108,7 +121,8 @@ export class AuthService {
    * @param token The new access token string.
    */
   setAccessTokenFromRefresh(token: string) {
-    this.setAccessToken(token);
+    const remember = !!localStorage.getItem(this.persistFlagKey);
+    this.setAccessToken(token, remember);
   }
 
   /**

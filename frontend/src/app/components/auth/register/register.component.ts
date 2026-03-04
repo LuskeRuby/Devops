@@ -42,8 +42,17 @@ export class RegisterComponent extends AuthFormBase {
 
     this.auth.register({ email, password }).subscribe({
       next:  () => this.router.navigate(['/login']),
-      error: () => {
-        this.setError('Registration failed. Please try again.');
+      error: (err) => {
+        console.error('Register error:', err);
+        const status = err?.status;
+        const serverMsg = err?.error?.message || err?.error?.error || null;
+        if (serverMsg) {
+          this.setError(serverMsg);
+        } else if (status === 409) {
+          this.setError('An account with that email already exists.');
+        } else {
+          this.setError('Registration failed. Please try again.');
+        }
         this.setLoading(false);
       },
     });

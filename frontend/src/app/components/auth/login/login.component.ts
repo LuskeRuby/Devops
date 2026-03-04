@@ -49,10 +49,16 @@ export class LoginComponent extends AuthFormBase {
 
     const { email, password } = this.loginModel();
 
-    this.auth.login({ email, password }).subscribe({
+    this.auth.login({ email, password }, this.rememberMe()).subscribe({
       next:  () => this.router.navigate(['/select-member']),
-      error: () => {
-        this.setError('Login failed. Please check your credentials.');
+      error: (err) => {
+        console.error('Login error:', err);
+        const serverMsg = err?.error?.message || err?.error?.error || null;
+        if (serverMsg) {
+          this.setError(serverMsg);
+        } else {
+          this.setError('Login failed. Please check your credentials.');
+        }
         this.setLoading(false);
       },
     });
