@@ -9,10 +9,10 @@ import {MessageComponent} from './components/message-page/message-page.component
 
 export const routes: Routes = [
   {path:'',redirectTo:'/login',pathMatch:'full'},
-  {path:'select-member',component:SelectMemberPageComponent},
-  {path:'create-member-page',component:CreateMemberPageComponent},
+  {path:'select-member',component:SelectMemberPageComponent, canActivate: [AuthGuard]},
+  {path:'create-member-page',component:CreateMemberPageComponent, canActivate: [AuthGuard]},
   {path:'home',component:HomePageComponent, canActivate: [AuthGuard]},
   {path:'login', component: LoginComponent},
   {path:'register', component: RegisterComponent},
-  {path: 'message', component:MessageComponent}
+  {path: 'message', component:MessageComponent, canActivate: [AuthGuard]}
   ];
