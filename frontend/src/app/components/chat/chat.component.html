@@ -1,0 +1,33 @@
+<div class="chat-messages" #scrollContainer>
+
+  <!-- Loop over all messages-->
+  <ng-container *ngFor="let message of messages; let i = index">
+
+    <div class="date-separator"
+         *ngIf="i === 0 || isDifferentDay(messages[i - 1].timestamp, message.timestamp)">
+      <span>{{ formatDateLabel(message.timestamp) }}</span>
+    </div>
+
+    <div class="message-wrapper"
+         [ngClass]="{
+           'mine':  message.userId === selectedUserId,
+           'other': message.userId !== selectedUserId
+         }">
+      <div class="timestamp">{{ message.timestamp | date:'HH:mm' }}</div>
+      <div class="bubble">
+        <strong>{{ message.username }}</strong><br>
+        {{ message.content }}
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<div class="chat-input">
+  <input
+    [(ngModel)]="messageText"
+    placeholder="Aa"
+    (keyup.enter)="send()"
+  />
+  <button (click)="send()" [disabled]="!isConnected">Send</button>
+</div>

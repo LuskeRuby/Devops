@@ -5,6 +5,7 @@ import { AuthService } from './auth/auth.service';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet, PointsInputComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
