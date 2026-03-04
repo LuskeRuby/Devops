@@ -1,0 +1,33 @@
+
+<div class="task-card" [class.completed]="task.checked">
+  <!--
+  <div class="task-image">
+    <img [src]="" [alt]="task.title" />
+  </div>-->
+
+  <div class="task-details">
+    <h3 class="title">{{ task.name }}</h3>
+    
+    <div class="meta-info">
+      <div class="time">
+        ⏱️ {{ task.timestamp | date:'hh:mm' }}
+      </div>
+      <!---
+        <div class="assigned-users">
+            @for (user of task.userIds; track user.name) {
+                <div class="user-badge">
+                <img [src]="user.avatarUrl" [alt]="user.name" class="avatar" />
+                <span class="user-name">{{ user.name }}</span>
+                </div>
+            }
+        </div>-->
+    </div>
+  </div>
+
+  <div class="task-action">
+    <button class="check-btn" (click)="onCheckmarkClick()">
+      ✔️
+    </button>
+  </div>
+
+</div>

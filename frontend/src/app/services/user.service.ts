@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { TaskDTO } from '../features/task/models/TaskDto';
 
 export interface User {
   id: number;
@@ -30,4 +31,8 @@ export class UserService {
  getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {
    return this.http.get<User[]>(`${this.apiUrl}/family/${familyEmail}`);
  }
+
+  getTasksByUserId(id: number): Observable<TaskDTO[]> {    
+    return this.http.get<TaskDTO[]>(`${this.apiUrl}/${id}/tasks`);
+  }
 }
