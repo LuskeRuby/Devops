@@ -30,4 +30,9 @@ public class TaskController {
         return taskService.markAsCompleted(taskId);
     }
 
+    @GetMapping("/family/{familyEmail}")
+    public List<Task> getTasksForFamily(@PathVariable String familyEmail) {
+        return taskService.getTasksForFamily(familyEmail);
+    }
+
 }

@@ -96,3 +96,25 @@
 .btn-submit:active {
   transform: scale(0.98);
 }
+
+.btn-submit:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-submit:disabled:hover {
+  background: #cccccc;
+}
+
+.validation-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.no-users {
+  color: #999;
+  text-align: center;
+  padding: 1rem;
+}

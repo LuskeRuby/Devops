@@ -43,18 +43,25 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">Tildel Brugere</label>
+      <label class="form-label">Tildel Brugere *</label>
       <div class="users-container">
+        <div *ngIf="users.length === 0" class="no-users">
+          Indlæser brugere...
+        </div>
         <div *ngFor="let user of users" class="user-checkbox">
           <input
             type="checkbox"
             [id]="'user-' + user.id"
+            [checked]="selectedUserIds.includes(user.id)"
             (change)="toggleUser(user.id)">
           <label [for]="'user-' + user.id" class="checkbox-label">{{ user.name }}</label>
         </div>
       </div>
+      <div *ngIf="selectedUserIds.length === 0" class="validation-error">
+        Vælg mindst én bruger
+      </div>
     </div>
 
-    <button type="submit" class="btn-submit">Gem Opgave</button>
+    <button type="submit" class="btn-submit" [disabled]="selectedUserIds.length === 0">Gem Opgave</button>
   </form>
 </div>

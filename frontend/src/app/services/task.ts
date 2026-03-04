@@ -35,4 +35,8 @@ export class TaskService {
   completeTask(taskId: number): Observable<Task> {
     return this.http.put<Task>(`${this.baseUrl}/${taskId}/complete`, {});
   }
+
+  getTasksForFamily(familyEmail: string): Observable<Task[]> {
+    return this.http.get<Task[]>(`${this.baseUrl}/family/${familyEmail}`);
+  }
 }

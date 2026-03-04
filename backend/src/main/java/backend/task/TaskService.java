@@ -40,5 +40,8 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    public List<Task> getTasksForFamily(String familyEmail) {
+        return taskRepository.findByUsers_Family_Email(familyEmail);
+    }
 
 }
