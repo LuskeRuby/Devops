@@ -1,0 +1,194 @@
+// Shared auth form styles — imported by login and register components
+
+$blue:      #2a6fdb;
+$blue-dark: #1d55b0;
+$red:       #c0392b;
+$red-bg:    #fdf3f2;
+$grey-1:    #1a1a1a;
+$grey-2:    #555;
+$grey-3:    #888;
+$grey-4:    #ccc;
+$radius:    8px;
+
+.error-slot {
+  min-height: 4rem;
+  overflow: hidden;
+}
+
+.card-header {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $grey-1;
+    margin: 0 0 0.35rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $grey-2;
+    margin: 0;
+
+    a {
+      color: $blue;
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+.field {
+  margin-bottom: 1.125rem;
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $grey-1;
+    margin-bottom: 0.375rem;
+
+    a {
+      font-weight: 400;
+      color: $grey-3;
+      text-decoration: none;
+      font-size: 0.75rem;
+
+      &:hover { color: $grey-1; }
+    }
+  }
+
+  input[type=email],
+  input[type=text],
+  input[type=password] {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1.5px solid $grey-4;
+    border-radius: $radius;
+    font-size: 0.9375rem;
+    color: $grey-1;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 120ms;
+
+    &::placeholder { color: $grey-4; }
+
+    &:focus {
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(42, 111, 219, 0.1);
+    }
+  }
+}
+
+.field--error {
+  input[type=email],
+  input[type=text],
+  input[type=password] {
+    border-color: $red;
+
+    &:focus { box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1); }
+  }
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: $red;
+}
+
+.password-wrap {
+  position: relative;
+
+  input { padding-right: 2.5rem; }
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $grey-3;
+  display: flex;
+  padding: 0.2rem;
+
+  &:hover { color: $grey-1; }
+}
+
+.remember-row { margin-bottom: 1.5rem; }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: $grey-2;
+  cursor: pointer;
+  user-select: none;
+
+  input[type=checkbox] { display: none; }
+
+  input:checked + .checkbox-box {
+    background: $blue;
+    border-color: $blue;
+
+    &::after { opacity: 1; }
+  }
+}
+
+.checkbox-box {
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid $grey-4;
+  border-radius: 4px;
+  background: #fff;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 120ms, border-color 120ms;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    opacity: 0;
+    transform: rotate(45deg);
+    transition: opacity 120ms;
+  }
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.7rem;
+  background: $blue;
+  color: #fff;
+  border: none;
+  border-radius: $radius;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms;
+
+  &:hover:not(:disabled) { background: $blue-dark; }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

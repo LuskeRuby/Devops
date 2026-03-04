@@ -41,6 +41,6 @@ export class SelectMemberPageComponent implements OnInit {
 
   addMember(): void {
     console.log('Add member clicked');
-    this.router.navigate(['/home']);
+    this.router.navigate(['/create-member-page']);
   }
 }

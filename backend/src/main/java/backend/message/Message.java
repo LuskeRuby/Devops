@@ -3,19 +3,15 @@ package backend.message;
 import java.time.LocalDateTime;
 
 import backend.user.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter 
-@Setter 
+@Getter
+@Setter
 @NoArgsConstructor
 public class Message {
 
@@ -24,9 +20,11 @@ public class Message {
     private Long id;
 
     private String content;
+
     private LocalDateTime timestamp;
 
     @ManyToOne
     @JoinColumn(name = "User_ID")
+    @JsonIgnoreProperties("messages")
     private User user;
 }

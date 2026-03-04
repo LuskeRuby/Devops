@@ -1,0 +1,82 @@
+.task-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+
+  // Dynamic class added via Angular when isCompleted is true
+  &.completed {
+    background-color: #2ea542; // The green color from your screenshot
+    color: black;
+  }
+}
+
+.task-image {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.task-details {
+  flex-grow: 1;
+  padding: 0 16px;
+
+  .title {
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+  }
+
+  .meta-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+}
+
+.assigned-users {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #ccc;
+    }
+  }
+}
+
+.task-action {
+  .check-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    
+    // Simple hover effect
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
