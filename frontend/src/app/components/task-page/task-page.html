@@ -1,0 +1,67 @@
+<div class="task-form-container">
+  <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="task-form">
+    <h2>Opret Opgave</h2>
+
+    <div class="form-group">
+      <label for="name" class="form-label">Navn</label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        class="form-input"
+        placeholder="Indtast opgavens navn">
+    </div>
+
+    <div class="form-group">
+      <label for="description" class="form-label">Beskrivelse</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="form-input form-textarea"
+        placeholder="Indtast opgavens beskrivelse"
+        rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="points" class="form-label">Point</label>
+      <input
+        id="points"
+        type="number"
+        formControlName="points"
+        class="form-input"
+        placeholder="0">
+    </div>
+
+    <div class="form-group">
+      <label for="repeatEvery" class="form-label">Gentag</label>
+      <select id="repeatEvery" formControlName="repeatEvery" class="form-input">
+        <option value="">Vælg hyppighed</option>
+        <option value="Daily">Dagligt</option>
+        <option value="Weekly">Ugentligt</option>
+        <option value="Monthly">Månedligt</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Tildel Brugere *</label>
+      <div class="users-container">
+        <div *ngIf="users.length === 0" class="no-users">
+          Indlæser brugere...
+        </div>
+        <div *ngFor="let user of users" class="user-checkbox">
+          <input
+            type="checkbox"
+            [id]="'user-' + user.id"
+            [checked]="selectedUserIds.includes(user.id)"
+            (change)="toggleUser(user.id)">
+          <label [for]="'user-' + user.id" class="checkbox-label">{{ user.name }}</label>
+        </div>
+      </div>
+      <div *ngIf="selectedUserIds.length === 0" class="validation-error">
+        Vælg mindst én bruger
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit" [disabled]="selectedUserIds.length === 0">Gem Opgave</button>
+  </form>
+</div>

@@ -1,6 +1,12 @@
 package backend.task;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,13 +20,33 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    @PostMapping
+    public Task createTask(@RequestBody CreateTaskRequest request) {
+        return taskService.createTask(request.getTask(), request.getUserIds());
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Task> getTasksForUser(@PathVariable Long userId) {
+        return taskService.getTasksForUser(userId);
+    }
+
+    @PutMapping("/{taskId}/complete")
+    public Task completeTask(@PathVariable Long taskId) {
+        return taskService.markAsCompleted(taskId);
+    }
+
+    @GetMapping("/family/{familyEmail}")
+    public List<Task> getTasksForFamily(@PathVariable String familyEmail) {
+        return taskService.getTasksForFamily(familyEmail);
+    }
+
     @GetMapping("/{id}")
-    public Task getTaskById(Long id) {
+    public Task getTaskById(@PathVariable Long id) {
         return taskService.getTaskById(id);
     }
 
     @GetMapping
-    public Task getTaskByUserId(Long userId) {
+    public Task getTaskByUserId(@PathVariable Long userId) {
         return taskService.getTaskById(userId);
     }
 
