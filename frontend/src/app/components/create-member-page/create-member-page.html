@@ -1,0 +1,48 @@
+<div class="create-member-container">
+  <form class="create-member-form" (ngSubmit)="onSubmit()">
+    <h2>Create New Member</h2>
+
+    <div class="form-error" *ngIf="showError">
+      Please enter a name and a valid 4-digit PIN code
+    </div>
+
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input
+        type="text"
+        id="name"
+        [(ngModel)]="name"
+        name="name"
+        placeholder="Enter member name"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="pinCode">PIN Code (4 digits)</label>
+      <input
+        type="text"
+        id="pinCode"
+        [value]="pinCode"
+        (input)="onPinCodeInput($event)"
+        name="pinCode"
+        placeholder="Enter 4-digit PIN code"
+        maxlength="4"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role" [(ngModel)]="role" name="role" required>
+        <option value="parent">Parent</option>
+        <option value="child">Child</option>
+      </select>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="submit">Create Member</button>
+      <button type="button" class="cancel" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+</div>
