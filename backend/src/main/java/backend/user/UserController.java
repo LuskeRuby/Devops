@@ -1,12 +1,12 @@
 package backend.user;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -17,15 +17,12 @@ public class UserController {
         this.userService = userService;
     }
 
-  
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id) {
-        
-     
+
         User user = userService.getUserById(id);
-        
-   
-        return ResponseEntity.ok(user); 
+
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/{id}/add-points/{points}")
@@ -33,7 +30,7 @@ public class UserController {
         User updatedUser = userService.addPoints(id, points);
         return ResponseEntity.ok(updatedUser);
     }
-    
+
     // Listens for GET /api/users/family/{familyEmail}
     @GetMapping("/family/{familyEmail}")
     public ResponseEntity<java.util.List<User>> getUsersByFamily(@PathVariable String familyEmail) {

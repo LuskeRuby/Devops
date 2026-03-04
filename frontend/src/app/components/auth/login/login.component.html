@@ -1,0 +1,106 @@
+<div class="auth-wrapper">
+
+  <aside class="auth-aside">
+    <div class="aside-inner">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Family App</span>
+      </div>
+      <div class="aside-text">
+        <h1>A calm place to keep track of the day.</h1>
+        <p>Built for families, shaped around routine.</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <header class="card-header">
+        <h2>Sign in</h2>
+        <p>New here? <a routerLink="/register">Create an account</a></p>
+      </header>
+
+      <div class="error-slot">
+        <app-error-banner [style.visibility]="error() ? 'visible' : 'hidden'" [message]="error() ?? ' '" />
+      </div>
+
+      <form novalidate>
+
+        <div class="field" [class.field--error]="loginForm.email().touched() && loginForm.email().invalid()">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            [formField]="loginForm.email"
+            placeholder="you@example.com"
+            autocomplete="email"
+          />
+          @if (loginForm.email().touched() && loginForm.email().invalid()) {
+            <span class="field-error">{{ loginForm.email().errors()[0].message }}</span>
+          }
+        </div>
+
+        <div class="field" [class.field--error]="loginForm.password().touched() && loginForm.password().invalid()">
+          <label for="password">
+            <span>Password</span>
+            <a routerLink="/forgot-password">Forgot password?</a>
+          </label>
+          <div class="password-wrap">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              [formField]="loginForm.password"
+              placeholder="Min. 8 characters"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+            >
+              @if (!showPassword()) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (loginForm.password().touched() && loginForm.password().invalid()) {
+            <span class="field-error">{{ loginForm.password().errors()[0].message }}</span>
+          }
+        </div>
+
+        <div class="remember-row">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="rememberMe()"
+              (change)="onRememberMeChange($event)"
+            />
+            <span class="checkbox-box"></span>
+            Keep me signed in
+          </label>
+        </div>
+
+        <button type="button" class="btn-submit" (click)="submit()">
+          Sign in
+        </button>
+
+      </form>
+
+    </div>
+  </main>
+
+</div>
