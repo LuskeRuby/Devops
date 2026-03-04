@@ -2,6 +2,8 @@ package backend.user;
 
 import org.springframework.stereotype.Service;
 
+import backend.task.Task;
+
 import java.util.List;
 
 @Service
@@ -12,6 +14,10 @@ public class UserService {
   
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     public User getUserById(Long id) {

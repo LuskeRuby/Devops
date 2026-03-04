@@ -1,0 +1,12 @@
+<div class="task-list-container">
+  @for (taskItem of tasks(); track taskItem.id) {
+    
+    <app-taskcard 
+      [task]="taskItem" 
+      (toggleStatus)="handleTaskToggle($event)">
+    </app-taskcard>
+
+  } @empty {
+    <p>No tasks found for this user. Time to relax!</p>
+  }
+</div>
