@@ -1,9 +1,10 @@
 ---
 name: User Story
-about: 'Define a vertically sliced feature with clear acceptance criteria and priority'
-title: '[Epic Name]: Short Action Description'
-labels: 'MoSCoW: Must/Should/Could'
+about: Define a vertically sliced feature with clear acceptance criteria and priority
+title: "[Epic Name]: Short Action Description"
+labels: ''
 assignees: ''
+
 ---
 
 **Epic:** [Link to parent Epic issue, e.g., #12, or type Epic name]
