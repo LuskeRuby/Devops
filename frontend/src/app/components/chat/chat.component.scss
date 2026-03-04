@@ -1,0 +1,118 @@
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+//
+//message positioning
+//
+.message-wrapper {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-wrapper.mine {
+  align-self: flex-end;
+  text-align: right;
+}
+
+.message-wrapper.other {
+  align-self: flex-start;
+  text-align: left;
+}
+//
+// Date seperator styling with: ────────────── TODAY ──────────────
+//
+.date-separator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+//style date seperator horizontal lines
+.date-separator::before,
+.date-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+//date in the middle of date-seperator
+.date-separator span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+//
+// Styling of actual messages
+//
+
+//time over each message
+.timestamp {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+//msg bubble
+.bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message-wrapper.mine .bubble {
+  background: #0084ff;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-wrapper.other .bubble {
+  background: white;
+  color: black;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+
+//
+//Inputbar to chat
+//
+.chat-input {
+  display: flex;
+  padding: 15px;
+  background: white;
+  border-top: 1px solid #ddd;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.chat-input button {
+  margin-left: 10px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #0084ff;
+  color: white;
+  cursor: pointer;
+}

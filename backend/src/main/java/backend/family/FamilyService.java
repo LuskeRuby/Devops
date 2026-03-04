@@ -1,5 +1,7 @@
 package backend.family;
 
+import backend.common.exception.EmailAlreadyInUseException;
+import backend.common.exception.InvalidCredentialsException;
 import backend.common.security.JwtUtil;
 import backend.common.security.refreshtoken.RefreshToken;
 import backend.common.security.refreshtoken.RefreshTokenService;
@@ -29,11 +31,11 @@ public class FamilyService {
      *
      * @param dto the registration payload containing the family's email and
      *            password
-     * @throws RuntimeException if the email is already registered
+     * @throws EmailAlreadyInUseException if the email is already registered
      */
     public void register(FamilyRequestDto dto) {
         if (familyRepository.existsById(dto.email())) {
-            throw new RuntimeException("Email already in use");
+            throw new EmailAlreadyInUseException(dto.email());
         }
 
         Family family = new Family();
@@ -55,10 +57,10 @@ public class FamilyService {
      */
     public FamilyAuthResponseDto login(FamilyLoginDto dto, HttpServletResponse response) {
         Family family = familyRepository.findById(dto.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(dto.password(), family.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         String accessToken = jwtUtil.generateAccessToken(family.getEmail());

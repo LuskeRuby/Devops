@@ -1,0 +1,12 @@
+<div class="chat-page">
+
+  <div class="chat-header">
+    <h2>Chat</h2>
+    <!-- REMOVE BUTTOSN AFTER Authentication isd  madee -->
+    <button (click)="connectAsUser(1)">Connect as Mark</button>
+    <button (click)="connectAsUser(2)">Connect as Sarah</button>
+  </div>
+
+  <app-chat [selectedUserId]="selectedUserId" />
+
+</div>
