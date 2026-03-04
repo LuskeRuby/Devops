@@ -37,6 +37,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/families/register").permitAll()
                         .anyRequest().authenticated());
+                //Replace with code below for local test without auth
+                //.authorizeHttpRequests(auth -> auth
+                //    .anyRequest().permitAll());
+
         return http.build();
     }
 

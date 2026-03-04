@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 import{SelectMemberPageComponent} from './components/select-member-page/select-member-page.component';
 import{HomePageComponent} from './components/home-page/home-page.component';
+import {MessageComponent} from './components/message-page/message-page.component';
 
 export const routes: Routes = [
   {path:'',redirectTo:'/select-member',pathMatch:'full'},
   {path:'select-member',component:SelectMemberPageComponent},
-  {path:'home',component:HomePageComponent}
+  {path:'home',component:HomePageComponent},
+  {path: 'message', component:MessageComponent}
   ];
