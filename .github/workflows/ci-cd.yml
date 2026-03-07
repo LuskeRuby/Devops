@@ -1,53 +1,60 @@
-name: Kids Planner CI
+name: Kids Planner CI/CD
 
 on:
   push:
-    branches: [ main ]      # Runs when code is pushed to 'main'
+    branches: [main]
   pull_request:
-    branches: [ main ]      # Runs when a Pull Request is created for 'main'
-
-# --- NOTE ON PARALLELISM ---
-# In GitHub Actions, all "jobs" run at the same time (In Parallel) by default.
-# This means 'backend-build' and 'frontend-build' start together on two 
-# different virtual machines to save time.
-# ---------------------------
+    branches: [main]
 
 jobs:
   # JOB 1: Handles Java/Maven (Backend)
   backend-build:
-    runs-on: ubuntu-latest  # Use a fresh Linux virtual machine
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4   # Step 1: Copy code to the virtual machine
-      
-      - name: Set up JDK 25         # Step 2: Install Java 25
+      - uses: actions/checkout@v4
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: 'maven'            # Speeds up future builds
-          
-      - name: Build Backend (Skip Tests) # Step 3: Build without needing a database
-  
+          java-version: "25"
+          distribution: "temurin"
+          cache: "maven"
+      - name: Build Backend (Skip Tests)
         run: chmod +x mvnw && ./mvnw package -DskipTests
         working-directory: ./backend
 
   # JOB 2: Handles Angular/Node.js (Frontend)
   frontend-build:
-    runs-on: ubuntu-latest  # Use another fresh Linux machine
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4   # Step 1: Copy code for this job
-      
-      - name: Set up Node.js         # Step 2: Install Node.js (version 22)
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'              # Speeds up future builds
+          node-version: "22"
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install Dependencies  # Step 3: Clean install of all libraries
+      - name: Install Dependencies
         run: npm ci
         working-directory: ./frontend
-
-      - name: Build Angular App     # Step 4: Just build to check for errors
+      - name: Build Angular App
         run: npm run build --configuration=production
         working-directory: ./frontend
+
+  # JOB 3: Deploy to server (only runs on push to main, and only if both builds pass)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/full-stack-app
+            git fetch origin
+            git reset --hard origin/main
+            docker compose down
+            docker compose up -d --build
