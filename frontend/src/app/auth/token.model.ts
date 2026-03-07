@@ -1,5 +1,6 @@
 export interface FamilyAuthResponseDto {
   accessToken: string;
+  familyEmail: string;
 }
 
 export interface LoginRequest {

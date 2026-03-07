@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../services/user.service';
+import { AuthService } from "../../auth/auth.service";
 
 @Component({
   selector: 'app-select-member-page',
@@ -12,21 +13,28 @@ import { UserService, User } from '../../services/user.service';
 })
 export class SelectMemberPageComponent implements OnInit {
   users: User[] = [];
-  familyEmail = "fam1@gmail.com"; // Replace with actual family email
+  familyEmail: string | null = null;
 
   constructor(
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    this.familyEmail = this.authService.getFamilyEmail();
     this.loadUsers();
   }
 
   loadUsers(): void {
+    if (!this.familyEmail) return;
+
     this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
       next: (users) => {
         this.users = users;
+        if (this.users.length === 0) {
+          this.router.navigate(['/create-member-page']);
+        }
       },
       error: (error) => {
         console.error('Error loading users:', error);
@@ -40,7 +48,6 @@ export class SelectMemberPageComponent implements OnInit {
   }
 
   addMember(): void {
-    console.log('Add member clicked');
     this.router.navigate(['/create-member-page']);
   }
 }

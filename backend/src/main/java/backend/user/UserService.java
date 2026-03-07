@@ -11,7 +11,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-  
+
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -25,6 +25,11 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
+
+    public User createUser(User user) {
+        return userRepository.save(user);
+    }
+
 
     public User addPoints(Long id, int points) {
     

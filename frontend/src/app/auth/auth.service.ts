@@ -29,6 +29,12 @@ export class AuthService {
    */
   public isAuthenticated$ = new BehaviorSubject<boolean>(this._isAuthenticated());
 
+  /**
+  * a way to store the familyEmail and a public observable to use it in other pages
+  */
+  private familyEmailSubject = new BehaviorSubject<string | null>(null);
+  public familyEmail$ = this.familyEmailSubject.asObservable();
+
   constructor(private http: HttpClient, private router: Router) {}
 
   /**
@@ -76,6 +82,7 @@ export class AuthService {
     return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/login`, payload, { withCredentials: true }).pipe(
       switchMap((res) => {
         this.setAccessToken(res.accessToken, remember);
+        this.familyEmailSubject.next(res.familyEmail); // Store family email from response
         return of(res);
       })
     );
@@ -112,6 +119,7 @@ export class AuthService {
    */
   logout() {
     this.setAccessToken(null);
+    this.familyEmailSubject.next(null);
     this.router.navigate(['/login']);
   }
 
@@ -134,5 +142,11 @@ export class AuthService {
   isAuthenticated(): boolean {
     return this._isAuthenticated();
   }
+
+  getFamilyEmail(): string | null {
+    return this.familyEmailSubject.value;
+  }
+
+
 }
 
