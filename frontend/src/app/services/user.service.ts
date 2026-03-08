@@ -7,6 +7,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  totalPoints?: number;
   avatarUrl?: string;
 }
 

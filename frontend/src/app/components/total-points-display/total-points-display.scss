@@ -1,62 +1,7 @@
-.points-card {
-  width: 100%;
-  max-width: 135px;
-  margin-top: 5px;
-}
 
-.top-row {
-  display: flex;
-  justify-content: space-between; // Star left and Gift right side
-  align-items: center;
-  font-size: 0.8rem;
-  font-weight: bold;
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-}
-
-.rewards-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.reward-text {
-  font-size: 0.75rem;
-  color: #555;
-  font-weight: bold;
-}
-
-
-
-.progress-container {
-  background: #e0e0e0;
-  height: 8px;
-  border-radius: 4px;
-  margin-top: 4px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  background: #086e03; 
-  height: 100%;
-  transition: width 0.3s ease-in-out;
-}
-
-
-
-.reward-box {
-  background: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  min-width: 30px;
-  justify-content: center;
-}
-
-.gift-icon {
-  font-size: 0.9rem;
 }
