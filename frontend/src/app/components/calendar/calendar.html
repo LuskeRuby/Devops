@@ -3,6 +3,7 @@
     [viewDate]="viewDate"
     [events]="events"
     [locale]="locale"
-    [weekStartsOn]="weekStartsOn">
+    [weekStartsOn]="weekStartsOn"
+    (hourSegmentClicked)="handleHourClick($event)">
   </mwl-calendar-week-view>
 </div>

@@ -12,6 +12,10 @@ import { format } from 'date-fns';
 
 import { CalendarEvent } from 'angular-calendar';
 
+import { MatDialog } from '@angular/material/dialog';
+import { CalendarEventDialogComponent } from '../calendar-event-dialog/calendar-event-dialog';
+import { MatDialogModule } from '@angular/material/dialog';
+
 
 registerLocaleData(localeDa);
 
@@ -30,7 +34,8 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   standalone: true,
   imports: [
     CalendarModule,
-    CommonModule
+    CommonModule,
+    MatDialogModule
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
@@ -42,6 +47,8 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
 
 // to display a calendar with Danish locale and 24-hour time format
 export class CalendarComponent {
+  constructor(private dialog: MatDialog) {}
+
   viewDate: Date = new Date();
   locale = 'da-DK';
   weekStartsOn = 1;
@@ -56,4 +63,26 @@ export class CalendarComponent {
       }
     }
   ];
+
+  handleHourClick({ date }: { date: Date }): void {
+    const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
+      width: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      const newEvent: CalendarEvent = {
+        start: date,
+        end: new Date(date.getTime() + 60 * 60 * 1000),
+        title: result,
+        color: {
+          primary: '#4285f4',
+          secondary: '#D1E8FF'
+        }
+      };
+
+      this.events = [...this.events, newEvent];
+    });
+  }
 }
