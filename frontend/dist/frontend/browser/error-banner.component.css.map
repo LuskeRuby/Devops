@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/error-banner/error-banner.component.ts"],
+  "sourcesContent": ["\n    .error-banner {\n      display: flex;\n      align-items: center;\n      gap: 0.5rem;\n      background: #fdf3f2;\n      color: #c0392b;\n      border: 1px solid #f0c0bc;\n      border-radius: 8px;\n      padding: 0.65rem 0.875rem;\n      font-size: 0.875rem;\n      margin-bottom: 1.25rem;\n    }\n  "],
+  "mappings": ";AACI,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;AACA,cAAA;AACA,SAAA;AACA,UAAA,IAAA,MAAA;AACA,iBAAA;AACA,WAAA,QAAA;AACA,aAAA;AACA,iBAAA;;",
+  "names": []
+}

@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  height: 100%;
+  background: white;
+}
+
+/* Main calendar container */
+::ng-deep .cal-week-view {
+  background: white;
+  color: black;
+}
+
+/* Grid borders */
+::ng-deep .cal-hour-segment,
+::ng-deep .cal-day-headers,
+::ng-deep .cal-day-column {
+  border-color: #e0e0e0 !important;
+}
+
+/* Header background */
+::ng-deep .cal-day-headers {
+  background: #f5f5f5;
+}
+
+/* Time column */
+::ng-deep .cal-time-label-column {
+  background: #fafafa;
+  color: #555;
+}
+
+/* Events */
+::ng-deep .cal-event {
+  background-color: #4285f4 !important;
+  border-color: #4285f4 !important;
+  color: white !important;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.calendar-wrapper {
+  height: 100vh;
+}

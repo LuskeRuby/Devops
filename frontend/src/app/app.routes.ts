@@ -6,13 +6,15 @@ import{LoginComponent} from './components/auth/login/login.component';
 import{RegisterComponent} from './components/auth/register/register.component';
 import{AuthGuard} from './auth/auth.guard';
 import {MessageComponent} from './components/message-page/message-page.component';
+import { CalendarComponent } from './components/calendar/calendar';
 
 export const routes: Routes = [
-  {path:'',redirectTo:'/login',pathMatch:'full'},
-  {path:'select-member',component:SelectMemberPageComponent, canActivate: [AuthGuard]},
-  {path:'create-member-page',component:CreateMemberPageComponent, canActivate: [AuthGuard]},
-  {path:'home',component:HomePageComponent, canActivate: [AuthGuard]},
-  {path:'login', component: LoginComponent},
-  {path:'register', component: RegisterComponent},
-  {path: 'message', component:MessageComponent, canActivate: [AuthGuard]}
-  ];
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: 'select-member', component: SelectMemberPageComponent, canActivate: [AuthGuard] },
+  { path: 'create-member-page', component: CreateMemberPageComponent, canActivate: [AuthGuard] },
+  { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
+  { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'message', component: MessageComponent, canActivate: [AuthGuard] }
+];

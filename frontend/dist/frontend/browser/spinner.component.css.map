@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/spinner/spinner.component.ts"],
+  "sourcesContent": [".spinner { animation: spin 0.75s linear infinite; display: block; }@keyframes spin { to { transform: rotate(360deg); } }"],
+  "mappings": ";AAAA,CAAA;AAAW,aAAA,KAAA,MAAA,OAAA;AAAuC,WAAA;;AAAiB,WAAxD;AAA0E;AAAK,eAAA,OAAA;;;",
+  "names": []
+}
