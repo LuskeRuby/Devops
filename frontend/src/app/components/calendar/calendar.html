@@ -5,5 +5,6 @@
     [locale]="locale"
     [weekStartsOn]="weekStartsOn"
     (hourSegmentClicked)="handleHourClick($event)">
+    (eventClicked)="handleEventClick($event.event)">
   </mwl-calendar-week-view>
 </div>

@@ -38,7 +38,11 @@ export class CalendarEventDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
+  ) {
+    if (data?.title) {
+      this.title = data.title;
+    }
+  }
 
   close() {
     this.dialogRef.close();

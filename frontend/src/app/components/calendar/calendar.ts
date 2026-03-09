@@ -85,4 +85,20 @@ export class CalendarComponent {
       this.events = [...this.events, newEvent];
     });
   }
+
+  handleEventClick(event: CalendarEvent): void {
+    const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
+      width: '400px',
+      data: { title: event.title }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      event.title = result;
+
+      // Trigger change detection
+      this.events = [...this.events];
+    });
+  }
 }
