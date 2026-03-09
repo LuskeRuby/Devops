@@ -67,8 +67,9 @@ public class FamilyService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(family);
         setRefreshTokenCookie(response, refreshToken.getToken());
 
-        return new FamilyAuthResponseDto(accessToken);
+        return new FamilyAuthResponseDto(accessToken, family.getEmail());
     }
+
 
     /**
      * Issues a new access token using a valid refresh token.
@@ -86,7 +87,7 @@ public class FamilyService {
         RefreshToken rotated = refreshTokenService.rotateRefreshToken(refreshToken);
         String accessToken = jwtUtil.generateAccessToken(rotated.getFamily().getEmail());
         setRefreshTokenCookie(response, rotated.getToken());
-        return new FamilyAuthResponseDto(accessToken);
+        return new FamilyAuthResponseDto(accessToken, rotated.getFamily().getEmail());
     }
 
     /**
