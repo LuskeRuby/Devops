@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global CSS Reset */
 * {
   margin: 0;
   padding: 0;
@@ -6,16 +6,13 @@
 }
 
 html, body {
-  height: 100%;
-  width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #1a1a1a;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
-app-root {
-  display: block;
-  height: 100%;
-  width: 100%;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+

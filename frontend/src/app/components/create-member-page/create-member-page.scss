@@ -3,16 +3,25 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 20px;
 }
 
 .create-member-form {
   background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
+
+  h2 {
+    font-size: 1.75rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+  }
 }
 
 .form-group {
@@ -20,71 +29,88 @@
 
   label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 500;
-    color: #333;
+    color: #444;
+    font-size: 0.95rem;
   }
 
   input,
   select {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 0.875rem 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     font-size: 1rem;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+
+    &::placeholder {
+      color: #999;
+    }
 
     &:focus {
       outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+      border-color: #6366f1;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
   }
 }
+
 .pin-error {
-    display: block;
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-  }
+  display: block;
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
 
 .form-error {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
-  padding: 0.75rem;
-  border-radius: 4px;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
   margin-bottom: 1.5rem;
+  font-size: 0.95rem;
 }
 
 .button-group {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 
   button {
     flex: 1;
-    padding: 0.75rem;
+    padding: 0.875rem 1.5rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
+    transition: all 0.3s ease;
 
     &.submit {
-      background-color: #007bff;
+      background-color: #6366f1;
       color: white;
 
       &:hover {
-        background-color: #0056b3;
+        background-color: #4f46e5;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: translateY(0);
       }
     }
 
     &.cancel {
-      background-color: #6c757d;
-      color: white;
+      background-color: #e5e7eb;
+      color: #374151;
 
       &:hover {
-        background-color: #545b62;
+        background-color: #d1d5db;
       }
     }
   }
