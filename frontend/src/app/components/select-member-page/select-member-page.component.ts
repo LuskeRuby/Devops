@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../services/user.service';
@@ -12,7 +12,7 @@ import { AuthService } from "../../auth/auth.service";
   styleUrls: ['./select-member-page.component.scss']
 })
 export class SelectMemberPageComponent implements OnInit {
-  users: User[] = [];
+  users = signal([] as User[]);
   familyEmail: string | null = null;
 
   constructor(
@@ -31,8 +31,8 @@ export class SelectMemberPageComponent implements OnInit {
 
     this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
       next: (users) => {
-        this.users = users;
-        if (this.users.length === 0) {
+        this.users.set(users);
+        if (this.users().length === 0) {
           this.router.navigate(['/create-member-page']);
         }
       },
