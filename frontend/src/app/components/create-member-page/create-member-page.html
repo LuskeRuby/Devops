@@ -1,48 +1,51 @@
 <div class="create-member-container">
   <form class="create-member-form" (ngSubmit)="onSubmit()">
-    <h2>Create New Member</h2>
+    <h2>Opret nyt medlem</h2>
 
     <div class="form-error" *ngIf="showError">
-      Please enter a name and a valid 4-digit PIN code
+      <span *ngIf="!name.trim()">Indtast venligst et navn</span>
+      <span *ngIf="name.trim() && pinCode.length !== 4">PIN-koden skal være præcis 4 cifre</span>
     </div>
 
     <div class="form-group">
-      <label for="name">Name</label>
+      <label for="name">Navn</label>
       <input
         type="text"
         id="name"
         [(ngModel)]="name"
         name="name"
-        placeholder="Enter member name"
+        placeholder="Indtast medlems navn"
         required
       />
     </div>
 
     <div class="form-group">
-      <label for="pinCode">PIN Code (4 digits)</label>
+      <label for="pinCode">PIN-kode (4 cifre)</label>
       <input
         type="text"
         id="pinCode"
+        inputmode="numeric"
+        pattern="[0-9]*"
         [value]="pinCode"
         (input)="onPinCodeInput($event)"
         name="pinCode"
-        placeholder="Enter 4-digit PIN code"
+        placeholder="Indtast 4-cifret PIN-kode"
         maxlength="4"
         required
       />
     </div>
 
     <div class="form-group">
-      <label for="role">Role</label>
+      <label for="role">Rolle</label>
       <select id="role" [(ngModel)]="role" name="role" required>
-        <option value="parent">Parent</option>
-        <option value="child">Child</option>
+        <option value="parent">Forælder</option>
+        <option value="child">Barn</option>
       </select>
     </div>
 
     <div class="button-group">
-      <button type="submit" class="submit">Create Member</button>
-      <button type="button" class="cancel" (click)="onCancel()">Cancel</button>
+      <button type="submit" class="submit">Opret medlem</button>
+      <button type="button" class="cancel" (click)="onCancel(); $event.preventDefault()">Annuller</button>
     </div>
   </form>
 </div>
