@@ -50,6 +50,7 @@ export class CreateMemberPageComponent implements OnInit {
 
     const newUser = {
       name: this.name,
+      email: this.familyEmail,
       pincode: this.pinCode,
       role: this.role,
       totalPoints: 0,
@@ -58,7 +59,7 @@ export class CreateMemberPageComponent implements OnInit {
       }
     };
 
-    this.http.post('/api/users', newUser).subscribe({
+    this.http.post('http://localhost:8080/api/users', newUser).subscribe({
       next: () => {
         this.router.navigate(['/select-member']);
       },
