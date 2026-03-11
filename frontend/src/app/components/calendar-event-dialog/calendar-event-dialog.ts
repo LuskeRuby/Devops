@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-calendar-event-dialog',
@@ -27,8 +28,16 @@ import { MatInputModule } from '@angular/material/input';
     </div>
 
     <div mat-dialog-actions align="end">
-      <button mat-button (click)="close()">Annuller</button>
-      <button mat-raised-button color="primary" (click)="save()">Gem</button>
+
+      <button mat-button (click)="goToTaskPage()">
+        Advanced edit
+      </button>
+
+      <div>
+        <button mat-button (click)="close()">Annuller</button>
+        <button mat-raised-button color="primary" (click)="save()">Gem</button>
+      </div>
+
     </div>
   `
 })
@@ -37,7 +46,8 @@ export class CalendarEventDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private router: Router
   ) {
     if (data?.title) {
       this.title = data.title;
@@ -51,4 +61,18 @@ export class CalendarEventDialogComponent {
   save() {
     this.dialogRef.close(this.title);
   }
+
+  goToTaskPage() {
+
+    // luk dialog
+    this.dialogRef.close();
+
+    // send titel til task form
+    this.router.navigate(['/task'], {
+      queryParams: {
+        title: this.title
+      }
+    });
+  }
+
 }

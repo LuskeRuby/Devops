@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TaskService, Task } from '../../services/task';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, User } from '../../services/user.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-task-page',
@@ -24,7 +25,8 @@ export class TaskPageComponent implements OnInit {
   constructor(
     private taskService: TaskService,
     private userService: UserService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private route: ActivatedRoute
   ) {
     this.taskForm = this.fb.group({
       name: ['', Validators.required],
@@ -36,7 +38,16 @@ export class TaskPageComponent implements OnInit {
 
   ngOnInit(): void {
     console.log("TaskPage initialized");
+
     this.loadUsers();
+
+    const title = this.route.snapshot.queryParamMap.get('title');
+
+    if (title) {
+      this.taskForm.patchValue({
+        name: title
+      });
+    }
   }
 
   loadUsers(): void {

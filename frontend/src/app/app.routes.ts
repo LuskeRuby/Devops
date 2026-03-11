@@ -1,12 +1,13 @@
 import { Routes } from '@angular/router';
-import{SelectMemberPageComponent} from './components/select-member-page/select-member-page.component';
-import{HomePageComponent} from './components/home-page/home-page.component';
-import{CreateMemberPageComponent} from './components/create-member-page/create-member-page';
-import{LoginComponent} from './components/auth/login/login.component';
-import{RegisterComponent} from './components/auth/register/register.component';
-import{AuthGuard} from './auth/auth.guard';
-import {MessageComponent} from './components/message-page/message-page.component';
+import { SelectMemberPageComponent } from './components/select-member-page/select-member-page.component';
+import { HomePageComponent } from './components/home-page/home-page.component';
+import { CreateMemberPageComponent } from './components/create-member-page/create-member-page';
+import { LoginComponent } from './components/auth/login/login.component';
+import { RegisterComponent } from './components/auth/register/register.component';
+import { AuthGuard } from './auth/auth.guard';
+import { MessageComponent } from './components/message-page/message-page.component';
 import { CalendarComponent } from './components/calendar/calendar';
+import { TaskPageComponent } from './components/task-page/task-page';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'create-member-page', component: CreateMemberPageComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
   { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
+  { path: 'task', component: TaskPageComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'message', component: MessageComponent, canActivate: [AuthGuard] }
