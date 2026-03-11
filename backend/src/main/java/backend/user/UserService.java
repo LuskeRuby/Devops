@@ -43,4 +43,12 @@ public class UserService {
     public List<User> getUsersByFamilyEmail(String familyEmail) {
         return userRepository.findByFamilyEmail(familyEmail);
     }
+
+    public boolean validatePin(Long id, String pin) {
+        User user = getUserById(id);
+        if (user.getPincode() == null) {
+            return false;
+        }
+        return user.getPincode().equals(pin);
+    }
 }

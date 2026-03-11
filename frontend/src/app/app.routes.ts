@@ -9,10 +9,12 @@ import { MessageComponent } from './components/message-page/message-page.compone
 import { TotalPointsDisplayComponent } from './components/total-points-display/total-points-display';
 import { PointsProgressComponent } from './components/points-progress/points-progress.component';
 import { RewardsDisplayComponent } from './components/rewards-display/rewards-display.component';
+import { MemberPinPageComponent } from './components/member-pin-page/member-pin-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'select-member', component: SelectMemberPageComponent, canActivate: [AuthGuard] },
+  { path: 'member-pin', component: MemberPinPageComponent, canActivate: [AuthGuard] },
   { path: 'create-member-page', component: CreateMemberPageComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
