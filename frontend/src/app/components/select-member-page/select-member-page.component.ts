@@ -44,7 +44,7 @@ export class SelectMemberPageComponent implements OnInit {
 
   selectUser(user: User): void {
     console.log('Selected user:', user);
-    this.router.navigate(['/home']);
+    this.router.navigate(['/member-pin'], { state: { user } });
   }
 
   addMember(): void {

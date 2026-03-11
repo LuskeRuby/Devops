@@ -1,0 +1,30 @@
+<div class="pin-page-container">
+  <div class="pin-content">
+    
+    <h1 class="member-name">{{ user?.name || 'Member' }}</h1>
+
+    <!-- Picture Placeholder -->
+    <div class="picture-placeholder">
+       <span>Vælg et billede</span>
+    </div>
+
+    <p class="instruction-text">Indtast din pinkode for at få adgang</p>
+    <p class="error-text" *ngIf="errorMessage" style="color: red; margin-bottom: 1rem;">{{ errorMessage }}</p>
+
+    <div class="pin-inputs">
+      <input 
+        *ngFor="let digit of pin; let i = index; trackBy: trackByFn"
+        #pinInput
+        type="password"
+        maxlength="1"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        [(ngModel)]="pin[i]"
+        (input)="onPinInput(i, $event)"
+        (keydown)="onKeyDown(i, $event)"
+        class="pin-box"
+      >
+    </div>
+
+  </div>
+</div>

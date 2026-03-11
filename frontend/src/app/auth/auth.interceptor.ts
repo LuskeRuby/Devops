@@ -13,11 +13,10 @@ import { AuthService } from './auth.service';
 export class AuthInterceptor implements HttpInterceptor {
   private refreshing = false;
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Skip adding auth header for login/register/refresh endpoints
-    if (req.url.endsWith('/login') || req.url.endsWith('/register') || req.url.endsWith('/refresh')) {
+    if (req.url.endsWith('/login') || req.url.endsWith('/register') || req.url.endsWith('/refresh') || req.url.endsWith('/validate-pin')) {
       return next.handle(req);
     }
 

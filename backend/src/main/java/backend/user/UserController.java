@@ -76,4 +76,13 @@ public class UserController {
         return ResponseEntity.ok(createdUser);
     }
 
+    @PostMapping("/{id}/validate-pin")
+    public ResponseEntity<Boolean> validatePin(@PathVariable Long id, @RequestBody PinValidationRequest request) {
+        boolean isValid = userService.validatePin(id, request.pin());
+        if (isValid) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.status(401).body(false);
+        }
+    }
 }

@@ -36,4 +36,8 @@ export class UserService {
   getTasksByUserId(id: number): Observable<TaskDTO[]> {    
     return this.http.get<TaskDTO[]>(`${this.apiUrl}/${id}/tasks`);
   }
+
+  validatePin(id: number, pin: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.apiUrl}/${id}/validate-pin`, { pin });
+  }
 }
