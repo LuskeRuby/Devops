@@ -68,5 +68,12 @@ public class UserController {
                                     .map(TaskController::convertToDto)
                                     .toList();
         return ResponseEntity.ok(taskDTOs);
-    }  
+    }
+
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        User createdUser = userService.createUser(user);
+        return ResponseEntity.ok(createdUser);
+    }
+
 }

@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { TotalPointsDisplayComponent } from './components/total-points-display/total-points-display';
+import { PointsProgressComponent } from './components/points-progress/points-progress.component';
+import { RewardsDisplayComponent } from './components/rewards-display/rewards-display.component';
 import { SelectMemberPageComponent } from './components/select-member-page/select-member-page.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
 import { CreateMemberPageComponent } from './components/create-member-page/create-member-page';
@@ -14,9 +17,11 @@ export const routes: Routes = [
   { path: 'select-member', component: SelectMemberPageComponent, canActivate: [AuthGuard] },
   { path: 'create-member-page', component: CreateMemberPageComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
-  { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
-  { path: 'task', component: TaskPageComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'message', component: MessageComponent, canActivate: [AuthGuard] }
+  { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
+  { path: 'message', component: MessageComponent, canActivate: [AuthGuard] },
+  { path: 'test-total-points', component: TotalPointsDisplayComponent },
+  { path: 'test-points-progress', component: PointsProgressComponent },
+  { path: 'test-rewards-display', component: RewardsDisplayComponent }
 ];
