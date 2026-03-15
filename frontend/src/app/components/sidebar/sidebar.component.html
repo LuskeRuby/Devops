@@ -1,0 +1,51 @@
+<nav class="sidebar">
+
+  <div class="current-user">
+    <div class="avatar"></div>
+    <span class="current-user-name">{{ currentUser.name }}</span>
+  </div>
+
+  <div class="nav-section">
+    <a class="nav-item" routerLink="/home" routerLinkActive="active">
+      <i class="ph ph-house"></i>
+      <span class="nav-label">Oversigt</span>
+    </a>
+    <a class="nav-item" routerLink="/message" routerLinkActive="active">
+      <i class="ph ph-chat-circle"></i>
+      <span class="nav-label">Familie Chat</span>
+    </a>
+    <a class="nav-item" routerLink="/settings" routerLinkActive="active">
+      <i class="ph ph-gear"></i>
+      <span class="nav-label">Indstillinger</span>
+    </a>
+  </div>
+
+  <div class="familie-section">
+    <div class="section-header">Familie</div>
+
+    <div class="member-list">
+      <div
+        class="member-item"
+        *ngFor="let member of familyMembers"
+        [class.me]="member.id === currentUser.id">
+        <div class="avatar"></div>
+        <span class="member-name">{{ member.name }}</span>
+      </div>
+
+      <button
+        *ngIf="isParent"
+        class="add-member-btn"
+        (click)="onAddMember()">
+        <span class="add-member-label">+ Tilføj medlem</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="bottom-section">
+    <a class="nav-item" routerLink="/login" routerLinkActive="active">
+      <i class="ph ph-sign-out"></i>
+      <span class="nav-label">Log ud</span>
+    </a>
+  </div>
+
+</nav>
