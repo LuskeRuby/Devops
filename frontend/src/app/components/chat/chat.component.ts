@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../../services/websocket/web-socket.service';
 import { MessageService, MessageResponse } from '../../services/message/message.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-chat',
@@ -11,11 +12,15 @@ import { MessageService, MessageResponse } from '../../services/message/message.
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
-
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
-  @Input() selectedUserId: number | null = null;
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+
+  private userService = inject(UserService);
+
+  get selectedUserId(): number | null {
+    return this.userService.currentUser()?.id ?? null;
+  }
 
   messageText = '';
   messages: MessageResponse[] = [];
@@ -29,22 +34,22 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   ) {}
 
   ngOnInit() {
-    this.messageService.getMessages().subscribe(data => {
+    const familyEmail = this.userService.currentUser()?.email;
+    if (!familyEmail) return;
+
+    this.messageService.getMessages(familyEmail).subscribe(data => {
       this.messages = data;
       this.shouldScroll = true;
       this.cd.detectChanges();
+      setTimeout(() => this.scrollToBottom(), 0);
     });
 
-    this.ws.connect(
-
-      //callbackfunction 1: runs when a message arrives
-      (msg: any) => {
+    this.ws.connect(familyEmail, (msg) => {
         this.messages = [...this.messages, msg];
         this.shouldScroll = true;
         this.cd.detectChanges();
+        setTimeout(() => this.scrollToBottom(), 0);
       },
-
-      //callback 2: runs when socket is ready
       () => {
         this.isConnected = true;
         this.cd.detectChanges();
@@ -64,8 +69,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   send() {
-    if (this.messageText.trim() && this.isConnected) {
-      this.ws.send(this.selectedUserId!, this.messageText);
+    const familyEmail = this.userService.currentUser()?.email;
+    if (this.messageText.trim() && this.isConnected && familyEmail) {
+      this.ws.send(this.selectedUserId!, this.messageText, familyEmail);
       this.messageText = '';
     }
   }
@@ -77,8 +83,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     } catch {}
   }
 
-
-  //Timestamp logic
   isDifferentDay(a: string, b: string): boolean {
     return new Date(a).toDateString() !== new Date(b).toDateString();
   }
@@ -96,5 +100,4 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       weekday: 'short', day: 'numeric', month: 'short'
     });
   }
-
 }

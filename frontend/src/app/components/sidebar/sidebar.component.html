@@ -32,10 +32,7 @@
         <span class="member-name">{{ member.name }}</span>
       </div>
 
-      <button
-        *ngIf="isParent"
-        class="add-member-btn"
-        (click)="onAddMember()">
+      <button *ngIf="isParent" class="add-member-btn" routerLink="/create-member-page">
         <span class="add-member-label">+ Tilføj medlem</span>
       </button>
     </div>

@@ -13,8 +13,6 @@ import { AuthService } from '../../auth/auth.service';
 })
 export class SidebarComponent implements OnInit {
 
-  @Output() addMember = new EventEmitter<void>();
-
   private userService = inject(UserService);
   private authService = inject(AuthService);
 
@@ -33,10 +31,6 @@ export class SidebarComponent implements OnInit {
       next: (members) => this.familyMembers.set(members),
       error: (err) => console.error('Failed to load family members:', err),
     });
-  }
-
-  onAddMember(): void {
-    this.addMember.emit();
   }
 
   onLogout(): void {
