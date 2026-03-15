@@ -66,8 +66,8 @@ export class MemberPinPageComponent implements OnInit {
 
     this.userService.validatePin(userId, pinString).subscribe({
       next: (isValid: boolean) => {
-        if (isValid) {
-          console.log('PIN correct! Navigating to home.');
+        if (isValid && this.user) {
+          this.userService.setCurrentUser(this.user!);
           this.router.navigate(['/home']);
         }
       },

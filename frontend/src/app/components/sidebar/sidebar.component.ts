@@ -1,7 +1,8 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { User } from '../../services/user.service';
+import { UserService, User } from '../../services/user.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -10,27 +11,35 @@ import { User } from '../../services/user.service';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
 
   @Output() addMember = new EventEmitter<void>();
 
-  //MANGLER AUTHENTICATION...
-  currentUser: User = { id: 1, name: 'user1', email: '', avatarUrl: '' };
-  role: 'parent' | 'child' = 'parent'; // TODO: Replace with currentUser.role
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
 
-  //MANGLER AUTHENTICATION...
-  familyMembers: User[] = [
-    { id: 1, name: 'user1', email: '', avatarUrl: '' },
-    { id: 2, name: 'user2', email: '', avatarUrl: '' },
-    { id: 3, name: 'user3', email: '', avatarUrl: '' },
-    { id: 4, name: 'user4', email: '', avatarUrl: '' },
-  ];
+  currentUser = this.userService.currentUser;
+  familyMembers = signal<User[]>([]);
 
   get isParent(): boolean {
-    return this.role === 'parent';
+    return this.currentUser()?.role === 'parent';
+  }
+
+  ngOnInit(): void {
+    const familyEmail = this.userService.currentUser()?.email;
+    if (!familyEmail) return;
+
+    this.userService.getUsersByFamilyEmail(familyEmail).subscribe({
+      next: (members) => this.familyMembers.set(members),
+      error: (err) => console.error('Failed to load family members:', err),
+    });
   }
 
   onAddMember(): void {
     this.addMember.emit();
+  }
+
+  onLogout(): void {
+    this.userService.logoutUser();
   }
 }

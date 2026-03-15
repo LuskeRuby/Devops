@@ -2,7 +2,7 @@
 
   <div class="current-user">
     <div class="avatar"></div>
-    <span class="current-user-name">{{ currentUser.name }}</span>
+    <span class="current-user-name">{{ currentUser()?.name }}</span>
   </div>
 
   <div class="nav-section">
@@ -26,8 +26,8 @@
     <div class="member-list">
       <div
         class="member-item"
-        *ngFor="let member of familyMembers"
-        [class.me]="member.id === currentUser.id">
+        *ngFor="let member of familyMembers()"
+        [class.me]="member.id === currentUser()?.id">
         <div class="avatar"></div>
         <span class="member-name">{{ member.name }}</span>
       </div>
@@ -42,7 +42,7 @@
   </div>
 
   <div class="bottom-section">
-    <a class="nav-item" routerLink="/login" routerLinkActive="active">
+    <a class="nav-item" (click)="onLogout()" style="cursor:pointer">
       <i class="ph ph-sign-out"></i>
       <span class="nav-label">Log ud</span>
     </a>
