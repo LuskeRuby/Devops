@@ -34,10 +34,9 @@ public class MessageService {
         return new MessageResponseDto(saved);
     }
 
-    public List<MessageResponseDto> getAllMessages() {
-
+    public List<MessageResponseDto> getAllMessages(String familyEmail) {
         return messageRepository
-                .findAllByOrderByTimestampAsc()
+                .findAllByUser_Family_EmailOrderByTimestampAsc(familyEmail)
                 .stream()
                 .map(MessageResponseDto::new)
                 .collect(Collectors.toList());
