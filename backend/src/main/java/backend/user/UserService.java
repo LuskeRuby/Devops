@@ -1,9 +1,7 @@
 package backend.user;
 
 import org.springframework.stereotype.Service;
-
 import backend.task.Task;
-
 import java.util.List;
 
 @Service
@@ -11,41 +9,51 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    private UserResponseDto toDto(User user) {
+        return new UserResponseDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole(),
+                user.getTotalPoints()
+        );
     }
 
-    public User getUserById(Long id) {
-   
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    public UserResponseDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        return toDto(user);
+    }
+
+    public User getUserEntityById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserResponseDto createUser(User user) {
+        return toDto(userRepository.save(user));
     }
 
-
-    public User addPoints(Long id, int points) {
-    
-        User user = getUserById(id);
-        
+    public UserResponseDto addPoints(Long id, int points) {
+        User user = getUserEntityById(id);
         user.setTotalPoints(user.getTotalPoints() + points);
-        
-        return userRepository.save(user);
+        return toDto(userRepository.save(user));
     }
-    
-    public List<User> getUsersByFamilyEmail(String familyEmail) {
-        return userRepository.findByFamilyEmail(familyEmail);
+
+    public List<UserResponseDto> getUsersByFamilyEmail(String familyEmail) {
+        return userRepository.findByFamilyEmail(familyEmail).stream().map(this::toDto).toList();
     }
 
     public boolean validatePin(Long id, String pin) {
-        User user = getUserById(id);
+        User user = getUserEntityById(id);
         if (user.getPincode() == null) {
             return false;
         }

@@ -23,7 +23,7 @@ public class MessageService {
 
     public MessageResponseDto saveMessage(MessageRequestDto dto) {
 
-        User user = userService.getUserById(dto.getUserId());
+        User user = userService.getUserEntityById(dto.getUserId());
 
         Message message = new Message();
         message.setUser(user);
