@@ -19,15 +19,14 @@ export class WebSocketService {
 
   //onMessage: called when message arrives
   //onConnected: called whern the socket handshake complete
-  connect(onMessage: (msg: any) => void, onConnected: () => void) {
+  connect(familyEmail: string, onMessage: (msg: any) => void, onConnected: () => void) {
     this.client.onConnect = () => {
       console.log('Connected to backend');
       this.connected = true;
       onConnected();
 
-      this.client.subscribe('/topic/messages', message => {
+      this.client.subscribe(`/topic/messages/${familyEmail}`, message => {
         const body = JSON.parse(message.body);
-        console.log('Received:', body);
         onMessage(body);
       });
     };
@@ -35,12 +34,12 @@ export class WebSocketService {
     this.client.activate();
   }
 
-  send(userId: number, content: string) {
+  send(userId: number, content: string, familyEmail: string) {
     if (!this.connected) return;
 
     this.client.publish({
       destination: '/app/chat',
-      body: JSON.stringify({ userId, content })
+      body: JSON.stringify({ userId, content, familyEmail })
     });
   }
 

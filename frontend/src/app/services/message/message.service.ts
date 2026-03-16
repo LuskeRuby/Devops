@@ -19,7 +19,7 @@ export class MessageService {
 
   constructor(private http: HttpClient) {}
 
-  getMessages(): Observable<MessageResponse[]> {
-    return this.http.get<MessageResponse[]>(this.apiUrl);
+  getMessages(familyEmail: string): Observable<MessageResponse[]> {
+    return this.http.get<MessageResponse[]>(`${this.apiUrl}?familyEmail=${familyEmail}`);
   }
 }
