@@ -11,6 +11,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { MessageComponent } from './components/message-page/message-page.component';
 import { CalendarComponent } from './components/calendar/calendar';
 import { TaskPageComponent } from './components/task-page/task-page';
+import { DashboardPage } from './components/dashboard-page/dashboard-page';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -23,5 +24,6 @@ export const routes: Routes = [
   { path: 'message', component: MessageComponent, canActivate: [AuthGuard] },
   { path: 'test-total-points', component: TotalPointsDisplayComponent },
   { path: 'test-points-progress', component: PointsProgressComponent },
-  { path: 'test-rewards-display', component: RewardsDisplayComponent }
+  { path: 'test-rewards-display', component: RewardsDisplayComponent },
+  { path: 'dashboard', component: DashboardPage }
 ];

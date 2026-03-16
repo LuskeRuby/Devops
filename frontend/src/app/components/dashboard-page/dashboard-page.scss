@@ -1,0 +1,39 @@
+.dashboard-container {
+  padding: 30px;
+}
+
+.calendar-section {
+  width: 900px;
+  margin: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.calendar-controls button {
+  padding: 6px 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.today-btn {
+  font-weight: bold;
+}
+
+.calendar-title {
+  font-size: 22px;
+  font-weight: 600;
+}

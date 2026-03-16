@@ -1,5 +1,7 @@
 import localeDa from '@angular/common/locales/da';
 import { Component, LOCALE_ID } from '@angular/core';
+import { Input } from '@angular/core';
+
 import {
   CalendarDateFormatter,
   CalendarModule,
@@ -49,7 +51,7 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
 export class CalendarComponent {
   constructor(private dialog: MatDialog) {}
 
-  viewDate: Date = new Date();
+  @Input() viewDate: Date = new Date();
   locale = 'da-DK';
   weekStartsOn = 1;
 
