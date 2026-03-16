@@ -1,4 +1,12 @@
+<div class="view-toggle">
+  <label>
+    <input type="checkbox" [(ngModel)]="isDayView">
+    Day view
+  </label>
+</div>
+
 <mwl-calendar-week-view
+  *ngIf="!isDayView"
   [viewDate]="viewDate"
   [events]="events"
   [locale]="locale"
@@ -6,3 +14,12 @@
   (hourSegmentClicked)="handleHourClick($event)"
   (eventClicked)="handleEventClick($event.event)">
 </mwl-calendar-week-view>
+
+<mwl-calendar-day-view
+  *ngIf="isDayView"
+  [viewDate]="viewDate"
+  [events]="events"
+  [locale]="locale"
+  (hourSegmentClicked)="handleHourClick($event)"
+  (eventClicked)="handleEventClick($event.event)">
+</mwl-calendar-day-view>

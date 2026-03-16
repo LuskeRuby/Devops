@@ -1,6 +1,7 @@
 import localeDa from '@angular/common/locales/da';
 import { Component, LOCALE_ID } from '@angular/core';
 import { Input } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import {
   CalendarDateFormatter,
@@ -8,6 +9,8 @@ import {
   DateAdapter,
   DateFormatterParams
 } from 'angular-calendar';
+
+
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { format } from 'date-fns';
@@ -37,7 +40,8 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   imports: [
     CalendarModule,
     CommonModule,
-    MatDialogModule
+    MatDialogModule,
+    FormsModule // for 1/7 day view
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
@@ -54,6 +58,8 @@ export class CalendarComponent {
   @Input() viewDate: Date = new Date();
   locale = 'da-DK';
   weekStartsOn = 1;
+
+  isDayView = false;
 
   events: CalendarEvent[] = [
     {
