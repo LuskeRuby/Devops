@@ -81,6 +81,45 @@ h1 {
   color: white;
 }
 
+.rewards-card {
+  width: 100%;
+  max-width: 135px;
+  margin-top: 0.5rem;
+}
+
+.rewards-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0;
+  gap: 0.5rem;
+}
+
+.reward-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: bold;
+}
+
+.reward-box {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  min-width: 35px;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.gift-icon {
+  font-size: 0.85rem;
+}
+
+
 .add-avatar {
   display: flex;
   align-items: center;

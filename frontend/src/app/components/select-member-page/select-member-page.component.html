@@ -7,13 +7,23 @@
           <img [src]="user.avatarUrl || 'assets/default-avatar.png'" [alt]="user.name">
         </div>
         <span class="user-name">{{user.name}}</span>
+        <div class="rewards-card">
+          <div class="rewards-row">
+            <span class="reward-text">Belønninger <span class="gift-icon">🎁</span></span>
+            <div class="reward-box">
+              <span>{{ calculateRewards(user.totalPoints || 0) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     }
-    <div class="user-card add-member-card" (click)="addMember()">
-      <div class="avatar add-avatar">
-        <span class="plus-icon">+</span>
+    @if (users().length === 0) {
+      <div class="user-card add-member-card" (click)="addMember()">
+        <div class="avatar add-avatar">
+          <span class="plus-icon">+</span>
+        </div>
+        <span class="user-name">Add Member</span>
       </div>
-      <span class="user-name">Add Member</span>
-    </div>
+    }
   </div>
 </div>
