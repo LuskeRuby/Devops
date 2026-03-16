@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-create-member-page',
@@ -18,18 +19,34 @@ export class CreateMemberPageComponent implements OnInit {
   role = 'child';
   familyEmail: string | null = null;
   showError = false;
+  isFirstUser = false;
 
   constructor(
     private router: Router,
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.familyEmail = this.authService.getFamilyEmail();
     if (!this.familyEmail) {
       this.router.navigate(['/login']);
+      return;
     }
+
+    // Check if this is the first user in the family
+    this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
+      next: (users) => {
+        this.isFirstUser = users.length === 0;
+        if (this.isFirstUser) {
+          this.role = 'parent'; // Set first user as parent
+        }
+      },
+      error: (error) => {
+        console.error('Error checking family users:', error);
+      }
+    });
   }
 
   onPinCodeInput(event: Event): void {
