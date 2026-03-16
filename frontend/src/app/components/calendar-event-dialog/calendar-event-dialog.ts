@@ -21,28 +21,41 @@ import { Router } from '@angular/router';
     <h2 mat-dialog-title>Opret Event</h2>
 
     <div mat-dialog-content>
+
       <mat-form-field appearance="outline" style="width:100%">
         <mat-label>Titel</mat-label>
         <input matInput [(ngModel)]="title">
       </mat-form-field>
-    </div>
 
-    <div mat-dialog-actions align="end">
+      <mat-form-field appearance="outline" style="width:100%">
+        <mat-label>Beskrivelse</mat-label>
+        <textarea matInput [(ngModel)]="description"></textarea>
+      </mat-form-field>
 
-      <button mat-button (click)="goToTaskPage()">
-        Advanced edit
-      </button>
+      <mat-form-field appearance="outline" style="width:100%">
+        <mat-label>Sted</mat-label>
+        <input matInput [(ngModel)]="location">
+      </mat-form-field>
 
-      <div>
-        <button mat-button (click)="close()">Annuller</button>
-        <button mat-raised-button color="primary" (click)="save()">Gem</button>
+      <div style="margin-top:10px">
+        <label>Billede</label>
+        <input type="file" (change)="onFileSelected($event)">
       </div>
+
+      <img *ngIf="imagePreview"
+           [src]="imagePreview"
+           style="margin-top:10px;max-width:100%;border-radius:6px">
 
     </div>
   `
 })
 export class CalendarEventDialogComponent {
   title = '';
+  description = '';
+  location = '';
+
+  imagePreview: string | null = null;
+  imageFile: File | null = null;
 
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
@@ -54,12 +67,33 @@ export class CalendarEventDialogComponent {
     }
   }
 
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.imageFile = file;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
   close() {
     this.dialogRef.close();
   }
 
   save() {
-    this.dialogRef.close(this.title);
+    const eventData = {
+      title: this.title,
+      description: this.description,
+      location: this.location,
+      image: this.imagePreview
+    };
+
+    this.dialogRef.close(eventData);
   }
 
   goToTaskPage() {

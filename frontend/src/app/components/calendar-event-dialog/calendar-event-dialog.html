@@ -1,1 +1,41 @@
-<p>calendar-event-dialog works!</p>
+template: `
+<h2 mat-dialog-title>Opret Event</h2>
+
+<div mat-dialog-content>
+
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>Titel</mat-label>
+    <input matInput [(ngModel)]="title">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>Beskrivelse</mat-label>
+    <textarea matInput [(ngModel)]="description"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>Sted</mat-label>
+    <input matInput [(ngModel)]="location">
+  </mat-form-field>
+
+  <div style="margin-top:10px">
+    <label>Billede</label>
+    <input type="file" (change)="onFileSelected($event)">
+  </div>
+
+  <img *ngIf="imagePreview"
+       [src]="imagePreview"
+       style="margin-top:10px;max-width:100%;border-radius:6px">
+</div>
+
+<div mat-dialog-actions align="end">
+
+  <button mat-button (click)="goToTaskPage()">Advanced edit</button>
+
+  <div>
+    <button mat-button (click)="close()">Annuller</button>
+    <button mat-raised-button color="primary" (click)="save()">Gem</button>
+  </div>
+
+</div>
+`
