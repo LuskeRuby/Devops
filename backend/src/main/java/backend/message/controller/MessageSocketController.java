@@ -21,6 +21,6 @@ public class MessageSocketController {
     @MessageMapping("/chat")
     public void handleChat(MessageRequestDto dto) {
         MessageResponseDto response = messageService.saveMessage(dto);
-        messagingTemplate.convertAndSend("/topic/messages/" + dto.getFamilyEmail(), response);
+        messagingTemplate.convertAndSend("/topic/messages/" + dto.familyEmail(), response);
     }
 }
