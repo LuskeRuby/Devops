@@ -67,6 +67,9 @@ export class CalendarComponent implements OnInit {
   familyUsers: User[] = [];
 
   ngOnInit(): void {
+    const role = this.userService.currentUser()?.role?.toUpperCase();
+    this.isDayView = role === 'CHILD';
+
     this.loadFamilyUsers();
     this.loadEvents();
   }

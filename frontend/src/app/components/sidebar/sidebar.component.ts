@@ -1,8 +1,7 @@
-import { Component, Output, EventEmitter, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService, User } from '../../services/user.service';
-import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,17 +13,16 @@ import { AuthService } from '../../auth/auth.service';
 export class SidebarComponent implements OnInit {
 
   private userService = inject(UserService);
-  private authService = inject(AuthService);
 
   currentUser = this.userService.currentUser;
   familyMembers = signal<User[]>([]);
 
   get isParent(): boolean {
-    return this.currentUser()?.role === 'parent';
+    return this.currentUser()?.role?.toUpperCase() === 'PARENT';
   }
 
   ngOnInit(): void {
-    const familyEmail = this.userService.currentUser()?.email;
+    const familyEmail = this.userService.currentUser()?.familyEmail;
     if (!familyEmail) return;
 
     this.userService.getUsersByFamilyEmail(familyEmail).subscribe({

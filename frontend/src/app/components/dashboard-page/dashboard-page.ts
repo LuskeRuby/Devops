@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar';
+import { SidebarComponent } from '../sidebar/sidebar.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CalendarComponent],
+  imports: [CommonModule, CalendarComponent, SidebarComponent],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
 })
