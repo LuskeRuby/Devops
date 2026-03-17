@@ -11,6 +11,10 @@ export interface User {
   role?: string;
   totalPoints?: number;
   avatarUrl?: string;
+  pincode?: string;
+  family: {
+    email: string;
+  };
 }
 
 const STORAGE_KEY = 'currentUser';
@@ -39,6 +43,10 @@ export class UserService {
 
   getUser(id: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/${id}`);
+  }
+
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   addPoints(id: number, points: number): Observable<any> {

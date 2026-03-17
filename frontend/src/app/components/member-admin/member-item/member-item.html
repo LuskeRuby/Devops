@@ -1,0 +1,22 @@
+<div class="member-row">
+  <div class="member-info">
+    <div class="avatar-container">
+      <img [src]="member().avatarUrl" alt="Avatar" class="avatar-img" />
+    </div>
+    <div class="text-info">
+      <div class="name">{{ member().name }}</div>
+      <div class="role">{{ member().role }}</div>
+    </div>
+  </div>
+
+  @if (showActions()) {
+    <div class="actions animate-fade-in">
+      <button class="icon-btn" (click)="edit.emit()">
+        <lucide-icon [name]="PencilIcon" [size]="22"></lucide-icon>
+      </button>
+      <button class="icon-btn delete" (click)="deleteMember.emit()">
+        <lucide-icon [name]="TrashIcon" [size]="22"></lucide-icon>
+      </button>
+    </div>
+  }
+</div>
