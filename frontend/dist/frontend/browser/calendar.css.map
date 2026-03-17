@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/calendar/calendar.scss"],
-  "sourcesContent": [":host {\r\n  display: block;\r\n  height: 100%;\r\n  background: white;\r\n}\r\n\r\n/* Main calendar container */\r\n::ng-deep .cal-week-view {\r\n  background: white;\r\n  color: black;\r\n}\r\n\r\n/* Grid borders */\r\n::ng-deep .cal-hour-segment,\r\n::ng-deep .cal-day-headers,\r\n::ng-deep .cal-day-column {\r\n  border-color: #e0e0e0 !important;\r\n}\r\n\r\n/* Header background */\r\n::ng-deep .cal-day-headers {\r\n  background: #f5f5f5;\r\n}\r\n\r\n/* Time column */\r\n::ng-deep .cal-time-label-column {\r\n  background: #fafafa;\r\n  color: #555;\r\n}\r\n\r\n/* Events */\r\n::ng-deep .cal-event {\r\n  background-color: #4285f4 !important;\r\n  border-color: #4285f4 !important;\r\n  color: white !important;\r\n  border-radius: 6px;\r\n  padding: 4px;\r\n}\r\n\r\n.calendar-wrapper {\r\n  height: 100vh;\r\n}\r\n"],
-  "mappings": ";AAAA;AACE,WAAA;AACA,UAAA;AACA,cAAA;;AAIF,UAAA,CAAA;AACE,cAAA;AACA,SAAA;;AAIF,UAAA,CAAA;AAAA,UAAA,CAAA;AAAA,UAAA,CAAA;AAGE,gBAAA;;AAIF,UAAA,CAPA;AAQE,cAAA;;AAIF,UAAA,CAAA;AACE,cAAA;AACA,SAAA;;AAIF,UAAA,CAAA;AACE,oBAAA;AACA,gBAAA;AACA,SAAA;AACA,iBAAA;AACA,WAAA;;AAGF,CAAA;AACE,UAAA;;",
-  "names": []
-}

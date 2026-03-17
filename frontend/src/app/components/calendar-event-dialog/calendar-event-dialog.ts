@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-calendar-event-dialog',
@@ -18,7 +17,7 @@ import { Router } from '@angular/router';
     MatInputModule
   ],
   template: `
-    <h2 mat-dialog-title>Opret Event</h2>
+    <h2 mat-dialog-title>{{ isEditing ? 'Event detaljer' : 'Opret Event' }}</h2>
 
     <div mat-dialog-content>
 
@@ -29,59 +28,42 @@ import { Router } from '@angular/router';
 
       <mat-form-field appearance="outline" style="width:100%">
         <mat-label>Beskrivelse</mat-label>
-        <textarea matInput [(ngModel)]="description"></textarea>
+        <textarea matInput [(ngModel)]="description" rows="3"></textarea>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" style="width:100%">
-        <mat-label>Sted</mat-label>
-        <input matInput [(ngModel)]="location">
-      </mat-form-field>
+    </div>
 
-      <div style="margin-top:10px">
-        <label>Billede</label>
-        <input type="file" (change)="onFileSelected($event)">
+    <div mat-dialog-actions style="justify-content: space-between">
+
+      <button mat-button color="warn" *ngIf="isEditing" (click)="delete()">
+        Slet
+      </button>
+
+      <div style="display:flex; gap:8px; margin-left:auto">
+        <button mat-button (click)="close()">Annuller</button>
+        <button mat-raised-button color="primary" *ngIf="!isEditing" (click)="save()" [disabled]="!title.trim()">
+          Gem
+        </button>
       </div>
-
-      <img *ngIf="imagePreview"
-           [src]="imagePreview"
-           style="margin-top:10px;max-width:100%;border-radius:6px">
 
     </div>
   `
 })
 export class CalendarEventDialogComponent {
+
   title = '';
   description = '';
-  location = '';
-
-  imagePreview: string | null = null;
-  imageFile: File | null = null;
+  isEditing = false;
 
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
-    private router: Router
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     if (data) {
       this.title = data.title || '';
       this.description = data.description || '';
-      this.location = data.location || '';
-      this.imagePreview = data.image || null;
+      this.isEditing = !!data.id;
     }
-  }
-
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    this.imageFile = file;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.imagePreview = reader.result as string;
-    };
-
-    reader.readAsDataURL(file);
   }
 
   close() {
@@ -89,27 +71,13 @@ export class CalendarEventDialogComponent {
   }
 
   save() {
-    const eventData = {
-      title: this.title,
-      description: this.description,
-      location: this.location,
-      image: this.imagePreview
-    };
-
-    this.dialogRef.close(eventData);
-  }
-
-  goToTaskPage() {
-
-    // luk dialog
-    this.dialogRef.close();
-
-    // send titel til task form
-    this.router.navigate(['/task'], {
-      queryParams: {
-        title: this.title
-      }
+    this.dialogRef.close({
+      title: this.title.trim(),
+      description: this.description.trim()
     });
   }
 
+  delete() {
+    this.dialogRef.close({ deleted: true });
+  }
 }

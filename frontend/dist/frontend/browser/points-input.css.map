@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/components/points-input/points-input.scss"],
-  "sourcesContent": [".opgave-point {\r\n  margin: 20px 0;\r\n  padding: 15px;\r\n  background-color: #f9f9f9;\r\n  border-radius: 8px;\r\n  border: 1px solid #ddd;\r\n  font-family: sans-serif;\r\n\r\n  label {\r\n    display: block;\r\n    font-weight: bold;\r\n    margin-bottom: 8px;\r\n  }\r\n\r\n  input {\r\n    padding: 8px;\r\n    border: 1px solid #ccc;\r\n    border-radius: 4px;\r\n    width: 100px;\r\n  }\r\n}"],
-  "mappings": ";AAAA,CAAA;AACE,UAAA,KAAA;AACA,WAAA;AACA,oBAAA;AACA,iBAAA;AACA,UAAA,IAAA,MAAA;AACA,eAAA;;AAEA,CARF,aAQE;AACE,WAAA;AACA,eAAA;AACA,iBAAA;;AAGF,CAdF,aAcE;AACE,WAAA;AACA,UAAA,IAAA,MAAA;AACA,iBAAA;AACA,SAAA;;",
-  "names": []
-}

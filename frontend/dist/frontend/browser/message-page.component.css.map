@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/components/message-page/message-page.component.scss"],
-  "sourcesContent": [".chat-page {\r\n  display: flex;\r\n  flex-direction: column;\r\n  height: 100vh;\r\n  background: #f4f6f8;\r\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\r\n}\r\n\r\n.chat-header {\r\n  padding: 15px;\r\n  background: white;\r\n  border-bottom: 1px solid #ddd;\r\n}\r\n\r\n.chat-header button {\r\n  margin-right: 10px;\r\n}\r\n\r\napp-chat {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  overflow: hidden;\r\n}\r\n"],
-  "mappings": ";AAAA,CAAA;AACE,WAAA;AACA,kBAAA;AACA,UAAA;AACA,cAAA;AACA;IAAA,aAAA;IAAA,kBAAA;IAAA,UAAA;IAAA;;AAGF,CAAA;AACE,WAAA;AACA,cAAA;AACA,iBAAA,IAAA,MAAA;;AAGF,CANA,YAMA;AACE,gBAAA;;AAGF;AACE,QAAA;AACA,WAAA;AACA,kBAAA;AACA,YAAA;;",
-  "names": []
-}

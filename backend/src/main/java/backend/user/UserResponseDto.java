@@ -5,5 +5,6 @@ public record UserResponseDto(
         String name,
         String email,
         String role,
-        int totalPoints
+        int totalPoints,
+        String familyEmail
 ) {}

@@ -27,5 +27,5 @@ export const routes: Routes = [
   { path: 'test-total-points', component: TotalPointsDisplayComponent },
   { path: 'test-points-progress', component: PointsProgressComponent },
   { path: 'test-rewards-display', component: RewardsDisplayComponent },
-  { path: 'dashboard', component: DashboardPage }
+  { path: 'dashboard', component: DashboardPage, canActivate: [AuthGuard] }
 ];
