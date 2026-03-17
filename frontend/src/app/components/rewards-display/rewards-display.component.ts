@@ -8,8 +8,9 @@ import { PointsStore } from '../../services/points-store.service';
     styleUrl: './rewards-display.component.scss'
 })
 export class RewardsDisplayComponent {
-   
+
     readonly pointsStore = inject(PointsStore);
 
     totalRewards = this.pointsStore.totalRewards;
 }
+

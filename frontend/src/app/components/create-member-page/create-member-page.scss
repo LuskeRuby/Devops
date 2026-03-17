@@ -55,6 +55,20 @@
       background-color: #fff;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
+
+    &:disabled {
+      background-color: #f3f4f6;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+  }
+
+  .role-note {
+    display: block;
+    font-size: 0.875rem;
+    color: #6366f1;
+    margin-top: 0.5rem;
+    font-style: italic;
   }
 }
 

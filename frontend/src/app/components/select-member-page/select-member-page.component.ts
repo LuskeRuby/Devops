@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../services/user.service';
@@ -44,10 +44,17 @@ export class SelectMemberPageComponent implements OnInit {
 
   selectUser(user: User): void {
     console.log('Selected user:', user);
-    this.router.navigate(['/home']);
+    this.router.navigate(['/member-pin'], { state: { user } });
   }
 
   addMember(): void {
     this.router.navigate(['/create-member-page']);
   }
+
+  calculateRewards(totalPoints: number): number {
+    const targetPoints = 100;
+    return Math.floor(totalPoints / targetPoints);
+  }
 }
+
+

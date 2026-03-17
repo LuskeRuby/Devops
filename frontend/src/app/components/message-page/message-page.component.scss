@@ -1,9 +1,16 @@
 .chat-page {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   background: #f4f6f8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-header {

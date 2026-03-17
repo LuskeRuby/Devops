@@ -11,4 +11,5 @@ public class MessageRequestDto {
 
     private Long userId;
     private String content;
+    private String familyEmail;
 }
