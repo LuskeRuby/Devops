@@ -4,13 +4,15 @@ export interface TaskDTO {
   description: string;
   points: number;
   checked: boolean;
-  
+  assignedUserIds?: number[];
+  assignedUserNames?: string[];
+
   // Dates are received as strings (ISO 8601) from JSON
-  timestamp: string; 
+  timestamp: string;
   repeatUntil: string;
-  
+
   repeatEvery: 'Daily' | 'Weekly' | 'Monthly' | string;
 
   // Foreign Key references (IDs) instead of full objects
-  imageId?: number; 
+  imageId?: number;
 }

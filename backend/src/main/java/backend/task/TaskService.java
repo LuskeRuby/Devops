@@ -42,7 +42,7 @@ public class TaskService {
     }
 
     public List<Task> getTasksForFamily(String familyEmail) {
-        return taskRepository.findByUsers_Family_Email(familyEmail);
+        return taskRepository.findDistinctByUsers_Family_Email(familyEmail);
     }
 
     public Task getTaskById(Long id) {

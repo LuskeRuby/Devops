@@ -75,6 +75,10 @@ public class TaskController {
         if (task.getImage() != null) {
             dto.setImageId(task.getImage().getId());
         }
+        if (task.getUsers() != null) {
+            dto.setAssignedUserIds(task.getUsers().stream().map(user -> user.getId()).toList());
+            dto.setAssignedUserNames(task.getUsers().stream().map(user -> user.getName()).toList());
+        }
         return dto;
     }   
 }

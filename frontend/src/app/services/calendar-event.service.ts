@@ -82,7 +82,9 @@ export class CalendarEventService {
       meta: {
         description: task.description,
         taskId: task.id,
-        checked: task.checked
+        checked: task.checked,
+        assignedUserIds: task.assignedUserIds ?? [],
+        assignedUserNames: task.assignedUserNames ?? []
       },
       color: {
         primary: task.checked ? '#9e9e9e' : '#4285f4',

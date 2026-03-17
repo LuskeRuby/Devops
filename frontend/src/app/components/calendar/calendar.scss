@@ -135,6 +135,14 @@
   opacity: 0.95;
 }
 
+.event-assignees {
+  font-size: 10px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .event-image {
   margin-top: 4px;
   width: 100%;

@@ -19,6 +19,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { CalendarEventService } from '../../services/calendar-event.service';
 import { User, UserService } from '../../services/user.service';
 import { Router } from '@angular/router';
+import { ErrorBannerComponent } from '../error-banner/error-banner.component';
 
 registerLocaleData(localeDa);
 
@@ -39,7 +40,8 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
     CalendarModule,
     CommonModule,
     MatDialogModule,
-    FormsModule // for 1/7 day view
+    FormsModule, // for 1/7 day view
+    ErrorBannerComponent
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
@@ -65,6 +67,7 @@ export class CalendarComponent implements OnInit {
 
   events: CalendarEvent[] = [];
   familyUsers: User[] = [];
+  loadError: string | null = null;
 
   ngOnInit(): void {
     const role = this.userService.currentUser()?.role?.toUpperCase();
@@ -76,28 +79,24 @@ export class CalendarComponent implements OnInit {
 
   loadEvents(): void {
     const user = this.userService.currentUser();
-    if (!user) return;
+    if (!user?.familyEmail) {
+      this.events = [];
+      this.loadError = 'Unable to load calendar tasks: missing family context.';
+      return;
+    }
 
-    const source$ = this.calendarEventService.loadUserEvents(user.id);
+    const source$ = this.calendarEventService.loadFamilyEvents(user.familyEmail);
 
     source$.subscribe({
       next: events => {
-        console.log("RAW EVENTS FROM BACKEND:", events);
-
-        this.events = events.map((e: any) => ({
-          id: e.id,
-          title: e.name,
-          start: new Date(e.timestamp),
-          end: new Date(new Date(e.timestamp).getTime() + 60 * 60 * 1000),
-          meta: {
-            description: e.description,
-            checked: e.checked
-          }
-        }));
-
-        console.log("MAPPED EVENTS:", this.events);
+        this.loadError = null;
+        this.events = events;
       },
-      error: err => console.error('Failed to load calendar events:', err)
+      error: err => {
+        console.error('Failed to load calendar events:', err);
+        this.events = [];
+        this.loadError = 'Failed to load family calendar tasks.';
+      }
     });
   }
 
@@ -163,7 +162,10 @@ export class CalendarComponent implements OnInit {
 
     this.calendarEventService.completeEvent(taskId).subscribe({
       next: () => this.loadEvents(),
-      error: err => console.error('Failed to complete task:', err)
+      error: err => {
+        console.error('Failed to complete task:', err);
+        this.loadError = 'Failed to update task status.';
+      }
     });
   }
 
@@ -191,7 +193,10 @@ export class CalendarComponent implements OnInit {
       userIds: result.userIds
     }).subscribe({
       next: () => this.loadEvents(),
-      error: err => console.error('Failed to create calendar event:', err)
+      error: err => {
+        console.error('Failed to create calendar event:', err);
+        this.loadError = 'Failed to create calendar event.';
+      }
     });
   }
 }

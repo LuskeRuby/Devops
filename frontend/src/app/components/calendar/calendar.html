@@ -5,6 +5,8 @@
   </label>
 </div>
 
+<app-error-banner *ngIf="loadError" [message]="loadError"></app-error-banner>
+
 <!-- EVENT TEMPLATE -->
 <ng-template #eventTemplate let-event="event">
 
@@ -22,6 +24,9 @@
     </div>
     <div class="event-time">
       {{ event.start | date:'HH:mm' }} - {{ (event.end || event.start) | date:'HH:mm' }}
+    </div>
+    <div class="event-assignees" *ngIf="event.meta?.assignedUserNames?.length">
+      {{ event.meta.assignedUserNames.join(', ') }}
     </div>
 
   </div>
