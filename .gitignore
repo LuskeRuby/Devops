@@ -6,6 +6,7 @@
 /out-tsc
 /bazel-out
 target/
+frontend/dist/
 
 # Node
 .angular/
