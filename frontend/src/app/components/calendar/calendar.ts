@@ -78,12 +78,25 @@ export class CalendarComponent implements OnInit {
     const user = this.userService.currentUser();
     if (!user) return;
 
-    const source$ = user.familyEmail
-      ? this.calendarEventService.loadFamilyEvents(user.familyEmail)
-      : this.calendarEventService.loadUserEvents(user.id);
+    const source$ = this.calendarEventService.loadUserEvents(user.id);
 
     source$.subscribe({
-      next: events => (this.events = events),
+      next: events => {
+        console.log("RAW EVENTS FROM BACKEND:", events);
+
+        this.events = events.map((e: any) => ({
+          id: e.id,
+          title: e.name,
+          start: new Date(e.timestamp),
+          end: new Date(new Date(e.timestamp).getTime() + 60 * 60 * 1000),
+          meta: {
+            description: e.description,
+            checked: e.checked
+          }
+        }));
+
+        console.log("MAPPED EVENTS:", this.events);
+      },
       error: err => console.error('Failed to load calendar events:', err)
     });
   }

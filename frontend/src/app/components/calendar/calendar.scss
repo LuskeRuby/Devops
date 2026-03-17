@@ -3,6 +3,12 @@
   background: white;
 }
 
+.calendar-scroll {
+  max-height: 68vh;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
 ::ng-deep .cal-week-view .cal-hour-segment {
   cursor: pointer;
   z-index: 1;
@@ -46,10 +52,24 @@
   background: #f5f5f5;
 }
 
+::ng-deep .cal-week-view .cal-day-headers,
+::ng-deep .cal-day-view .cal-day-headers {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
 /* Time column */
 ::ng-deep .cal-time-label-column {
   background: #fafafa;
   color: #555;
+}
+
+::ng-deep .cal-week-view .cal-time-label-column,
+::ng-deep .cal-day-view .cal-time-label-column {
+  position: sticky;
+  left: 0;
+  z-index: 4;
 }
 
 /* Events */
@@ -75,11 +95,6 @@
 }
 
 
-
-/* Calendar container */
-.calendar-wrapper {
-  height: 100vh;
-}
 
 
 /* Custom event template */

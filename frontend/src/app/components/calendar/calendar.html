@@ -29,26 +29,28 @@
 </ng-template>
 
 
-<!-- WEEK VIEW -->
-<mwl-calendar-week-view
-  *ngIf="!isDayView"
-  [viewDate]="viewDate"
-  [events]="events"
-  [locale]="locale"
-  [weekStartsOn]="weekStartsOn"
-  [eventTemplate]="eventTemplate"
-  (hourSegmentClicked)="handleHourClick($event)"
-  (eventClicked)="handleEventClick($event.event)">
-</mwl-calendar-week-view>
+<div class="calendar-scroll">
+  <!-- WEEK VIEW -->
+  <mwl-calendar-week-view
+    *ngIf="!isDayView"
+    [viewDate]="viewDate"
+    [events]="events"
+    [locale]="locale"
+    [weekStartsOn]="weekStartsOn"
+    [eventTemplate]="eventTemplate"
+    (hourSegmentClicked)="handleHourClick($event)"
+    (eventClicked)="handleEventClick($event.event)">
+  </mwl-calendar-week-view>
 
 
-<!-- DAY VIEW -->
-<mwl-calendar-day-view
-  *ngIf="isDayView"
-  [viewDate]="viewDate"
-  [events]="events"
-  [locale]="locale"
-  [eventTemplate]="eventTemplate"
-  (hourSegmentClicked)="handleHourClick($event)"
-  (eventClicked)="handleEventClick($event.event)">
-</mwl-calendar-day-view>
+  <!-- DAY VIEW -->
+  <mwl-calendar-day-view
+    *ngIf="isDayView"
+    [viewDate]="viewDate"
+    [events]="events"
+    [locale]="locale"
+    [eventTemplate]="eventTemplate"
+    (hourSegmentClicked)="handleHourClick($event)"
+    (eventClicked)="handleEventClick($event.event)">
+  </mwl-calendar-day-view>
+</div>
