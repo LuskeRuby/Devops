@@ -62,8 +62,11 @@ export class CalendarEventDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private router: Router
   ) {
-    if (data?.title) {
-      this.title = data.title;
+    if (data) {
+      this.title = data.title || '';
+      this.description = data.description || '';
+      this.location = data.location || '';
+      this.imagePreview = data.image || null;
     }
   }
 

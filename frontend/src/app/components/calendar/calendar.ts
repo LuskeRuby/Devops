@@ -83,7 +83,8 @@ export class CalendarComponent {
       const newEvent: CalendarEvent = {
         start: date,
         end: new Date(date.getTime() + 60 * 60 * 1000),
-        title: result,
+        title: result.title,
+        meta: result,
         color: {
           primary: '#4285f4',
           secondary: '#D1E8FF'
@@ -97,13 +98,14 @@ export class CalendarComponent {
   handleEventClick(event: CalendarEvent): void {
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
       width: '400px',
-      data: { title: event.title }
+      data: event.meta || { title: event.title }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
 
-      event.title = result;
+      event.title = result.title;
+      event.meta = result;
 
       // Trigger change detection
       this.events = [...this.events];

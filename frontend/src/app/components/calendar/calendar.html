@@ -5,21 +5,46 @@
   </label>
 </div>
 
+<!-- EVENT TEMPLATE -->
+<ng-template #eventTemplate let-event="event">
+
+  <div class="custom-event">
+
+    <div class="event-title">
+      {{ event.title }}
+    </div>
+
+    <img
+      *ngIf="event.meta?.image"
+      [src]="event.meta.image"
+      class="event-image"
+    />
+
+  </div>
+
+</ng-template>
+
+
+<!-- WEEK VIEW -->
 <mwl-calendar-week-view
   *ngIf="!isDayView"
   [viewDate]="viewDate"
   [events]="events"
   [locale]="locale"
   [weekStartsOn]="weekStartsOn"
+  [eventTemplate]="eventTemplate"
   (hourSegmentClicked)="handleHourClick($event)"
   (eventClicked)="handleEventClick($event.event)">
 </mwl-calendar-week-view>
 
+
+<!-- DAY VIEW -->
 <mwl-calendar-day-view
   *ngIf="isDayView"
   [viewDate]="viewDate"
   [events]="events"
   [locale]="locale"
+  [eventTemplate]="eventTemplate"
   (hourSegmentClicked)="handleHourClick($event)"
   (eventClicked)="handleEventClick($event.event)">
 </mwl-calendar-day-view>
