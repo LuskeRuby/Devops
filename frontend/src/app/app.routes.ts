@@ -23,6 +23,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
+  { path: 'task', component: TaskPageComponent, canActivate: [AuthGuard] },
   { path: 'message', component: MessageComponent, canActivate: [AuthGuard] },
   { path: 'test-total-points', component: TotalPointsDisplayComponent },
   { path: 'test-points-progress', component: PointsProgressComponent },

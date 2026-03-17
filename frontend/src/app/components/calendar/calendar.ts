@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 
 import {
   CalendarDateFormatter,
+  CalendarEvent,
   CalendarModule,
   DateFormatterParams
 } from 'angular-calendar';
@@ -12,13 +13,12 @@ import {
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { format } from 'date-fns';
 
-import { CalendarEvent } from 'angular-calendar';
-
 import { MatDialog } from '@angular/material/dialog';
-import { CalendarEventDialogComponent } from '../calendar-event-dialog/calendar-event-dialog';
+import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../calendar-event-dialog/calendar-event-dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CalendarEventService } from '../../services/calendar-event.service';
-import { UserService } from '../../services/user.service';
+import { User, UserService } from '../../services/user.service';
+import { Router } from '@angular/router';
 
 registerLocaleData(localeDa);
 
@@ -54,7 +54,8 @@ export class CalendarComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private calendarEventService: CalendarEventService,
-    private userService: UserService
+    private userService: UserService,
+    private router: Router
   ) {}
 
   @Input() viewDate: Date = new Date();
@@ -63,8 +64,10 @@ export class CalendarComponent implements OnInit {
   isDayView = false;
 
   events: CalendarEvent[] = [];
+  familyUsers: User[] = [];
 
   ngOnInit(): void {
+    this.loadFamilyUsers();
     this.loadEvents();
   }
 
@@ -82,49 +85,97 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  loadFamilyUsers(): void {
+    const user = this.userService.currentUser();
+    if (!user?.familyEmail) {
+      this.familyUsers = user ? [user] : [];
+      return;
+    }
+
+    this.userService.getUsersByFamilyEmail(user.familyEmail).subscribe({
+      next: users => (this.familyUsers = users),
+      error: err => {
+        console.error('Failed to load family users:', err);
+        this.familyUsers = [user];
+      }
+    });
+  }
+
   handleHourClick({ date }: { date: Date }): void {
+    const end = new Date(date.getTime() + 60 * 60 * 1000);
+    const current = this.userService.currentUser();
+
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
-      width: '400px',
-      data: { start: date }
+      width: '460px',
+      data: {
+        start: date,
+        end,
+        users: this.familyUsers,
+        selectedUserIds: current ? [current.id] : []
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (!result) return;
-
-      const user = this.userService.currentUser();
-      if (!user) return;
-
-      const end = new Date(date.getTime() + 60 * 60 * 1000);
-
-      this.calendarEventService
-        .createEvent(result.title, result.description, date, end, user.id)
-        .subscribe({
-          next: () => this.loadEvents(),
-          error: err => console.error('Failed to create calendar event:', err)
-        });
+      this.handleDialogResult(result);
     });
   }
 
   handleEventClick(event: CalendarEvent): void {
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
-      width: '400px',
+      width: '460px',
       data: {
-        id: event.id,
+        eventId: event.id as number | undefined,
         title: event.title,
         description: event.meta?.description,
-        start: event.start
+        start: event.start,
+        end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
+        users: this.familyUsers,
+        selectedUserIds: []
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (!result) return;
+      this.handleDialogResult(result, event.id as number | undefined);
+    });
+  }
 
-      if (result.deleted && event.id != null) {
-        this.calendarEventService.deleteEvent(event.id as number).subscribe({
-          next: () => this.loadEvents(),
-          error: err => console.error('Failed to delete event:', err)
-        });
-      }
+  completeFromCalendar(event: CalendarEvent, mouseEvent: MouseEvent): void {
+    mouseEvent.stopPropagation();
+
+    const taskId = event.id as number | undefined;
+    if (!taskId || event.meta?.checked) return;
+
+    this.calendarEventService.completeEvent(taskId).subscribe({
+      next: () => this.loadEvents(),
+      error: err => console.error('Failed to complete task:', err)
+    });
+  }
+
+  private handleDialogResult(
+    result: CalendarEventDialogResult | undefined,
+    eventId?: number
+  ): void {
+    if (!result) return;
+
+    if (result.mode === 'edit') {
+      this.router.navigate(['/task'], {
+        queryParams: {
+          taskId: result.eventId ?? eventId,
+          title: result.title
+        }
+      });
+      return;
+    }
+
+    this.calendarEventService.createEvent({
+      title: result.title,
+      description: result.description,
+      start: result.start,
+      end: result.end,
+      userIds: result.userIds
+    }).subscribe({
+      next: () => this.loadEvents(),
+      error: err => console.error('Failed to create calendar event:', err)
     });
   }
 }

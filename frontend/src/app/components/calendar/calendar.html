@@ -9,16 +9,20 @@
 <ng-template #eventTemplate let-event="event">
 
   <div class="custom-event">
+    <button
+      class="event-check"
+      [disabled]="event.meta?.checked"
+      (click)="completeFromCalendar(event, $event)"
+      [title]="event.meta?.checked ? 'Completed' : 'Mark complete'">
+      {{ event.meta?.checked ? '✓' : '☐' }}
+    </button>
 
     <div class="event-title">
       {{ event.title }}
     </div>
-
-    <img
-      *ngIf="event.meta?.image"
-      [src]="event.meta.image"
-      class="event-image"
-    />
+    <div class="event-time">
+      {{ event.start | date:'HH:mm' }} - {{ (event.end || event.start) | date:'HH:mm' }}
+    </div>
 
   </div>
 

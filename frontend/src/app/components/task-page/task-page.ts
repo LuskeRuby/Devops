@@ -20,7 +20,7 @@ export class TaskPageComponent implements OnInit {
   users: User[] = [];
   selectedUserIds: number[] = [];
 
-  familyEmail = 'Asma@test.com';
+  familyEmail = '';
 
   constructor(
     private taskService: TaskService,
@@ -39,6 +39,9 @@ export class TaskPageComponent implements OnInit {
   ngOnInit(): void {
     console.log("TaskPage initialized");
 
+    const currentUser = this.userService.currentUser();
+    this.familyEmail = currentUser?.familyEmail ?? '';
+
     this.loadUsers();
 
     const title = this.route.snapshot.queryParamMap.get('title');
@@ -51,6 +54,11 @@ export class TaskPageComponent implements OnInit {
   }
 
   loadUsers(): void {
+    if (!this.familyEmail) {
+      this.users = [];
+      return;
+    }
+
     this.userService
       .getUsersByFamilyEmail(this.familyEmail)
       .subscribe(res => {

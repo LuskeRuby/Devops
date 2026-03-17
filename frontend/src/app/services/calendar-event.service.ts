@@ -5,6 +5,14 @@ import { map } from 'rxjs/operators';
 import { CalendarEvent } from 'angular-calendar';
 import { TaskDTO } from '../features/task/models/TaskDto';
 
+export interface CalendarQuickCreatePayload {
+  title: string;
+  description: string;
+  start: Date;
+  end: Date;
+  userIds: number[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CalendarEventService {
 
@@ -28,26 +36,25 @@ export class CalendarEventService {
   }
 
   /** Create a new calendar event (persisted as a Task) */
-  createEvent(
-    title: string,
-    description: string,
-    start: Date,
-    end: Date,
-    userId: number
-  ): Observable<TaskDTO> {
+  createEvent(payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
     const body = {
       task: {
-        name: title,
-        description: description,
-        timestamp: start.toISOString(),
-        repeatUntil: end.toISOString(),
+        name: payload.title,
+        description: payload.description,
+        timestamp: payload.start.toISOString(),
+        repeatUntil: payload.end.toISOString(),
         points: 0,
         checked: false,
         repeatEvery: null
       },
-      userIds: [userId]
+      userIds: payload.userIds
     };
+
     return this.http.post<TaskDTO>(this.tasksUrl, body);
+  }
+
+  completeEvent(id: number): Observable<TaskDTO> {
+    return this.http.put<TaskDTO>(`${this.tasksUrl}/${id}/complete`, {});
   }
 
   /** Delete a calendar event by its task ID */
@@ -67,6 +74,11 @@ export class CalendarEventService {
       title: task.name,
       start,
       end,
+      draggable: !task.checked,
+      resizable: {
+        beforeStart: !task.checked,
+        afterEnd: !task.checked
+      },
       meta: {
         description: task.description,
         taskId: task.id,

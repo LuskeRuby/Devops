@@ -55,14 +55,40 @@
 
 /* Custom event template */
 .custom-event {
+  position: relative;
   display: flex;
   flex-direction: column;
-  pointer-events: none;
+  pointer-events: auto;
+  padding: 2px 18px 2px 2px;
+}
+
+.event-check {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.event-check:disabled {
+  opacity: 0.9;
+  cursor: default;
 }
 
 .event-title {
   font-weight: 600;
   font-size: 12px;
+  margin-right: 14px;
+}
+
+.event-time {
+  font-size: 11px;
+  opacity: 0.95;
 }
 
 .event-image {
