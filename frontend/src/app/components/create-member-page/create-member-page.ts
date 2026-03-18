@@ -26,7 +26,7 @@ export class CreateMemberPageComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private userService: UserService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.familyEmail = this.authService.getFamilyEmail();
@@ -76,7 +76,7 @@ export class CreateMemberPageComponent implements OnInit {
       }
     };
 
-    this.http.post('http://localhost:8080/api/users', newUser).subscribe({
+    this.http.post('/api/users', newUser).subscribe({
       next: () => {
         this.router.navigate(['/select-member']);
       },
