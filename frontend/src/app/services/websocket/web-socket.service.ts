@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Client } from '@stomp/stompjs';
+import { AuthService } from '../../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,9 +10,8 @@ export class WebSocketService {
   private client: Client;
   private connected = false;
 
-  constructor() {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   constructor(private authService: AuthService) {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     this.client = new Client({
       brokerURL: `${wsProtocol}://${window.location.host}/websocket`,
       reconnectDelay: 5000,
@@ -21,8 +21,6 @@ export class WebSocketService {
     });
   }
 
-  //onMessage: called when message arrives
-  //onConnected: called whern the socket handshake complete
   connect(familyEmail: string, onMessage: (msg: any) => void, onConnected: () => void) {
     this.client.onConnect = () => {
       console.log('Connected to backend');
