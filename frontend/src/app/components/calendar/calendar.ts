@@ -17,6 +17,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../calendar-event-dialog/calendar-event-dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CalendarEventService } from '../../services/calendar-event.service';
+import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
 import { Router } from '@angular/router';
 import { ErrorBannerComponent } from '../error-banner/error-banner.component';
@@ -65,7 +66,7 @@ export class CalendarComponent implements OnInit {
   weekStartsOn = 1;
   isDayView = false;
 
-  events: CalendarEvent[] = [];
+  events: CalendarEvent<CalendarTaskMeta>[] = [];
   familyUsers: User[] = [];
   loadError: string | null = null;
 
@@ -135,7 +136,11 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  handleEventClick(event: CalendarEvent): void {
+  handleEventClick(event?: CalendarEvent<CalendarTaskMeta>): void {
+    if (!event) {
+      return;
+    }
+
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
       width: '460px',
       data: {
@@ -145,7 +150,7 @@ export class CalendarComponent implements OnInit {
         start: event.start,
         end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
         users: this.familyUsers,
-        selectedUserIds: []
+        selectedUserIds: event.meta?.assignedUserIds ?? []
       }
     });
 
@@ -154,8 +159,12 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  completeFromCalendar(event: CalendarEvent, mouseEvent: MouseEvent): void {
+  completeFromCalendar(event: CalendarEvent<CalendarTaskMeta> | undefined, mouseEvent: MouseEvent): void {
     mouseEvent.stopPropagation();
+
+    if (!event) {
+      return;
+    }
 
     const taskId = event.id as number | undefined;
     if (!taskId || event.meta?.checked) return;
@@ -168,6 +177,26 @@ export class CalendarComponent implements OnInit {
       }
     });
   }
+
+  resolveTemplateEvent(context: unknown): CalendarEvent<CalendarTaskMeta> | undefined {
+    if (!context) return undefined;
+
+    const wrapped = context as { event?: CalendarEvent<CalendarTaskMeta> };
+
+    // case 1: wrapped event
+    if (wrapped.event && wrapped.event.start) {
+      return wrapped.event;
+    }
+
+    // case 2: direct event
+    if ((context as CalendarEvent<CalendarTaskMeta>).start) {
+      return context as CalendarEvent<CalendarTaskMeta>;
+    }
+
+    // otherwise it's NOT an event
+    return undefined;
+  }
+
 
   private handleDialogResult(
     result: CalendarEventDialogResult | undefined,

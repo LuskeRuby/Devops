@@ -31,7 +31,7 @@ public class User {
     private int totalPoints; // Reward points storage
 
     @ManyToOne
-    @JoinColumn(name = "Family_Email", referencedColumnName = "Email")
+    @JoinColumn(name = "family_email", referencedColumnName = "email")
     @JsonIgnoreProperties("users") // Prevent infinite recursion when serializing Family
     private Family family;
 
@@ -45,9 +45,10 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-        name = "user_task",
-        joinColumns = @JoinColumn(name = "User_ID"),
-        inverseJoinColumns = @JoinColumn(name = "Task_ID")
+            name = "user_task",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
     )
+    @JsonIgnoreProperties("users")
     private List<Task> tasks;
 }

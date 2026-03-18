@@ -8,29 +8,34 @@
 <app-error-banner *ngIf="loadError" [message]="loadError"></app-error-banner>
 
 <!-- EVENT TEMPLATE -->
-<ng-template #eventTemplate let-event="event">
+<ng-template #eventTemplate let-context>
+  <ng-container *ngIf="resolveTemplateEvent(context) as event">
 
-  <div class="custom-event">
-    <button
-      class="event-check"
-      [disabled]="event.meta?.checked"
-      (click)="completeFromCalendar(event, $event)"
-      [title]="event.meta?.checked ? 'Completed' : 'Mark complete'">
-      {{ event.meta?.checked ? '✓' : '☐' }}
-    </button>
+    <div class="custom-event">
+      <button
+        class="event-check"
+        [disabled]="event.meta?.checked"
+        (click)="completeFromCalendar(event, $event)"
+        [title]="event.meta?.checked ? 'Completed' : 'Mark complete'">
+        {{ event.meta?.checked ? '✓' : '☐' }}
+      </button>
 
-    <div class="event-title">
-      {{ event.title }}
+      <div class="event-title">
+        {{ event.title }}
+      </div>
+
+      <div class="event-time">
+        {{ event.start | date:'HH:mm' }} -
+        {{ (event.end || event.start) | date:'HH:mm' }}
+      </div>
+
+      <div class="event-assignees" *ngIf="event.meta?.assignedUserNames?.length">
+        {{ event.meta?.assignedUserNames?.join(', ') }}
+      </div>
+
     </div>
-    <div class="event-time">
-      {{ event.start | date:'HH:mm' }} - {{ (event.end || event.start) | date:'HH:mm' }}
-    </div>
-    <div class="event-assignees" *ngIf="event.meta?.assignedUserNames?.length">
-      {{ event.meta.assignedUserNames.join(', ') }}
-    </div>
 
-  </div>
-
+  </ng-container>
 </ng-template>
 
 

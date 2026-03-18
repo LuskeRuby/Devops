@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CalendarEvent } from 'angular-calendar';
 import { TaskDTO } from '../features/task/models/TaskDto';
+import { CalendarTaskMeta } from '../features/task/models/CalendarTaskMeta';
 
 export interface CalendarQuickCreatePayload {
   title: string;
@@ -12,6 +13,7 @@ export interface CalendarQuickCreatePayload {
   end: Date;
   userIds: number[];
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class CalendarEventService {
@@ -22,14 +24,14 @@ export class CalendarEventService {
   constructor(private http: HttpClient) {}
 
   /** Load all tasks for a family (shared family calendar view) */
-  loadFamilyEvents(familyEmail: string): Observable<CalendarEvent[]> {
+  loadFamilyEvents(familyEmail: string): Observable<CalendarEvent<CalendarTaskMeta>[]> {
     return this.http
       .get<TaskDTO[]>(`${this.tasksUrl}/family/${familyEmail}`)
       .pipe(map(tasks => tasks.map(t => this.toCalendarEvent(t))));
   }
 
   /** Load tasks assigned to a single user (fallback if no familyEmail) */
-  loadUserEvents(userId: number): Observable<CalendarEvent[]> {
+  loadUserEvents(userId: number): Observable<CalendarEvent<CalendarTaskMeta>[]> {
     return this.http
       .get<TaskDTO[]>(`${this.usersUrl}/${userId}/tasks`)
       .pipe(map(tasks => tasks.map(t => this.toCalendarEvent(t))));
@@ -41,8 +43,8 @@ export class CalendarEventService {
       task: {
         name: payload.title,
         description: payload.description,
-        timestamp: payload.start.toISOString(),
-        repeatUntil: payload.end.toISOString(),
+        timestamp: this.toLocalDateTime(payload.start),
+        repeatUntil: this.toLocalDateTime(payload.end),
         points: 0,
         checked: false,
         repeatEvery: null
@@ -63,7 +65,7 @@ export class CalendarEventService {
   }
 
   /** Map a TaskDTO to an angular-calendar CalendarEvent */
-  private toCalendarEvent(task: TaskDTO): CalendarEvent {
+  private toCalendarEvent(task: TaskDTO): CalendarEvent<CalendarTaskMeta> {
     const start = new Date(task.timestamp);
     const end = task.repeatUntil
       ? new Date(task.repeatUntil)
@@ -80,7 +82,7 @@ export class CalendarEventService {
         afterEnd: !task.checked
       },
       meta: {
-        description: task.description,
+        description: task.description ?? '',
         taskId: task.id,
         checked: task.checked,
         assignedUserIds: task.assignedUserIds ?? [],
@@ -91,6 +93,16 @@ export class CalendarEventService {
         secondary: task.checked ? '#e0e0e0' : '#D1E8FF'
       }
     };
+  }
+
+  private toLocalDateTime(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    const hour = `${date.getHours()}`.padStart(2, '0');
+    const minute = `${date.getMinutes()}`.padStart(2, '0');
+    const second = `${date.getSeconds()}`.padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
   }
 }
 

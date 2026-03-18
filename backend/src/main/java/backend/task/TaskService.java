@@ -20,6 +20,13 @@ public class TaskService {
     }
 
     public Task createTask(Task task, List<Long> userIds) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task is required");
+        }
+
+        if (userIds == null || userIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one userId is required");
+        }
 
         List<User> users = userRepository.findAllById(userIds);
 

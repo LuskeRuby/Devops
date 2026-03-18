@@ -10,7 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import jakarta.transaction.Transactional;
 
-import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,6 +57,47 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldCreateTaskFromFlatCalendarPayload() throws Exception {
+
+        User user = userRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No users found"));
+
+        String json = """
+        {
+          "title": "Calendar event",
+          "description": "From quick create",
+          "start": "2026-02-15T18:00:00",
+          "end": "2026-02-15T19:00:00",
+          "userIds": [%d]
+        }
+        """.formatted(user.getId());
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Calendar event"));
+    }
+
+    @Test
+    void shouldRejectTaskWithoutUserIds() throws Exception {
+        String json = """
+        {
+          "task": {
+            "name": "No assignee",
+            "description": "Missing userIds",
+            "timestamp": "2026-02-15T18:00:00"
+          }
+        }
+        """;
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

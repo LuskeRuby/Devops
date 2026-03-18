@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -25,7 +26,26 @@ public class TaskController {
 
     @PostMapping
     public Task createTask(@RequestBody CreateTaskRequest request) {
-        return taskService.createTask(request.getTask(), request.getUserIds());
+        CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
+
+        if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task payload with a name is required");
+        }
+
+        if (request.getUserIds() == null || request.getUserIds().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one userId is required");
+        }
+
+        Task task = new Task();
+        task.setName(payload.getName().trim());
+        task.setDescription(payload.getDescription());
+        task.setPoints(payload.getPoints() != null ? payload.getPoints() : 0);
+        task.setChecked(false);
+        task.setTimestamp(payload.getTimestamp());
+        task.setRepeatEvery(payload.getRepeatEvery());
+        task.setRepeatUntil(payload.getRepeatUntil());
+
+        return taskService.createTask(task, request.getUserIds());
     }
 
     @GetMapping("/user/{userId}")
