@@ -19,7 +19,8 @@ public class UserService {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getTotalPoints()
+                user.getTotalPoints(),
+                user.getFamily() != null ? user.getFamily().getEmail() : null
         );
     }
 
@@ -58,5 +59,9 @@ public class UserService {
             return false;
         }
         return user.getPincode().equals(pin);
+    }
+    
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 }

@@ -1,6 +1,7 @@
 package backend.task;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Data;
 
@@ -14,5 +15,7 @@ public class TaskDto {
     private LocalDateTime timestamp;
     private String repeatEvery;
     private LocalDateTime repeatUntil;
-    private Long imageId;     
+    private Long imageId;
+    private List<Long> assignedUserIds;
+    private List<String> assignedUserNames;
 }

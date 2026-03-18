@@ -27,6 +27,52 @@ INSERT INTO user_task (User_ID, Task_ID) VALUES
   (1, 1),
   (3, 2);
 
+-- Seed one parent member under johnson family for quick dashboard testing
+INSERT INTO users (id, Family_Email, Image_ID, email, name, role, pincode, total_points)
+SELECT COALESCE((SELECT MAX(id) + 1 FROM users), 1),
+       'johnson@family.com',
+       1,
+       'test@test.dk',
+       'test',
+       'PARENT',
+       '1234',
+       0
+WHERE NOT EXISTS (
+  SELECT 1 FROM users WHERE email = 'test@test.dk'
+);
+
+-- Seed a current-week calendar event so it shows up immediately
+INSERT INTO task (id, Image_ID, name, timestamp, description, points, checked, Repeat_every, Repeat_Until)
+SELECT COALESCE((SELECT MAX(id) + 1 FROM task), 1),
+       4,
+       'Test calendar event',
+       NOW() + INTERVAL '1 hour',
+       'Dashboard seed event for test user',
+       5,
+       false,
+       'Once',
+       NOW() + INTERVAL '2 hours'
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM task
+  WHERE name = 'Test calendar event'
+    AND description = 'Dashboard seed event for test user'
+);
+
+INSERT INTO user_task (User_ID, Task_ID)
+SELECT u.id, t.id
+FROM users u
+JOIN task t
+  ON t.name = 'Test calendar event'
+ AND t.description = 'Dashboard seed event for test user'
+WHERE u.email = 'test@test.dk'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM user_task ut
+    WHERE ut.User_ID = u.id
+      AND ut.Task_ID = t.id
+  );
+
 -- Messages
 INSERT INTO message (id, User_ID, content, timestamp) VALUES
   (1, 1, 'Don''t forget to clean the kitchen today!', NOW()),
