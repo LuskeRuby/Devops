@@ -20,7 +20,6 @@ import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
 import { Router } from '@angular/router';
-import { ErrorBannerComponent } from '../error-banner/error-banner.component';
 
 registerLocaleData(localeDa);
 
@@ -42,7 +41,6 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
     CommonModule,
     MatDialogModule,
     FormsModule, // for 1/7 day view
-    ErrorBannerComponent
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },

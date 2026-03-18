@@ -60,4 +60,8 @@ public class UserService {
         }
         return user.getPincode().equals(pin);
     }
+    
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
 }

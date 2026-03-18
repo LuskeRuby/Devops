@@ -1,0 +1,67 @@
+.list-container {
+  max-width: 400px;
+  margin: 20px auto;
+  font-family: sans-serif;
+}
+.add-member-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  padding-left: 56px; 
+  cursor: pointer;
+}
+.add-member-container:hover .plus-box {
+  background-color: #6a9cf5;
+}
+.plus-box {
+  background-color: #8bb4f7; 
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  transition: background-color 0.2s;
+}
+.add-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #000;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.toggle-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.toggle-edit-btn:hover {
+  background: #e5e5e5;
+}
+
+/* Optional: smooth fade for the icons */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
