@@ -14,7 +14,7 @@ import { FamilyAuthResponseDto, LoginRequest, RegisterRequest } from './token.mo
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   /** Base URL for family-related auth endpoints. */
-  private apiBase = 'http://localhost:8080/api/families';
+  private apiBase = '/api/families';
 
   /** Key used to store the access token in localStorage. */
   private accessTokenKey = 'auth.accessToken';
@@ -35,7 +35,7 @@ export class AuthService {
   private familyEmailSubject = new BehaviorSubject<string | null>(null);
   public familyEmail$ = this.familyEmailSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
   /**
    * Read the current access token from localStorage.

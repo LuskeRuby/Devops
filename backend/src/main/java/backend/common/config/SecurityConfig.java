@@ -12,6 +12,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -40,9 +41,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/families/register", "/api/families/login", "/api/families/refresh")
                         .permitAll()
                         .anyRequest().authenticated());
-                //Replace with code below for local test without auth
-                //.authorizeHttpRequests(auth -> auth
-                //    .anyRequest().permitAll());
+        // Replace with code below for local test without auth
+        // .authorizeHttpRequests(auth -> auth
+        // .anyRequest().permitAll());
 
         return http.build();
     }
@@ -50,7 +51,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

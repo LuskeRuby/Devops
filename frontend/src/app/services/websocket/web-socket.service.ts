@@ -10,8 +10,9 @@ export class WebSocketService {
   private connected = false;
 
   constructor() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/websocket',
+      brokerURL: `${wsProtocol}://${window.location.host}/websocket`,
       reconnectDelay: 5000,
       debug: (msg) => console.log('STOMP:', msg)
     });

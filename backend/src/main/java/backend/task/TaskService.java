@@ -20,6 +20,13 @@ public class TaskService {
     }
 
     public Task createTask(Task task, List<Long> userIds) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task is required");
+        }
+
+        if (userIds == null || userIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one userId is required");
+        }
 
         List<User> users = userRepository.findAllById(userIds);
 
@@ -42,13 +49,17 @@ public class TaskService {
     }
 
     public List<Task> getTasksForFamily(String familyEmail) {
-        return taskRepository.findByUsers_Family_Email(familyEmail);
+        return taskRepository.findDistinctByUsers_Family_Email(familyEmail);
     }
 
     public Task getTaskById(Long id) {
    
         return taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+    }
+
+    public void deleteTask(Long id) {
+        taskRepository.deleteById(id);
     }
 
     public Task saveTask(Task task) {

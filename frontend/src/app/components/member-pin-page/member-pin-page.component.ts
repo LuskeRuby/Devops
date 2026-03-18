@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { User, UserService } from '../../services/user.service';
 import { FormsModule } from '@angular/forms';
 
@@ -68,7 +68,7 @@ export class MemberPinPageComponent implements OnInit {
       next: (isValid: boolean) => {
         if (isValid && this.user) {
           this.userService.setCurrentUser(this.user!);
-          this.router.navigate(['/home']);
+          this.router.navigate(['/dashboard']);
         }
       },
       error: (err: any) => {

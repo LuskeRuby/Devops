@@ -15,6 +15,7 @@ export interface User {
   family: {
     email: string;
   };
+  familyEmail?: string;
 }
 
 const STORAGE_KEY = 'currentUser';
@@ -22,13 +23,13 @@ const STORAGE_KEY = 'currentUser';
 @Injectable({ providedIn: 'root' })
 export class UserService {
 
-  private apiUrl = 'http://localhost:8080/api/users';
+  private apiUrl = '/api/users';
 
   readonly currentUser = signal<User | null>(
     JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? 'null')
   );
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
   setCurrentUser(user: User): void {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
@@ -53,9 +54,9 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/${id}/add-points/${points}`, {});
   }
 
- getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {
-   return this.http.get<User[]>(`${this.apiUrl}/family/${familyEmail}`);
- }
+  getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/family/${familyEmail}`);
+  }
 
   getTasksByUserId(id: number): Observable<TaskDTO[]> {
     return this.http.get<TaskDTO[]>(`${this.apiUrl}/${id}/tasks`);
