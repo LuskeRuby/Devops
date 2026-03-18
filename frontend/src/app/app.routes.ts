@@ -10,6 +10,9 @@ import { TotalPointsDisplayComponent } from './components/total-points-display/t
 import { PointsProgressComponent } from './components/points-progress/points-progress.component';
 import { RewardsDisplayComponent } from './components/rewards-display/rewards-display.component';
 import { MemberPinPageComponent } from './components/member-pin-page/member-pin-page.component';
+import { CalendarComponent } from './components/calendar/calendar';
+import { TaskPageComponent } from './components/task-page/task-page';
+import { DashboardPage } from './components/dashboard-page/dashboard-page';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -19,8 +22,11 @@ export const routes: Routes = [
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'calendar', component: CalendarComponent, canActivate: [AuthGuard] },
+  { path: 'task', component: TaskPageComponent, canActivate: [AuthGuard] },
   { path: 'message', component: MessageComponent, canActivate: [AuthGuard] },
   { path: 'test-total-points', component: TotalPointsDisplayComponent },
   { path: 'test-points-progress', component: PointsProgressComponent },
-  { path: 'test-rewards-display', component: RewardsDisplayComponent }
+  { path: 'test-rewards-display', component: RewardsDisplayComponent },
+  { path: 'dashboard', component: DashboardPage, canActivate: [AuthGuard] }
 ];

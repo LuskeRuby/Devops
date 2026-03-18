@@ -19,7 +19,8 @@ public class UserService {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getTotalPoints()
+                user.getTotalPoints(),
+                user.getFamily() != null ? user.getFamily().getEmail() : null
         );
     }
 

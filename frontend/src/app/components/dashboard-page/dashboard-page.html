@@ -1,0 +1,25 @@
+<div class="dashboard-layout">
+  <aside class="sidebar-pane">
+    <app-sidebar></app-sidebar>
+  </aside>
+
+  <main class="content-pane">
+    <section class="calendar-shell">
+      <div class="calendar-header">
+        <div class="calendar-controls">
+          <button (click)="previousWeek()">◀</button>
+          <button class="today-btn" (click)="goToToday()">Today</button>
+          <button (click)="nextWeek()">▶</button>
+        </div>
+
+        <div class="calendar-title">
+          {{ viewDate | date:'MMMM yyyy' }}
+        </div>
+      </div>
+
+      <div class="calendar-section">
+        <app-calendar [viewDate]="viewDate"></app-calendar>
+      </div>
+    </section>
+  </main>
+</div>

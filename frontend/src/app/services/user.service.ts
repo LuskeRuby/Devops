@@ -11,6 +11,7 @@ export interface User {
   role?: string;
   totalPoints?: number;
   avatarUrl?: string;
+  familyEmail?: string;
 }
 
 const STORAGE_KEY = 'currentUser';

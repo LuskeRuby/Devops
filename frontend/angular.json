@@ -35,6 +35,7 @@
             ],
             "styles": [
               "src/styles.scss",
+              "node_modules/angular-calendar/css/angular-calendar.css",
               "node_modules/@phosphor-icons/web/src/regular/style.css"
             ]
           },
