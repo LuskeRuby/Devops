@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Client } from '@stomp/stompjs';
-import { AuthService } from '../../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +9,11 @@ export class WebSocketService {
   private client: Client;
   private connected = false;
 
+  constructor() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   constructor(private authService: AuthService) {
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/websocket',
+      brokerURL: `${wsProtocol}://${window.location.host}/websocket`,
       reconnectDelay: 5000,
       connectHeaders: {
         Authorization: `Bearer ${this.authService.getAccessToken()}`
