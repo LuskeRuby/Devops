@@ -15,13 +15,14 @@ export class WebSocketService {
     this.client = new Client({
       brokerURL: `${wsProtocol}://${window.location.host}/websocket`,
       reconnectDelay: 5000,
-      connectHeaders: {
-        Authorization: `Bearer ${this.authService.getAccessToken()}`
-      }
     });
   }
 
   connect(familyEmail: string, onMessage: (msg: any) => void, onConnected: () => void) {
+    this.client.connectHeaders = {
+      Authorization: `Bearer ${this.authService.getAccessToken()}`
+    };
+
     this.client.onConnect = () => {
       console.log('Connected to backend');
       this.connected = true;
