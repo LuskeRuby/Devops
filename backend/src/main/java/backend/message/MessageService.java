@@ -23,11 +23,11 @@ public class MessageService {
 
     public MessageResponseDto saveMessage(MessageRequestDto dto) {
 
-        User user = userService.getUserEntityById(dto.getUserId());
+        User user = userService.getUserEntityById(dto.userId());
 
         Message message = new Message();
         message.setUser(user);
-        message.setContent(dto.getContent());
+        message.setContent(dto.content());
         message.setTimestamp(LocalDateTime.now());
 
         Message saved = messageRepository.save(message);
