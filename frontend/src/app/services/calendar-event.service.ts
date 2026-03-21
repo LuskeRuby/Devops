@@ -65,8 +65,10 @@ export class CalendarEventService {
   }
 
   /** Map a TaskDTO to an angular-calendar CalendarEvent */
-  private toCalendarEvent(task: TaskDTO): CalendarEvent<CalendarTaskMeta> {
+  private toCalendarEvent(task: TaskDTO): CalendarEvent {console.log("RAW timestamp:", task.timestamp);
+
     const start = new Date(task.timestamp);
+
     const end = task.repeatUntil
       ? new Date(task.repeatUntil)
       : new Date(start.getTime() + 60 * 60 * 1000);
@@ -82,7 +84,7 @@ export class CalendarEventService {
         afterEnd: !task.checked
       },
       meta: {
-        description: task.description ?? '',
+        description: task.description,
         taskId: task.id,
         checked: task.checked,
         assignedUserIds: task.assignedUserIds ?? [],

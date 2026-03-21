@@ -3,6 +3,12 @@
   background: white;
 }
 
+mwl-calendar-week-view,
+mwl-calendar-day-view {
+  display: block;
+  height: 800px;
+}
+
 .calendar-scroll {
   max-height: 68vh;
   overflow-y: auto;

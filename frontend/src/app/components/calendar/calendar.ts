@@ -7,9 +7,11 @@ import {
   CalendarDateFormatter,
   CalendarEvent,
   CalendarModule,
-  DateFormatterParams
+  DateFormatterParams,
+  DateAdapter
 } from 'angular-calendar';
 
+import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { format } from 'date-fns';
 
@@ -44,7 +46,8 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
-    { provide: CalendarDateFormatter, useClass: DanishCalendarDateFormatter }
+    { provide: CalendarDateFormatter, useClass: DanishCalendarDateFormatter },
+    { provide: DateAdapter, useFactory: adapterFactory }
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss'
@@ -74,6 +77,15 @@ export class CalendarComponent implements OnInit {
 
     this.loadFamilyUsers();
     this.loadEvents();
+
+    // manually insert for test
+    this.events = [
+      {
+        title: 'TEST EVENT',
+        start: new Date(),
+        end: new Date(new Date().getTime() + 60 * 60 * 1000)
+      }
+    ];
   }
 
   loadEvents(): void {
