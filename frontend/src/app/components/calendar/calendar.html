@@ -1,4 +1,63 @@
-<mwl-calendar-week-view
-  [viewDate]="viewDate"
-  [events]="events">
-</mwl-calendar-week-view>
+<div class="view-toggle">
+  <button class="view-btn" (click)="toggleView()" [class.active]="isDayView">
+    {{ isDayView ? '📅 Day' : '📋 Week' }}
+  </button>
+</div>
+
+<!-- EVENT TEMPLATE -->
+<ng-template #eventTemplate let-context>
+  <ng-container *ngIf="resolveTemplateEvent(context) as event">
+
+    <div class="custom-event" [class.completed]="event.meta?.checked">
+      <button
+        class="event-check"
+        [disabled]="event.meta?.checked"
+        (click)="completeFromCalendar(event, $event)"
+        [title]="event.meta?.checked ? 'Completed' : 'Mark complete'"
+        [class.checked]="event.meta?.checked">
+        {{ event.meta?.checked ? '✓' : '☐' }}
+      </button>
+
+      <div class="event-title">
+        {{ event.title }}
+      </div>
+
+      <div class="event-time">
+        {{ event.start | date:'HH:mm' }} -
+        {{ (event.end || event.start) | date:'HH:mm' }}
+      </div>
+
+      <div class="event-assignees" *ngIf="event.meta?.assignedUserNames?.length">
+        {{ event.meta?.assignedUserNames?.join(', ') }}
+      </div>
+
+    </div>
+
+  </ng-container>
+</ng-template>
+
+
+<div class="calendar-scroll">
+  <!-- WEEK VIEW -->
+  <mwl-calendar-week-view
+    *ngIf="!isDayView"
+    [viewDate]="viewDate"
+    [events]="events"
+    [locale]="locale"
+    [weekStartsOn]="weekStartsOn"
+    (hourSegmentClicked)="handleHourClick($event)"
+    (eventClicked)="handleEventClick($event.event)">
+  </mwl-calendar-week-view>
+
+
+  <!-- DAY VIEW -->
+  <mwl-calendar-day-view
+    *ngIf="isDayView"
+    [viewDate]="viewDate"
+    [events]="events"
+    [locale]="locale"
+    [eventTemplate]="eventTemplate"
+    (hourSegmentClicked)="handleHourClick($event)"
+    (eventClicked)="handleEventClick($event.event)">
+  </mwl-calendar-day-view>
+</div>

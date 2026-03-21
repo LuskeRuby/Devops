@@ -70,22 +70,26 @@ export class CalendarComponent implements OnInit {
   events: CalendarEvent<CalendarTaskMeta>[] = [];
   familyUsers: User[] = [];
   loadError: string | null = null;
+  private readonly STORAGE_KEY = 'calendar_view_preference';
 
   ngOnInit(): void {
     const role = this.userService.currentUser()?.role?.toUpperCase();
-    this.isDayView = role === 'CHILD';
+
+    // Check localStorage first, then fall back to role-based default
+    const savedView = localStorage.getItem(this.STORAGE_KEY);
+    if (savedView !== null) {
+      this.isDayView = savedView === 'day';
+    } else {
+      this.isDayView = role === 'CHILD';
+    }
 
     this.loadFamilyUsers();
     this.loadEvents();
+  }
 
-    // manually insert for test
-    this.events = [
-      {
-        title: 'TEST EVENT',
-        start: new Date(),
-        end: new Date(new Date().getTime() + 60 * 60 * 1000)
-      }
-    ];
+  toggleView(): void {
+    this.isDayView = !this.isDayView;
+    localStorage.setItem(this.STORAGE_KEY, this.isDayView ? 'day' : 'week');
   }
 
   loadEvents(): void {
@@ -128,6 +132,7 @@ export class CalendarComponent implements OnInit {
   }
 
   handleHourClick({ date }: { date: Date }): void {
+    console.log('HOUR CLICK WORKS', date);
     const end = new Date(date.getTime() + 60 * 60 * 1000);
     const current = this.userService.currentUser();
 
@@ -147,6 +152,7 @@ export class CalendarComponent implements OnInit {
   }
 
   handleEventClick(event?: CalendarEvent<CalendarTaskMeta>): void {
+    console.log('EVENT CLICK WORKS', event);
     if (!event) {
       return;
     }
