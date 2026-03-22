@@ -19,7 +19,7 @@ export class TaskService {
 
   private baseUrl = '/api/tasks';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   createTask(task: Task, userIds: number[]): Observable<Task> {
     return this.http.post<Task>(this.baseUrl, {

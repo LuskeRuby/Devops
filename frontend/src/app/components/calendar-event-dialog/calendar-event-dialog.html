@@ -1,41 +1,51 @@
-template: `
-<h2 mat-dialog-title>Opret Event</h2>
+<h2 mat-dialog-title>
+  {{ data.eventId ? 'Rediger event' : 'Opret event' }}
+</h2>
 
 <div mat-dialog-content>
 
-  <mat-form-field appearance="outline" style="width:100%">
+  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Titel</mat-label>
     <input matInput [(ngModel)]="title">
   </mat-form-field>
 
-  <mat-form-field appearance="outline" style="width:100%">
+  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Beskrivelse</mat-label>
     <textarea matInput [(ngModel)]="description"></textarea>
   </mat-form-field>
 
-  <mat-form-field appearance="outline" style="width:100%">
-    <mat-label>Sted</mat-label>
-    <input matInput [(ngModel)]="location">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Start</mat-label>
+    <input matInput type="datetime-local" [(ngModel)]="startLocal" />
   </mat-form-field>
 
-  <div style="margin-top:10px">
-    <label>Billede</label>
-    <input type="file" (change)="onFileSelected($event)">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Slut</mat-label>
+    <input matInput type="datetime-local" [(ngModel)]="endLocal" />
+  </mat-form-field>
+
+  <div class="users-section">
+    <mat-label>Assign family members</mat-label>
+
+    <div class="users">
+      <label *ngFor="let user of data.users" class="user-row">
+        <input
+          type="checkbox"
+          [checked]="selectedUserIds.includes(user.id)"
+          (change)="toggleUser(user.id)"
+        />
+        <span>{{ user.name }}</span>
+      </label>
+    </div>
   </div>
 
-  <img *ngIf="imagePreview"
-       [src]="imagePreview"
-       style="margin-top:10px;max-width:100%;border-radius:6px">
 </div>
 
 <div mat-dialog-actions align="end">
-
-  <button mat-button (click)="goToTaskPage()">Advanced edit</button>
-
-  <div>
-    <button mat-button (click)="close()">Annuller</button>
-    <button mat-raised-button color="primary" (click)="save()">Gem</button>
-  </div>
-
+  <button mat-button (click)="close()">Annuller</button>
+  <button mat-raised-button color="primary"
+          (click)="save()"
+          [disabled]="!canSave()">
+    Gem
+  </button>
 </div>
-`

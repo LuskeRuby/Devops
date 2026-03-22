@@ -66,6 +66,35 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    public Task updateTask(Long taskId, Task updatedTask, List<Long> userIds) {
+        if (updatedTask == null) {
+            throw new IllegalArgumentException("Task payload is required");
+        }
+
+        if (userIds == null || userIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one userId is required");
+        }
+
+        Task existing = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
+
+        List<User> users = userRepository.findAllById(userIds);
+
+        existing.setName(updatedTask.getName());
+        existing.setDescription(updatedTask.getDescription());
+        existing.setPoints(updatedTask.getPoints() != null ? updatedTask.getPoints() : 0);
+        existing.setTimestamp(updatedTask.getTimestamp());
+        existing.setRepeatEvery(updatedTask.getRepeatEvery());
+        existing.setRepeatUntil(updatedTask.getRepeatUntil());
+        existing.setUsers(users);
+
+        if (updatedTask.getChecked() != null) {
+            existing.setChecked(updatedTask.getChecked());
+        }
+
+        return taskRepository.save(existing);
+    }
+
     @Transactional(readOnly = true)
     public List<Task> getTasksByUserId(Long userId) {
         return taskRepository.findByUsers_Id(userId);

@@ -58,6 +58,30 @@ public class TaskController {
         return taskService.markAsCompleted(taskId);
     }
 
+    @PutMapping("/{taskId}")
+    public Task updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request) {
+        CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
+
+        if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task payload with a name is required");
+        }
+
+        if (request.getUserIds() == null || request.getUserIds().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one userId is required");
+        }
+
+        Task task = new Task();
+        task.setName(payload.getName().trim());
+        task.setDescription(payload.getDescription());
+        task.setPoints(payload.getPoints() != null ? payload.getPoints() : 0);
+        task.setChecked(payload.getChecked());
+        task.setTimestamp(payload.getTimestamp());
+        task.setRepeatEvery(payload.getRepeatEvery());
+        task.setRepeatUntil(payload.getRepeatUntil());
+
+        return taskService.updateTask(taskId, task, request.getUserIds());
+    }
+
     @GetMapping("/family/{familyEmail}")
     public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail) {
         return taskService.getTasksForFamily(familyEmail).stream()
