@@ -12,6 +12,8 @@ export interface CalendarQuickCreatePayload {
   start: Date;
   end: Date;
   userIds: number[];
+  points: number;
+  color: string;
 }
 
 
@@ -24,10 +26,12 @@ export class CalendarEventService {
   constructor(private http: HttpClient) {}
 
   /** Load all tasks for a family (shared family calendar view) */
-  loadFamilyEvents(familyEmail: string): Observable<CalendarEvent<CalendarTaskMeta>[]> {
+  loadFamilyEvents(familyEmail: string) {
     return this.http
       .get<TaskDTO[]>(`${this.tasksUrl}/family/${familyEmail}`)
-      .pipe(map(tasks => tasks.map(t => this.toCalendarEvent(t))));
+      .pipe(
+        map(tasks => tasks.map(task => this.toCalendarEvent(task)))
+      );
   }
 
   /** Load tasks assigned to a single user (fallback if no familyEmail) */
@@ -37,7 +41,7 @@ export class CalendarEventService {
       .pipe(map(tasks => tasks.map(t => this.toCalendarEvent(t))));
   }
 
-  /** Create a new calendar event (persisted as a Task) */
+  /** Create a new calendar event (persisted as a TaskService) */
   createEvent(payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
     const body = {
       task: {
@@ -55,6 +59,24 @@ export class CalendarEventService {
     return this.http.post<TaskDTO>(this.tasksUrl, body);
   }
 
+  /** Update an existing calendar event (persisted TaskService) */
+  updateEvent(taskId: number, payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
+    const body = {
+      task: {
+        name: payload.title,
+        description: payload.description,
+        timestamp: this.toLocalDateTime(payload.start),
+        repeatUntil: this.toLocalDateTime(payload.end),
+        points: payload.points,
+        checked: undefined,
+        repeatEvery: null
+      },
+      userIds: payload.userIds
+    };
+
+    return this.http.put<TaskDTO>(`${this.tasksUrl}/${taskId}`, body);
+  }
+
   completeEvent(id: number): Observable<TaskDTO> {
     return this.http.put<TaskDTO>(`${this.tasksUrl}/${id}/complete`, {});
   }
@@ -65,13 +87,17 @@ export class CalendarEventService {
   }
 
   /** Map a TaskDTO to an angular-calendar CalendarEvent */
-  private toCalendarEvent(task: TaskDTO): CalendarEvent {console.log("RAW timestamp:", task.timestamp);
-
-    const start = new Date(task.timestamp);
+  private toCalendarEvent(task: TaskDTO): CalendarEvent {
+    const start = task.timestamp ? new Date(task.timestamp) : new Date();
 
     const end = task.repeatUntil
       ? new Date(task.repeatUntil)
       : new Date(start.getTime() + 60 * 60 * 1000);
+
+    const color = {
+      primary: '#2563eb', // blue for active
+      secondary: '#dbeafe '// gray for done
+    };
 
     return {
       id: task.id,
@@ -90,10 +116,7 @@ export class CalendarEventService {
         assignedUserIds: task.assignedUserIds ?? [],
         assignedUserNames: task.assignedUserNames ?? []
       },
-      color: {
-        primary: task.checked ? '#9e9e9e' : '#4285f4',
-        secondary: task.checked ? '#e0e0e0' : '#D1E8FF'
-      }
+      color
     };
   }
 

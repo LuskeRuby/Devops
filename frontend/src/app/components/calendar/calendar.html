@@ -1,52 +1,60 @@
-<div class="view-toggle">
-  <button class="view-btn" (click)="toggleView()" [class.active]="isDayView">
-    {{ isDayView ? '📅 Day' : '📋 Week' }}
-  </button>
-</div>
+<!-- FULL EVENT TEMPLATE -->
+<ng-template #eventTemplate let-weekEvent="weekEvent">
+  <ng-container *ngIf="(weekEvent.tempEvent || weekEvent.event) as calEvent">
+    <div
+      class="event-card custom-event"
+      [class.is-done]="calEvent.meta?.checked"
+      [style.backgroundColor]="calEvent.color?.secondary || '#eef3ff'"
+      [style.borderLeft]="'4px solid ' + (calEvent.color?.primary || '#999999')"
+      (click)="onEventTemplateClick(calEvent, $event)"
+    >
+    <div class="event-content">
 
-<!-- EVENT TEMPLATE -->
-<ng-template #eventTemplate let-context>
-  <ng-container *ngIf="resolveTemplateEvent(context) as event">
+        <div class="event-top-row">
+          <input
+            type="checkbox"
+            [checked]="calEvent.meta?.checked"
+            [disabled]="calEvent.meta?.checked"
+            (click)="completeFromCalendar(calEvent, $event)"
+            aria-label="Mark task complete"
+          />
 
-    <div class="custom-event" [class.completed]="event.meta?.checked">
-      <button
-        class="event-check"
-        [disabled]="event.meta?.checked"
-        (click)="completeFromCalendar(event, $event)"
-        [title]="event.meta?.checked ? 'Completed' : 'Mark complete'"
-        [class.checked]="event.meta?.checked">
-        {{ event.meta?.checked ? '✓' : '☐' }}
-      </button>
+          <div class="event-title">
+            {{ calEvent.title }}
+          </div>
+        </div>
 
-      <div class="event-title">
-        {{ event.title }}
+        <div class="event-time">
+          {{ calEvent.start | date:'shortTime' }} -
+          {{ (calEvent.end || calEvent.start) | date:'shortTime' }}
+        </div>
+
+        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned'">
+          <i class="ph ph-user"></i>
+          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned' }}
+        </div>
+
       </div>
-
-      <div class="event-time">
-        {{ event.start | date:'HH:mm' }} -
-        {{ (event.end || event.start) | date:'HH:mm' }}
-      </div>
-
-      <div class="event-assignees" *ngIf="event.meta?.assignedUserNames?.length">
-        {{ event.meta?.assignedUserNames?.join(', ') }}
-      </div>
-
     </div>
-
   </ng-container>
 </ng-template>
 
 
+<!-- CALENDAR CONTAINER -->
 <div class="calendar-scroll">
+
   <!-- WEEK VIEW -->
   <mwl-calendar-week-view
     *ngIf="!isDayView"
     [viewDate]="viewDate"
     [events]="events"
+    [refresh]="refresh"
     [locale]="locale"
     [weekStartsOn]="weekStartsOn"
-    (hourSegmentClicked)="handleHourClick($event)"
-    (eventClicked)="handleEventClick($event.event)">
+    [eventTemplate]="eventTemplate"
+    (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+    (eventTimesChanged)="onEventTimesChanged($event)"
+    (hourSegmentClicked)="onHourSegmentClicked($event)">
   </mwl-calendar-week-view>
 
 
@@ -55,9 +63,12 @@
     *ngIf="isDayView"
     [viewDate]="viewDate"
     [events]="events"
+    [refresh]="refresh"
     [locale]="locale"
     [eventTemplate]="eventTemplate"
-    (hourSegmentClicked)="handleHourClick($event)"
-    (eventClicked)="handleEventClick($event.event)">
+    (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+    (eventTimesChanged)="onEventTimesChanged($event)"
+    (hourSegmentClicked)="onHourSegmentClicked($event)">
   </mwl-calendar-day-view>
+
 </div>

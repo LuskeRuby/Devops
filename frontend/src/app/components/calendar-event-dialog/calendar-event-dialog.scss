@@ -1,0 +1,39 @@
+.full-width {
+  width: 100%;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-section {
+  margin-top: 8px;
+}
+
+.image-preview {
+  margin-top: 8px;
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.users-section {
+  margin-top: 12px;
+}
+
+.users {
+  max-height: 160px;
+  overflow: auto;
+  padding-top: 6px;
+}
+
+.user-row {
+  display: block;
+  margin: 4px 0;
+  cursor: pointer;
+}

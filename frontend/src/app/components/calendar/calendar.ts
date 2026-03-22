@@ -1,7 +1,8 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit } from '@angular/core';
-import { Input } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { CalendarEventTimesChangedEvent } from 'angular-calendar';
 
 import {
   CalendarDateFormatter,
@@ -15,19 +16,17 @@ import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { format } from 'date-fns';
 
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../calendar-event-dialog/calendar-event-dialog';
-import { MatDialogModule } from '@angular/material/dialog';
 import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
-import { Router } from '@angular/router';
 
 registerLocaleData(localeDa);
 
 export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   override weekViewHour({ date }: DateFormatterParams): string {
-    return format(date, 'HH:mm'); // 24-hour
+    return format(date, 'HH:mm');
   }
 
   override dayViewHour({ date }: DateFormatterParams): string {
@@ -42,7 +41,7 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
     CalendarModule,
     CommonModule,
     MatDialogModule,
-    FormsModule, // for 1/7 day view
+    FormsModule
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
@@ -50,16 +49,14 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
     { provide: DateAdapter, useFactory: adapterFactory }
   ],
   templateUrl: './calendar.html',
-  styleUrl: './calendar.scss'
+  styleUrls: ['./calendar.scss']
 })
-
-// to display a calendar with Danish locale and 24-hour time format
 export class CalendarComponent implements OnInit {
+
   constructor(
     private dialog: MatDialog,
     private calendarEventService: CalendarEventService,
-    private userService: UserService,
-    private router: Router
+    private userService: UserService
   ) {}
 
   @Input() viewDate: Date = new Date();
@@ -70,18 +67,17 @@ export class CalendarComponent implements OnInit {
   events: CalendarEvent<CalendarTaskMeta>[] = [];
   familyUsers: User[] = [];
   loadError: string | null = null;
+  refresh = new Subject<void>();
+
   private readonly STORAGE_KEY = 'calendar_view_preference';
 
   ngOnInit(): void {
     const role = this.userService.currentUser()?.role?.toUpperCase();
-
-    // Check localStorage first, then fall back to role-based default
     const savedView = localStorage.getItem(this.STORAGE_KEY);
-    if (savedView !== null) {
-      this.isDayView = savedView === 'day';
-    } else {
-      this.isDayView = role === 'CHILD';
-    }
+
+    this.isDayView = savedView
+      ? savedView === 'day'
+      : role === 'CHILD';
 
     this.loadFamilyUsers();
     this.loadEvents();
@@ -92,75 +88,126 @@ export class CalendarComponent implements OnInit {
     localStorage.setItem(this.STORAGE_KEY, this.isDayView ? 'day' : 'week');
   }
 
+  // ---------------- EVENTS ----------------
+
   loadEvents(): void {
-    const user = this.userService.currentUser();
-    if (!user?.familyEmail) {
+    const familyEmail = this.getFamilyEmail();
+
+    if (!familyEmail) {
       this.events = [];
-      this.loadError = 'Unable to load calendar tasks: missing family context.';
+      this.loadError = 'Missing family';
+      this.refresh.next();
       return;
     }
 
-    const source$ = this.calendarEventService.loadFamilyEvents(user.familyEmail);
-
-    source$.subscribe({
+    this.calendarEventService.loadFamilyEvents(familyEmail).subscribe({
       next: events => {
-        this.loadError = null;
+        console.log('Loaded events:', events); // debug
         this.events = events;
+        this.loadError = null;
+        this.refresh.next();
       },
-      error: err => {
-        console.error('Failed to load calendar events:', err);
+      error: () => {
+        console.error('Error loading events:'); // debug
         this.events = [];
-        this.loadError = 'Failed to load family calendar tasks.';
+        this.loadError = 'Failed to load events';
+        this.refresh.next();
       }
     });
   }
 
   loadFamilyUsers(): void {
     const user = this.userService.currentUser();
-    if (!user?.familyEmail) {
+    const familyEmail = this.getFamilyEmail();
+
+    if (!familyEmail) {
       this.familyUsers = user ? [user] : [];
       return;
     }
 
-    this.userService.getUsersByFamilyEmail(user.familyEmail).subscribe({
-      next: users => (this.familyUsers = users),
-      error: err => {
-        console.error('Failed to load family users:', err);
-        this.familyUsers = [user];
+    this.userService.getUsersByFamilyEmail(familyEmail).subscribe({
+      next: users => this.familyUsers = users,
+      error: () => this.familyUsers = user ? [user] : []
+    });
+  }
+
+  // ---------------- CLICK HANDLING ----------------
+
+  onHourSegmentClicked(event: { date: Date; sourceEvent?: MouseEvent }): void {
+    const target = event.sourceEvent?.target as HTMLElement;
+
+    if (target?.closest('.custom-event')) return;
+
+    this.openCreateDialog(event.date);
+  }
+
+  onEventTemplateClick(
+    event: CalendarEvent<CalendarTaskMeta>,
+    mouseEvent: MouseEvent | KeyboardEvent
+  ): void {
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+    this.openEditDialog(event);
+  }
+
+  // drag and drop and resize
+  // TODO: needs validate.  not drag before current time, not drag to end before start, etc
+  onEventTimesChanged({ event, newStart, newEnd }: CalendarEventTimesChangedEvent<CalendarTaskMeta>): void {
+    const taskId = event.id as number;
+    if (!taskId) return;
+
+    // optimistic UI update
+    this.events = this.events.map(e =>
+      e.id === event.id
+        ? { ...e, start: newStart, end: newEnd ?? e.end }
+        : e
+    );
+    this.refresh.next();
+
+    const payload = {
+      title: event.title ?? '',
+      description: event.meta?.description ?? '',
+      start: newStart,
+      end: newEnd ?? event.end ?? new Date(newStart.getTime() + 60 * 60 * 1000),
+      userIds: event.meta?.assignedUserIds ?? [],
+      points: 0,
+      color: '#4285f4'
+    };
+
+    this.calendarEventService.updateEvent(taskId, payload).subscribe({
+      next: () => this.loadEvents(),
+      error: () => {
+        this.loadError = 'Failed to move event';
+        this.loadEvents(); // rollback from server truth
       }
     });
   }
 
-  handleHourClick({ date }: { date: Date }): void {
-    console.log('HOUR CLICK WORKS', date);
-    const end = new Date(date.getTime() + 60 * 60 * 1000);
+
+  // ---------------- DIALOGS ----------------
+
+  openCreateDialog(start: Date): void {
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     const current = this.userService.currentUser();
 
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
       width: '460px',
       data: {
-        start: date,
+        start,
         end,
         users: this.familyUsers,
         selectedUserIds: current ? [current.id] : []
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      this.handleDialogResult(result);
-    });
+    dialogRef.afterClosed().subscribe(result => this.handleDialog(result));
   }
 
-  handleEventClick(event?: CalendarEvent<CalendarTaskMeta>): void {
-    console.log('EVENT CLICK WORKS', event);
-    if (!event) {
-      return;
-    }
-
+  openEditDialog(event: CalendarEvent<CalendarTaskMeta>): void {
     const dialogRef = this.dialog.open(CalendarEventDialogComponent, {
       width: '460px',
       data: {
-        eventId: event.id as number | undefined,
+        eventId: event.id,
         title: event.title,
         description: event.meta?.description,
         start: event.start,
@@ -170,78 +217,57 @@ export class CalendarComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      this.handleDialogResult(result, event.id as number | undefined);
-    });
+    dialogRef.afterClosed().subscribe(result =>
+      this.handleDialog(result, event.id as number)
+    );
   }
 
-  completeFromCalendar(event: CalendarEvent<CalendarTaskMeta> | undefined, mouseEvent: MouseEvent): void {
-    mouseEvent.stopPropagation();
+  // ---------------- SAVE ----------------
 
-    if (!event) {
-      return;
-    }
-
-    const taskId = event.id as number | undefined;
-    if (!taskId || event.meta?.checked) return;
-
-    this.calendarEventService.completeEvent(taskId).subscribe({
-      next: () => this.loadEvents(),
-      error: err => {
-        console.error('Failed to complete task:', err);
-        this.loadError = 'Failed to update task status.';
-      }
-    });
-  }
-
-  resolveTemplateEvent(context: unknown): CalendarEvent<CalendarTaskMeta> | undefined {
-    if (!context) return undefined;
-
-    const wrapped = context as { event?: CalendarEvent<CalendarTaskMeta> };
-
-    // case 1: wrapped event
-    if (wrapped.event && wrapped.event.start) {
-      return wrapped.event;
-    }
-
-    // case 2: direct event
-    if ((context as CalendarEvent<CalendarTaskMeta>).start) {
-      return context as CalendarEvent<CalendarTaskMeta>;
-    }
-
-    // otherwise it's NOT an event
-    return undefined;
-  }
-
-
-  private handleDialogResult(
-    result: CalendarEventDialogResult | undefined,
-    eventId?: number
-  ): void {
+  handleDialog(result?: CalendarEventDialogResult, eventId?: number): void {
     if (!result) return;
 
-    if (result.mode === 'edit') {
-      this.router.navigate(['/task'], {
-        queryParams: {
-          taskId: result.eventId ?? eventId,
-          title: result.title
-        }
-      });
-      return;
-    }
-
-    this.calendarEventService.createEvent({
+    const payload = {
       title: result.title,
       description: result.description,
       start: result.start,
       end: result.end,
-      userIds: result.userIds
-    }).subscribe({
+      userIds: result.userIds,
+      points: 0,
+      color: '#4285f4'
+    };
+
+    const request$ = result.mode === 'update'
+      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload)
+      : this.calendarEventService.createEvent(payload);
+
+    request$.subscribe({
       next: () => this.loadEvents(),
-      error: err => {
-        console.error('Failed to create calendar event:', err);
-        this.loadError = 'Failed to create calendar event.';
-      }
+      error: () => this.loadError = 'Failed to save event'
     });
+  }
+
+  // ---------------- COMPLETE ----------------
+
+  completeFromCalendar(
+    event: CalendarEvent<CalendarTaskMeta>,
+    mouseEvent: MouseEvent
+  ): void {
+    mouseEvent.stopPropagation();
+
+    const taskId = event.id as number;
+    if (!taskId || event.meta?.checked) return;
+
+    this.calendarEventService.completeEvent(taskId).subscribe({
+      next: () => this.loadEvents(),
+      error: () => this.loadError = 'Failed to update task'
+    });
+  }
+
+  // ---------------- HELPERS ----------------
+
+  private getFamilyEmail(): string | null {
+    const user = this.userService.currentUser();
+    return user?.familyEmail ?? user?.family?.email ?? null;
   }
 }
