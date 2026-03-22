@@ -4,7 +4,7 @@
     @for (user of users(); track user.id) {
       <div class="user-card" (click)="selectUser(user)">
         <div class="avatar">
-          <img [src]="user.avatarUrl || 'assets/default-avatar.png'" [alt]="user.name">
+          <img [src]="getImageUrl(user.imageId)" [alt]="user.name">
         </div>
         <span class="user-name">{{user.name}}</span>
         <div class="rewards-card">

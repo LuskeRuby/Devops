@@ -6,5 +6,6 @@ public record UserResponseDto(
         String email,
         String role,
         int totalPoints,
-        String familyEmail
+        String familyEmail,
+        Long imageId
 ) {}

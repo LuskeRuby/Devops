@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/families/register", "/api/families/login", "/api/families/refresh")
                         .permitAll()
                         .requestMatchers("/websocket/**").permitAll() //Websockets secured with auth in websocketauthintercepter
+                        .requestMatchers("/api/images/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,15 +1,18 @@
 package backend.user;
 
+import backend.image.Image;
+import backend.image.ImageRepository;
 import org.springframework.stereotype.Service;
-import backend.task.Task;
 import java.util.List;
 
 @Service
 public class UserService {
 
+    private final ImageRepository imageRepository;
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(ImageRepository imageRepository, UserRepository userRepository) {
+        this.imageRepository = imageRepository;
         this.userRepository = userRepository;
     }
 
@@ -20,7 +23,8 @@ public class UserService {
                 user.getEmail(),
                 user.getRole(),
                 user.getTotalPoints(),
-                user.getFamily() != null ? user.getFamily().getEmail() : null
+                user.getFamily() != null ? user.getFamily().getEmail() : null,
+                user.getImage() != null ? user.getImage().getId() : null
         );
     }
 
@@ -40,6 +44,9 @@ public class UserService {
     }
 
     public UserResponseDto createUser(User user) {
+        if (user.getImage() == null) {
+            imageRepository.findAll().stream().findFirst().ifPresent(user::setImage);
+        }
         return toDto(userRepository.save(user));
     }
 
@@ -49,18 +56,24 @@ public class UserService {
         return toDto(userRepository.save(user));
     }
 
+    public UserResponseDto setProfileImage(Long userId, Long imageId) {
+        User user = getUserEntityById(userId);
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Image not found: " + imageId));
+        user.setImage(image);
+        return toDto(userRepository.save(user));
+    }
+
     public List<UserResponseDto> getUsersByFamilyEmail(String familyEmail) {
         return userRepository.findByFamilyEmail(familyEmail).stream().map(this::toDto).toList();
     }
 
     public boolean validatePin(Long id, String pin) {
         User user = getUserEntityById(id);
-        if (user.getPincode() == null) {
-            return false;
-        }
+        if (user.getPincode() == null) return false;
         return user.getPincode().equals(pin);
     }
-    
+
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }

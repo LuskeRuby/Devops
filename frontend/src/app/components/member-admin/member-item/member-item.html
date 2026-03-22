@@ -1,7 +1,7 @@
 <div class="member-row">
   <div class="member-info">
     <div class="avatar-container">
-      <img [src]="member().avatarUrl" alt="Avatar" class="avatar-img" />
+      <img [src]="getImageUrl(member().imageId)" alt="Avatar" class="avatar-img">
     </div>
     <div class="text-info">
       <div class="name">{{ member().name }}</div>

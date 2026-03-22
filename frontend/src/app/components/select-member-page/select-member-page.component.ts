@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../services/user.service';
@@ -43,7 +43,6 @@ export class SelectMemberPageComponent implements OnInit {
   }
 
   selectUser(user: User): void {
-    console.log('Selected user:', user);
     this.router.navigate(['/member-pin'], { state: { user } });
   }
 
@@ -55,6 +54,8 @@ export class SelectMemberPageComponent implements OnInit {
     const targetPoints = 100;
     return Math.floor(totalPoints / targetPoints);
   }
+
+  getImageUrl(imageId: number | undefined): string {
+    return this.userService.getImageUrl(imageId);
+  }
 }
-
-
