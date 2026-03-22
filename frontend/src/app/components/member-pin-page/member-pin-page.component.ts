@@ -39,7 +39,7 @@ export class MemberPinPageComponent implements OnInit {
       this.router.navigate(['/select-member']);
       return;
     }
-    this.http.get<number[]>('/api/images').subscribe({
+    this.http.get<number[]>('/api/images?type=AVATAR').subscribe({
       next: (ids) => this.availableImageIds = ids,
       error: (err) => console.error('Failed to load images', err)
     });

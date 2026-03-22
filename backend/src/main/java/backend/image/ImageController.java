@@ -1,5 +1,6 @@
 package backend.image;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +35,12 @@ public class ImageController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Long>> getAllImageIds() {
-        return ResponseEntity.ok(
-                imageRepository.findAll().stream().map(Image::getId).toList()
-        );
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Long>> getAllImageIds(@RequestParam(required = false) String type) {
+        List<Long> ids = (type != null ? imageRepository.findByType(type) : imageRepository.findAll())
+                .stream()
+                .map(Image::getId)
+                .toList();
+        return ResponseEntity.ok(ids);
     }
 }

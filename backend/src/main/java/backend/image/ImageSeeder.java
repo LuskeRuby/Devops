@@ -21,27 +21,41 @@ public class ImageSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         if (imageRepository.count() > 0) return;
 
+        //avatars
         String[] avatars = {"avatar1.png", "avatar2.png"};
         Image firstImage = null;
 
         for (String filename : avatars) {
-            ClassPathResource resource = new ClassPathResource("static/seed-avatars/" + filename);
+            ClassPathResource resource = new ClassPathResource("static/seed-images/" + filename);
             byte[] bytes = resource.getInputStream().readAllBytes();
 
             Image image = new Image();
             image.setImage(bytes);
+            image.setType("AVATAR");
             Image saved = imageRepository.save(image);
 
             if (firstImage == null) firstImage = saved;
         }
 
-        // assign first avatar to all existing users as default
+        //task
+        String[] taskImages = {"task1.png"};
+        for (String filename : taskImages) {
+            ClassPathResource resource = new ClassPathResource("static/seed-images/" + filename);
+            byte[] bytes = resource.getInputStream().readAllBytes();
+
+            Image image = new Image();
+            image.setImage(bytes);
+            image.setType("TASK");
+            imageRepository.save(image);
+        }
+
+        //placeholder avatar
         Image defaultImage = firstImage;
         userRepository.findAll().forEach(user -> {
             user.setImage(defaultImage);
             userRepository.save(user);
         });
 
-        System.out.println("Seeded " + avatars.length + " avatars.");
+        System.out.println("Seeded " + avatars.length + " avatars and " + taskImages.length + " task images.");
     }
 }
