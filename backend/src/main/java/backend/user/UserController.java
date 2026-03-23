@@ -1,7 +1,6 @@
 package backend.user;
 
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import backend.task.Task;
 import backend.task.TaskController;
@@ -65,11 +64,16 @@ public class UserController {
         }
     }
 
+    @PostMapping("/{id}/profile-image/{imageId}")
+    public ResponseEntity<UserResponseDto> setProfileImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId) {
+        return ResponseEntity.ok(userService.setProfileImage(id, imageId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        System.out.println("Received request to delete user with id: " + id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-
 }

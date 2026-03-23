@@ -1,18 +1,22 @@
 <div class="pin-page-container">
   <div class="pin-content">
-    
+
     <h1 class="member-name">{{ user?.name || 'Member' }}</h1>
 
-    <!-- Picture Placeholder -->
-    <div class="picture-placeholder">
-       <span>Vælg et billede</span>
+    <!-- Avatar display / picker trigger -->
+    <div class="picture-placeholder" (click)="openImagePicker()">
+      @if (user?.imageId) {
+        <img [src]="getImageUrl(user?.imageId)" alt="Avatar" class="avatar-img" />
+      } @else {
+        <span>Vælg et billede</span>
+      }
     </div>
 
     <p class="instruction-text">Indtast din pinkode for at få adgang</p>
-    <p class="error-text" *ngIf="errorMessage" style="color: red; margin-bottom: 1rem;">{{ errorMessage }}</p>
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
 
     <div class="pin-inputs">
-      <input 
+      <input
         *ngFor="let digit of pin; let i = index; trackBy: trackByFn"
         #pinInput
         type="password"
@@ -28,3 +32,23 @@
 
   </div>
 </div>
+
+<!-- Image picker modal -->
+@if (showImagePicker) {
+  <div class="modal-overlay" (click)="closeImagePicker()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Vælg avatar</h2>
+      <div class="image-grid">
+        @for (id of availableImageIds; track id) {
+          <img
+            [src]="getImageUrl(id)"
+            (click)="selectImage(id)"
+            class="avatar-option"
+            [class.selected]="id === selectedImageId"
+          />
+        }
+      </div>
+      <button (click)="closeImagePicker()">Luk</button>
+    </div>
+  </div>
+}

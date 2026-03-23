@@ -10,7 +10,7 @@ export interface User {
   email: string;
   role?: string;
   totalPoints?: number;
-  avatarUrl?: string;
+  imageId?: number;
   pincode?: string;
   family: {
     email: string;
@@ -64,5 +64,20 @@ export class UserService {
 
   validatePin(id: number, pin: string): Observable<boolean> {
     return this.http.post<boolean>(`${this.apiUrl}/${id}/validate-pin`, { pin });
+  }
+
+  getImageUrl(imageId: number | undefined): string {
+    if (!imageId) return 'assets/default-avatar.png';
+    return `/api/images/${imageId}`;
+  }
+
+  uploadImage(file: File): Observable<number> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<number>('/api/images/upload', formData);
+  }
+
+  setProfileImage(userId: number, imageId: number): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/${userId}/profile-image/${imageId}`, {});
   }
 }

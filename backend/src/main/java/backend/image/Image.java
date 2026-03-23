@@ -25,4 +25,7 @@ public class Image {
     @Lob
     @Column(name = "image")
     private byte[] image;
+
+    @Column(name = "type")
+    private String type;
 }
