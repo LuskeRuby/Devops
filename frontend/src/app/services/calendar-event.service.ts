@@ -20,8 +20,8 @@ export interface CalendarQuickCreatePayload {
 @Injectable({ providedIn: 'root' })
 export class CalendarEventService {
 
-  private tasksUrl = 'http://localhost:8080/api/tasks';
-  private usersUrl = 'http://localhost:8080/api/users';
+  private tasksUrl = '/api/tasks';
+  private usersUrl = '/api/users';
 
   constructor(private http: HttpClient) {}
 

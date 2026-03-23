@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import {Component, inject, input, output} from '@angular/core';
 import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
 import { User, UserService } from '../../../services/user.service';
 
@@ -10,16 +10,17 @@ import { User, UserService } from '../../../services/user.service';
   styleUrl: 'member-item.scss'
 })
 export class MemberItemComponent {
+  userService = inject(UserService);
   member = input.required<User>();
   showActions = input<boolean>(false);
+  isCurrentUser = input<boolean>();
+
 
   deleteMember = output<void>();
   edit = output<void>();
 
   readonly PencilIcon = Pencil;
   readonly TrashIcon = Trash2;
-
-  constructor(private userService: UserService) {}
 
   getImageUrl(imageId: number | undefined): string {
     return this.userService.getImageUrl(imageId);

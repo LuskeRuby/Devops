@@ -12,8 +12,10 @@
   @for (member of members(); track member.id) {
     <app-member-item
       [member]="member"
-      [showActions]="isEditMode()" 
-      (deleteMember)="handleDelete(member)">
+      [showActions]="isEditMode()"
+      (deleteMember)="handleDelete(member)"
+      [isCurrentUser]="member.id === currentMember?.id"
+    >
     </app-member-item>
   }
 
