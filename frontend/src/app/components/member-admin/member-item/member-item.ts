@@ -13,7 +13,8 @@ import { User } from '../../../services/user.service';
 export class MemberItemComponent {
   member = input.required<User>();
   showActions = input<boolean>(false);
-  
+  isCurrentUser = input<boolean>();
+
   deleteMember = output<void>();
   edit = output<void>();
 

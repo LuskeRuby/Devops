@@ -1,0 +1,27 @@
+.admin-member-page {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  background: #f4f6f8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.admin-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-header {
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+app-member-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

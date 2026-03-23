@@ -2,10 +2,15 @@
   <form class="create-member-form" (ngSubmit)="onSubmit()">
     <h2>Opret nyt medlem</h2>
 
-    <div class="form-error" *ngIf="showError">
-      <span *ngIf="!name.trim()">Indtast venligst et navn</span>
-      <span *ngIf="name.trim() && pinCode.length !== 4">PIN-koden skal være præcis 4 cifre</span>
-    </div>
+    @if (showError) {
+      <div class="form-error">
+        @if (!name.trim()) {
+          <span>Indtast venligst et navn</span>
+        } @else if (pinCode.length !== 4) {
+          <span>PIN-koden skal være præcis 4 cifre</span>
+        }
+      </div>
+    }
 
     <div class="form-group">
       <label for="name">Navn</label>
@@ -41,7 +46,9 @@
         <option value="parent">Forælder</option>
         <option value="child" [disabled]="isFirstUser">Barn</option>
       </select>
-      <span class="role-note" *ngIf="isFirstUser">Det første medlem skal være en forælder</span>
+      @if (isFirstUser) {
+        <span class="role-note">Det første medlem skal være en forælder</span>
+      }
     </div>
 
     <div class="button-group">

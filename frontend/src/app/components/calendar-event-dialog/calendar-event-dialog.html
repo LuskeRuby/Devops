@@ -28,14 +28,18 @@
     <mat-label>Assign family members</mat-label>
 
     <div class="users">
-      <label *ngFor="let user of data.users" class="user-row">
-        <input
-          type="checkbox"
-          [checked]="selectedUserIds.includes(user.id)"
-          (change)="toggleUser(user.id)"
-        />
-        <span>{{ user.name }}</span>
-      </label>
+      @for (user of data.users; track user.id) {
+        <label class="user-row">
+          <input
+            type="checkbox"
+            [checked]="selectedUserIds.includes(user.id)"
+            (change)="toggleUser(user.id)"
+          />
+          <span>{{ user.name }}</span>
+        </label>
+      } @empty {
+        <p>Ingen familiemedlemmer tilgængelige.</p>
+      }
     </div>
   </div>
 
