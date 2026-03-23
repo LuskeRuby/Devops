@@ -31,6 +31,10 @@ export class SidebarComponent implements OnInit {
     });
   }
 
+  getImageUrl(imageId: number | undefined): string {
+    return this.userService.getImageUrl(imageId);
+  }
+
   onLogout(): void {
     this.userService.logoutUser();
   }

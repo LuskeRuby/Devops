@@ -8,6 +8,7 @@ export interface MessageResponse {
   timestamp: string;
   username: string;
   userId: number;
+  imageId?: number;
 }
 
 @Injectable({

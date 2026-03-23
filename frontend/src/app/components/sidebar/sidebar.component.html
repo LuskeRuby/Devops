@@ -1,7 +1,9 @@
 <nav class="sidebar">
 
   <div class="current-user">
-    <div class="avatar"></div>
+    <div class="avatar">
+      <img [src]="getImageUrl(currentUser()?.imageId)" [alt]="currentUser()?.name" />
+    </div>
     <span class="current-user-name">{{ currentUser()?.name }}</span>
   </div>
 
@@ -28,7 +30,9 @@
         class="member-item"
         *ngFor="let member of familyMembers()"
         [class.me]="member.id === currentUser()?.id">
-        <div class="avatar"></div>
+        <div class="avatar">
+          <img [src]="getImageUrl(member.imageId)" [alt]="member.name" />
+        </div>
         <span class="member-name">{{ member.name }}</span>
       </div>
 

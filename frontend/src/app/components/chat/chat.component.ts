@@ -100,4 +100,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       weekday: 'short', day: 'numeric', month: 'short'
     });
   }
+
+  getImageUrl(imageId: number | undefined): string {
+    return this.userService.getImageUrl(imageId);
+  }
+
 }

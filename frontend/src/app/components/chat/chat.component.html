@@ -1,6 +1,5 @@
 <div class="chat-messages" #scrollContainer>
 
-  <!-- Loop over all messages-->
   <ng-container *ngFor="let message of messages; let i = index">
 
     <div class="date-separator"
@@ -13,11 +12,23 @@
            'mine':  message.userId === selectedUserId,
            'other': message.userId !== selectedUserId
          }">
-      <div class="timestamp">{{ message.timestamp | date:'HH:mm' }}</div>
-      <div class="bubble">
-        <strong>{{ message.username }}</strong><br>
-        {{ message.content }}
+
+      @if (message.userId !== selectedUserId) {
+        <img
+          class="message-avatar"
+          [src]="getImageUrl(message.imageId)"
+          [alt]="message.username"
+        />
+      }
+
+      <div class="message-body">
+        <div class="timestamp">{{ message.timestamp | date:'HH:mm' }}</div>
+        <div class="bubble">
+          <strong>{{ message.username }}</strong><br>
+          {{ message.content }}
+        </div>
       </div>
+
     </div>
 
   </ng-container>
