@@ -1,24 +1,23 @@
 <nav class="sidebar">
-
   <div class="current-user">
-    <div class="avatar">
-      <img [src]="getImageUrl(currentUser()?.imageId)" [alt]="currentUser()?.name" />
-    </div>
+    <div class="avatar"></div>
     <span class="current-user-name">{{ currentUser()?.name }}</span>
   </div>
 
   <div class="nav-section">
-    <a class="nav-item" routerLink="/home" routerLinkActive="active">
+    <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
       <i class="ph ph-house"></i>
       <span class="nav-label">Oversigt</span>
     </a>
+    @if (isParent) {
+    <a class="nav-item" routerLink="/admin" routerLinkActive="active">
+      <i class="ph ph-users-four"></i>
+      <span class="nav-label">Administrer Familie</span>
+    </a>
+    }
     <a class="nav-item" routerLink="/message" routerLinkActive="active">
       <i class="ph ph-chat-circle"></i>
       <span class="nav-label">Familie Chat</span>
-    </a>
-    <a class="nav-item" routerLink="/settings" routerLinkActive="active">
-      <i class="ph ph-gear"></i>
-      <span class="nav-label">Indstillinger</span>
     </a>
   </div>
 
@@ -26,27 +25,32 @@
     <div class="section-header">Familie</div>
 
     <div class="member-list">
-      <div
-        class="member-item"
-        *ngFor="let member of familyMembers()"
-        [class.me]="member.id === currentUser()?.id">
-        <div class="avatar">
-          <img [src]="getImageUrl(member.imageId)" [alt]="member.name" />
+      @for (member of members(); track member.id) {
+        <div
+          class="member-item"
+          [class.me]="member.id === currentUser()?.id">
+          <div class="avatar"></div>
+          <span class="member-name">{{ member.name }}</span>
         </div>
-        <span class="member-name">{{ member.name }}</span>
-      </div>
+      } @empty {
+        <p class="empty-msg">Ingen familiemedlemmer fundet.</p>
+      }
 
-      <button *ngIf="isParent" class="add-member-btn" routerLink="/create-member-page">
-        <span class="add-member-label">+ Tilføj medlem</span>
-      </button>
+      @if (isParent) {
+        <button
+          class="add-member-btn"
+          routerLink="/create-member-page"
+          [state]="{ returnUrl: '/dashboard' }">
+          <span class="add-member-label">+ Tilføj medlem</span>
+        </button>
+      }
     </div>
   </div>
 
   <div class="bottom-section">
-    <a class="nav-item" (click)="onLogout()" style="cursor:pointer">
+    <button class="nav-item logout-btn" (click)="onLogout()">
       <i class="ph ph-sign-out"></i>
       <span class="nav-label">Log ud</span>
-    </a>
+    </button>
   </div>
-
 </nav>

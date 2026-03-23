@@ -8,15 +8,26 @@ import backend.common.security.refreshtoken.RefreshTokenService;
 import backend.family.dto.FamilyAuthResponseDto;
 import backend.family.dto.FamilyLoginDto;
 import backend.family.dto.FamilyRequestDto;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class FamilyService {
+
+    @Value("${app.jwt.refresh-token-cookie.secure:false}")
+    private boolean refreshTokenCookieSecure;
+
+    @Value("${app.jwt.refresh-token-cookie.same-site:Lax}")
+    private String refreshTokenCookieSameSite;
+
+    @Value("${app.jwt.refresh-token-cookie.max-age-seconds:86400}")
+    private long refreshTokenCookieMaxAgeSeconds;
 
     private final FamilyRepository familyRepository;
     private final PasswordEncoder passwordEncoder;
@@ -70,7 +81,6 @@ public class FamilyService {
         return new FamilyAuthResponseDto(accessToken, family.getEmail());
     }
 
-
     /**
      * Issues a new access token using a valid refresh token.
      * The refresh token is rotated on every call — the old token is deleted
@@ -101,11 +111,13 @@ public class FamilyService {
      * @param token    the raw refresh token string to store in the cookie
      */
     private void setRefreshTokenCookie(HttpServletResponse response, String token) {
-        Cookie cookie = new Cookie("refreshToken", token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false); // set to true in production
-        cookie.setPath("/api/families/refresh");
-        cookie.setMaxAge(24 * 60 * 60);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(refreshTokenCookieSecure)
+                .path("/api/families/refresh")
+                .maxAge(refreshTokenCookieMaxAgeSeconds)
+                .sameSite(refreshTokenCookieSameSite)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
