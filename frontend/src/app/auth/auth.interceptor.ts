@@ -11,8 +11,6 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  private refreshing = false;
-
   constructor(private auth: AuthService) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -21,6 +19,7 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     const token = this.auth.getAccessToken();
+    const hadAccessToken = !!token;
     let authReq = req;
     if (token) {
       authReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
@@ -29,19 +28,11 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // try to refresh by calling the refresh endpoint
-          if (this.refreshing) {
-            // if a refresh is already in progress, just fail the request
-            return throwError(() => error);
-          }
-
-          this.refreshing = true;
-          // call the refresh endpoint which uses an HttpOnly cookie
+          // Try hidden refresh using HttpOnly cookie on any protected 401.
           return this.auth
             .refresh()
             .pipe(
               switchMap((res) => {
-                this.refreshing = false;
                 if (res?.accessToken) {
                   this.auth.setAccessTokenFromRefresh(res.accessToken);
                   const retryReq = req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}` } });
@@ -50,8 +41,9 @@ export class AuthInterceptor implements HttpInterceptor {
                 return throwError(() => error);
               }),
               catchError((refreshErr) => {
-                this.refreshing = false;
-                this.auth.logout();
+                if (hadAccessToken) {
+                  this.auth.logout();
+                }
                 return throwError(() => refreshErr);
               })
             );

@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, firstValueFrom, of, shareReplay, switchMap, tap, finalize, map } from 'rxjs';
 import { FamilyAuthResponseDto, LoginRequest, RegisterRequest } from './token.model';
 
 /**
@@ -19,9 +19,12 @@ export class AuthService {
   /** Key used to store the access token in localStorage. */
   private accessTokenKey = 'auth.accessToken';
   private persistFlagKey = 'auth.persist';
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly refreshSkewMs = 30_000;
+  private refreshInFlight$: Observable<FamilyAuthResponseDto> | null = null;
 
-  /** Internal signal tracking whether an access token is present. */
-  private _isAuthenticated = signal<boolean>(!!this.getAccessToken());
+  /** Internal signal tracking whether a valid access token is present. */
+  private _isAuthenticated = signal<boolean>(false);
 
   /**
    * Public observable that emits the current authentication state.
@@ -35,14 +38,108 @@ export class AuthService {
   private familyEmailSubject = new BehaviorSubject<string | null>(null);
   public familyEmail$ = this.familyEmailSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private http: HttpClient, private router: Router) {
+    this.syncAuthStateFromStorage();
+  }
+
+  private getStoredAccessToken(): string | null {
+    return localStorage.getItem(this.accessTokenKey) ?? sessionStorage.getItem(this.accessTokenKey);
+  }
+
+  private decodeTokenPayload(token: string): Record<string, unknown> | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      return JSON.parse(atob(padded));
+    } catch {
+      return null;
+    }
+  }
+
+  private getTokenExpirationMs(token: string): number | null {
+    const payload = this.decodeTokenPayload(token);
+    const exp = payload?.['exp'];
+    if (typeof exp !== 'number') return null;
+    return exp * 1000;
+  }
+
+  private isTokenExpired(token: string): boolean {
+    const expiry = this.getTokenExpirationMs(token);
+    if (!expiry) return false;
+    return Date.now() >= expiry;
+  }
+
+  private clearRefreshTimer(): void {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  private scheduleSilentRefresh(token: string | null): void {
+    this.clearRefreshTimer();
+    if (!token) return;
+
+    const expiry = this.getTokenExpirationMs(token);
+    if (!expiry) return;
+
+    const delay = expiry - Date.now() - this.refreshSkewMs;
+    if (delay <= 0) {
+      this.refresh().pipe(
+        catchError(() => {
+          this.logout();
+          return of(null);
+        })
+      ).subscribe();
+      return;
+    }
+
+    this.refreshTimer = setTimeout(() => {
+      this.refresh().pipe(
+        catchError(() => {
+          this.logout();
+          return of(null);
+        })
+      ).subscribe();
+    }, delay);
+  }
+
+  private syncAuthStateFromStorage(): void {
+    const token = this.getStoredAccessToken();
+    if (!token) {
+      this._isAuthenticated.set(false);
+      this.isAuthenticated$.next(false);
+      this.clearRefreshTimer();
+      return;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.setAccessToken(null);
+      return;
+    }
+
+    this._isAuthenticated.set(true);
+    this.isAuthenticated$.next(true);
+    this.scheduleSilentRefresh(token);
+  }
 
   /**
    * Read the current access token from localStorage.
    * @returns The stored access token, or `null` if none exists.
    */
   getAccessToken(): string | null {
-    return localStorage.getItem(this.accessTokenKey) ?? sessionStorage.getItem(this.accessTokenKey);
+    const token = this.getStoredAccessToken();
+    if (!token) return null;
+
+    if (this.isTokenExpired(token)) {
+      this.setAccessToken(null);
+      return null;
+    }
+
+    return token;
   }
 
   /**
@@ -51,13 +148,15 @@ export class AuthService {
    * @private
    */
   private setAccessToken(token: string | null, remember = true) {
-    if (token) {
+    const validToken = token && !this.isTokenExpired(token) ? token : null;
+
+    if (validToken) {
       if (remember) {
-        localStorage.setItem(this.accessTokenKey, token);
+        localStorage.setItem(this.accessTokenKey, validToken);
         localStorage.setItem(this.persistFlagKey, '1');
         sessionStorage.removeItem(this.accessTokenKey);
       } else {
-        sessionStorage.setItem(this.accessTokenKey, token);
+        sessionStorage.setItem(this.accessTokenKey, validToken);
         localStorage.removeItem(this.accessTokenKey);
         localStorage.removeItem(this.persistFlagKey);
       }
@@ -67,8 +166,36 @@ export class AuthService {
       localStorage.removeItem(this.persistFlagKey);
     }
 
-    this._isAuthenticated.set(!!token);
+    this._isAuthenticated.set(!!validToken);
     this.isAuthenticated$.next(this._isAuthenticated());
+    this.scheduleSilentRefresh(validToken);
+  }
+
+  /**
+   * Bootstraps auth state on app startup.
+   * If no valid access token is present, attempts hidden refresh using the
+   * HttpOnly refresh-token cookie.
+   */
+  async initializeSession(): Promise<void> {
+    const token = this.getStoredAccessToken();
+    if (token && !this.isTokenExpired(token)) {
+      this.setAccessToken(token, !!localStorage.getItem(this.persistFlagKey));
+      return;
+    }
+
+    if (token && this.isTokenExpired(token)) {
+      this.setAccessToken(null);
+    }
+
+    await firstValueFrom(
+      this.refresh().pipe(
+        map(() => void 0),
+        catchError(() => {
+          this.setAccessToken(null);
+          return of(void 0);
+        })
+      )
+    );
   }
 
   /**
@@ -95,13 +222,22 @@ export class AuthService {
    * browser includes the HttpOnly cookie.
    */
   refresh(): Observable<FamilyAuthResponseDto> {
+    if (this.refreshInFlight$) {
+      return this.refreshInFlight$;
+    }
+
     const remember = !!localStorage.getItem(this.persistFlagKey);
-    return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/refresh`, {}, { withCredentials: true }).pipe(
-      switchMap((res) => {
-        this.setAccessToken(res.accessToken, remember);
-        return of(res);
-      })
-    );
+    this.refreshInFlight$ = this.http
+      .post<FamilyAuthResponseDto>(`${this.apiBase}/refresh`, {}, { withCredentials: true })
+      .pipe(
+        tap((res) => this.setAccessToken(res.accessToken, remember)),
+        finalize(() => {
+          this.refreshInFlight$ = null;
+        }),
+        shareReplay(1)
+      );
+
+    return this.refreshInFlight$;
   }
 
   /**
