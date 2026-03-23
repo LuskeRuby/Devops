@@ -20,6 +20,7 @@ export class CreateMemberPageComponent implements OnInit {
   familyEmail: string | null = null;
   showError = false;
   isFirstUser = false;
+  private returnUrl = history.state?.returnUrl || '/select-member';
 
   constructor(
     private router: Router,
@@ -78,7 +79,7 @@ export class CreateMemberPageComponent implements OnInit {
 
     this.http.post('/api/users', newUser).subscribe({
       next: () => {
-        this.router.navigate(['/select-member']);
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (error) => {
         console.error('Error creating member:', error);
@@ -89,6 +90,6 @@ export class CreateMemberPageComponent implements OnInit {
 
   onCancel(): void {
     this.showError = false;
-    this.router.navigate(['/select-member']);
+    this.router.navigateByUrl(this.returnUrl);
   }
 }

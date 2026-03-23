@@ -13,6 +13,7 @@ import { MemberPinPageComponent } from './components/member-pin-page/member-pin-
 import { CalendarComponent } from './components/calendar/calendar';
 import { TaskPageComponent } from './components/task-page/task-page';
 import { DashboardPage } from './components/dashboard-page/dashboard-page';
+import {AdminMemberPage} from './components/member-admin/member-page/member-page';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -28,5 +29,6 @@ export const routes: Routes = [
   { path: 'test-total-points', component: TotalPointsDisplayComponent },
   { path: 'test-points-progress', component: PointsProgressComponent },
   { path: 'test-rewards-display', component: RewardsDisplayComponent },
-  { path: 'dashboard', component: DashboardPage, canActivate: [AuthGuard] }
+  { path: 'dashboard', component: DashboardPage, canActivate: [AuthGuard] },
+  { path: 'admin', component: AdminMemberPage, canActivate: [AuthGuard] },
 ];

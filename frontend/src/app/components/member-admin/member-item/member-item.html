@@ -5,7 +5,15 @@
     </div>
     <div class="text-info">
       <div class="name">{{ member().name }}</div>
-      <div class="role">{{ member().role }}</div>
+      <div class="role">
+        @if (member().role?.toLowerCase() === 'parent') {
+          Forælder
+        } @else if (member().role?.toLowerCase() === 'child') {
+          Barn
+        } @else {
+          {{ member().role }}
+        }
+      </div>
     </div>
   </div>
 
@@ -14,9 +22,11 @@
       <button class="icon-btn" (click)="edit.emit()">
         <lucide-icon [name]="PencilIcon" [size]="22"></lucide-icon>
       </button>
-      <button class="icon-btn delete" (click)="deleteMember.emit()">
-        <lucide-icon [name]="TrashIcon" [size]="22"></lucide-icon>
-      </button>
+      @if (isCurrentUser() === false) {
+        <button class="icon-btn delete" (click)="deleteMember.emit()">
+          <lucide-icon [name]="TrashIcon" [size]="22"></lucide-icon>
+        </button>
+      }
     </div>
   }
 </div>
