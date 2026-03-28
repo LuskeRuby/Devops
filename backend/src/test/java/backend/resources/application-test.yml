@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+#SecurityConfig
+app:
+  cors:
+    allowed-origins: "http://localhost:4200"
+  jwt:
+    secret: "test-secret-key-that-is-long-enough-for-hmac-sha256-validation-purposes"
+    access-token-expiration: 3600000
