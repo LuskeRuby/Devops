@@ -18,6 +18,7 @@ export class AuthService {
 
   /** Key used to store the access token in localStorage. */
   private accessTokenKey = 'auth.accessToken';
+  private familyEmailKey = 'auth.familyEmail';
   private persistFlagKey = 'auth.persist';
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly refreshSkewMs = 30_000;
@@ -35,7 +36,7 @@ export class AuthService {
   /**
   * a way to store the familyEmail and a public observable to use it in other pages
   */
-  private familyEmailSubject = new BehaviorSubject<string | null>(null);
+  private familyEmailSubject = new BehaviorSubject<string | null>(localStorage.getItem('auth.familyEmail'));
   public familyEmail$ = this.familyEmailSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
@@ -164,6 +165,7 @@ export class AuthService {
       localStorage.removeItem(this.accessTokenKey);
       sessionStorage.removeItem(this.accessTokenKey);
       localStorage.removeItem(this.persistFlagKey);
+      localStorage.removeItem(this.familyEmailKey);
     }
 
     this._isAuthenticated.set(!!validToken);
@@ -209,7 +211,8 @@ export class AuthService {
     return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/login`, payload, { withCredentials: true }).pipe(
       switchMap((res) => {
         this.setAccessToken(res.accessToken, remember);
-        this.familyEmailSubject.next(res.familyEmail); // Store family email from response
+        localStorage.setItem(this.familyEmailKey, res.familyEmail); // Store family email
+        this.familyEmailSubject.next(res.familyEmail); // Notify subscribers
         return of(res);
       })
     );
@@ -232,7 +235,7 @@ export class AuthService {
           console.log('[AuthService] Refresh API success, updating email subject');
           this.setAccessToken(res.accessToken, remember);
           
-          // ADD THIS LINE:
+          localStorage.setItem(this.familyEmailKey, res.familyEmail); // Update stored email
           this.familyEmailSubject.next(res.familyEmail); 
         }),
         finalize(() => { this.refreshInFlight$ = null; }),
