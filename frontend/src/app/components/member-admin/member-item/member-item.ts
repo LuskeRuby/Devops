@@ -1,11 +1,12 @@
 import {Component, inject, input, output} from '@angular/core';
 import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
 import { User, UserService } from '../../../services/user.service';
+import { MemberPointEditorComponent } from '../member-point-editor/member-point-editor';
 
 @Component({
   selector: 'app-member-item',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, MemberPointEditorComponent],
   templateUrl: 'member-item.html',
   styleUrl: 'member-item.scss'
 })
