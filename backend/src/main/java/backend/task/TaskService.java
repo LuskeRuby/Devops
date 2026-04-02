@@ -14,7 +14,7 @@ public class TaskService {
     private final UserRepository userRepository;
 
     public TaskService(TaskRepository taskRepository,
-                       UserRepository userRepository) {
+            UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
     }
@@ -40,11 +40,23 @@ public class TaskService {
         return taskRepository.findByUsers_Id(userId);
     }
 
+    @Transactional
     public Task markAsCompleted(Long taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        if (task.getChecked())
+            return task;
 
         task.setChecked(true);
+
+        if (task.getUsers() != null && task.getPoints() != null && task.getPoints() > 0) {
+            for (User user : task.getUsers()) {
+                user.setTotalPoints(user.getTotalPoints() + task.getPoints());
+                userRepository.save(user);
+            }
+        }
+
         return taskRepository.save(task);
     }
 
@@ -53,7 +65,7 @@ public class TaskService {
     }
 
     public Task getTaskById(Long id) {
-   
+
         return taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }

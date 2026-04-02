@@ -21,6 +21,7 @@ import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../cale
 import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
+import { PointsStore } from '../../services/points-store.service';
 
 registerLocaleData(localeDa);
 
@@ -56,7 +57,8 @@ export class CalendarComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private calendarEventService: CalendarEventService,
-    private userService: UserService
+    private userService: UserService,
+    private pointsStore: PointsStore
   ) {}
 
   @Input() viewDate: Date = new Date();
@@ -213,7 +215,8 @@ export class CalendarComponent implements OnInit {
         start: event.start,
         end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
         users: this.familyUsers,
-        selectedUserIds: event.meta?.assignedUserIds ?? []
+        selectedUserIds: event.meta?.assignedUserIds ?? [],
+        points: event.meta?.points ?? 0
       }
     });
 
@@ -233,7 +236,7 @@ export class CalendarComponent implements OnInit {
       start: result.start,
       end: result.end,
       userIds: result.userIds,
-      points: 0,
+      points: result.points,
       color: '#4285f4'
     };
 
@@ -259,7 +262,13 @@ export class CalendarComponent implements OnInit {
     if (!taskId || event.meta?.checked) return;
 
     this.calendarEventService.completeEvent(taskId).subscribe({
-      next: () => this.loadEvents(),
+      next: () => {
+        this.loadEvents();
+        const user = this.userService.currentUser();
+        if (user) {
+          this.pointsStore.loadUser(user.id);
+        }
+      },
       error: () => this.loadError = 'Failed to update task'
     });
   }

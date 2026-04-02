@@ -24,7 +24,11 @@ $muted:       #9ca3af;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 8px 20px;
+  padding: 4px 8px 12px;
+}
+
+.points-summary {
+  padding: 0 8px 16px;
   border-bottom: 1px solid $border;
 }
 

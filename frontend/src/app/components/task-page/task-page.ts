@@ -4,11 +4,13 @@ import {Task, TaskService} from '../../services/task.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, User } from '../../services/user.service';
 import { ActivatedRoute } from '@angular/router';
+import { PointsStore } from '../../services/points-store.service';
+import { PointsInputComponent } from '../points-input/points-input';
 
 @Component({
   selector: 'app-task-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PointsInputComponent],
   templateUrl: './task-page.html',
   styleUrl: './task-page.scss'
 })
@@ -26,7 +28,8 @@ export class TaskPageComponent implements OnInit {
     private taskService: TaskService,
     private userService: UserService,
     private fb: FormBuilder,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pointsStore: PointsStore
   ) {
     this.taskForm = this.fb.group({
       name: ['', Validators.required],
@@ -119,6 +122,10 @@ export class TaskPageComponent implements OnInit {
   completeTask(id: number): void {
     this.taskService.completeTask(id).subscribe(() => {
       this.loadTasks();
+      const user = this.userService.currentUser();
+      if (user) {
+        this.pointsStore.loadUser(user.id);
+      }
     });
   }
 

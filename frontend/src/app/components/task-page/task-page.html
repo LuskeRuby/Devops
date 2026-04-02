@@ -23,13 +23,10 @@
     </div>
 
     <div class="form-group">
-      <label for="points" class="form-label">Point</label>
-      <input
-        id="points"
-        type="number"
-        formControlName="points"
-        class="form-input"
-        placeholder="0">
+      <app-points-input 
+        [taskPoints]="taskForm.get('points')?.value"
+        (taskPointsChange)="taskForm.patchValue({points: $event})">
+      </app-points-input>
     </div>
 
     <div class="form-group">
