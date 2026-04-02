@@ -49,7 +49,7 @@ export class CalendarEventService {
         description: payload.description,
         timestamp: this.toLocalDateTime(payload.start),
         repeatUntil: this.toLocalDateTime(payload.end),
-        points: 0,
+        points: payload.points,
         checked: false,
         repeatEvery: null
       },
@@ -114,7 +114,8 @@ export class CalendarEventService {
         taskId: task.id,
         checked: task.checked,
         assignedUserIds: task.assignedUserIds ?? [],
-        assignedUserNames: task.assignedUserNames ?? []
+        assignedUserNames: task.assignedUserNames ?? [],
+        points: task.points ?? 0
       },
       color
     };

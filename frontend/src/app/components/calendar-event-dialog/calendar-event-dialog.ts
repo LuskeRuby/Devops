@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
+import { PointsInputComponent } from '../points-input/points-input';
+
 interface CalendarEventDialogData {
   title?: string;
   description?: string;
@@ -14,6 +16,7 @@ interface CalendarEventDialogData {
   selectedUserIds?: number[];
   eventId?: number;
   users?: { id: number; name: string }[];
+  points?: number;
 }
 
 export type CalendarEventDialogResult = {
@@ -24,6 +27,7 @@ export type CalendarEventDialogResult = {
   start: Date;
   end: Date;
   userIds: number[];
+  points: number;
 };
 
 @Component({
@@ -35,7 +39,8 @@ export type CalendarEventDialogResult = {
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    PointsInputComponent
   ],
   templateUrl: './calendar-event-dialog.html',
   styleUrl: './calendar-event-dialog.scss'
@@ -46,6 +51,7 @@ export class CalendarEventDialogComponent {
   startLocal = '';
   endLocal = '';
   selectedUserIds: number[] = [];
+  points = 0;
 
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
@@ -62,6 +68,7 @@ export class CalendarEventDialogComponent {
     this.startLocal = this.toLocalInput(this.data.start);
     this.endLocal = this.toLocalInput(this.data.end);
     this.selectedUserIds = [...(this.data.selectedUserIds ?? [])];
+    this.points = this.data.points ?? 0;
   }
 
   // ---------------- USERS ----------------
@@ -96,7 +103,8 @@ export class CalendarEventDialogComponent {
       description: this.description.trim(),
       start: new Date(this.startLocal),
       end: new Date(this.endLocal),
-      userIds: this.selectedUserIds
+      userIds: this.selectedUserIds,
+      points: this.points
     };
 
     this.dialogRef.close(result);

@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService, User } from '../../services/user.service';
 import {MemberService} from '../../services/member/member-service';
+import { TotalPointsDisplayComponent } from '../total-points-display/total-points-display';
+import { PointsStore } from '../../services/points-store.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TotalPointsDisplayComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
@@ -15,6 +17,7 @@ export class SidebarComponent implements OnInit {
 
   private memberService = inject(MemberService);
   private userService: UserService = inject(UserService);
+  private pointsStore = inject(PointsStore);
   currentUser = this.userService.currentUser;
 
   members = this.memberService.members;
@@ -24,7 +27,12 @@ export class SidebarComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const familyEmail = this.currentUser()?.familyEmail;
+    const user = this.currentUser();
+    if (user) {
+      this.pointsStore.loadUser(user.id);
+    }
+
+    const familyEmail = user?.familyEmail;
     if (!familyEmail) return;
 
     this.userService.getUsersByFamilyEmail(familyEmail).subscribe({

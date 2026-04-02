@@ -4,5 +4,6 @@ export interface CalendarTaskMeta {
   checked: boolean;
   assignedUserIds: number[];
   assignedUserNames: string[];
+  points: number;
 }
 

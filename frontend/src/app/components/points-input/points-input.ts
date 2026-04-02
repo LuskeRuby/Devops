@@ -1,5 +1,5 @@
 import { FormsModule } from '@angular/forms'; 
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'app-points-input', 
@@ -9,5 +9,11 @@ import { Component } from '@angular/core';
   styleUrl: './points-input.scss'    
 })
 export class PointsInputComponent {
-  taskPoints: number = 0;
+  @Input() taskPoints: number = 0;
+  @Output() taskPointsChange = new EventEmitter<number>();
+
+  onPointsChange(newValue: number): void {
+    this.taskPoints = newValue;
+    this.taskPointsChange.emit(this.taskPoints);
+  }
 }

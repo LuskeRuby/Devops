@@ -22,6 +22,10 @@
           <div class="event-title">
             {{ calEvent.title }}
           </div>
+
+          <div class="points-badge" *ngIf="calEvent.meta?.points > 0">
+            {{ calEvent.meta?.points }}p
+          </div>
         </div>
 
         <div class="event-time">

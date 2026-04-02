@@ -24,6 +24,10 @@
     <input matInput type="datetime-local" [(ngModel)]="endLocal" />
   </mat-form-field>
 
+  <div class="points-section">
+    <app-points-input [(taskPoints)]="points"></app-points-input>
+  </div>
+
   <div class="users-section">
     <mat-label>Assign family members</mat-label>
 
