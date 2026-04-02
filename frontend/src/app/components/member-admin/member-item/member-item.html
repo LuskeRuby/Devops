@@ -17,6 +17,10 @@
     </div>
   </div>
 
+  <div class="points-editor-wrapper">
+    <app-member-point-editor [member]="member()"></app-member-point-editor>
+  </div>
+
   @if (showActions()) {
     <div class="actions animate-fade-in">
       <button class="icon-btn" (click)="edit.emit()">

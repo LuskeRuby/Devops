@@ -222,18 +222,20 @@ export class AuthService {
    * browser includes the HttpOnly cookie.
    */
   refresh(): Observable<FamilyAuthResponseDto> {
-    if (this.refreshInFlight$) {
-      return this.refreshInFlight$;
-    }
+    if (this.refreshInFlight$) return this.refreshInFlight$;
 
     const remember = !!localStorage.getItem(this.persistFlagKey);
     this.refreshInFlight$ = this.http
       .post<FamilyAuthResponseDto>(`${this.apiBase}/refresh`, {}, { withCredentials: true })
       .pipe(
-        tap((res) => this.setAccessToken(res.accessToken, remember)),
-        finalize(() => {
-          this.refreshInFlight$ = null;
+        tap((res) => {
+          console.log('[AuthService] Refresh API success, updating email subject');
+          this.setAccessToken(res.accessToken, remember);
+          
+          // ADD THIS LINE:
+          this.familyEmailSubject.next(res.familyEmail); 
         }),
+        finalize(() => { this.refreshInFlight$ = null; }),
         shareReplay(1)
       );
 
