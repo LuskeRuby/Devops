@@ -1,4 +1,4 @@
-<div class="task-form-container">
+<div class="task-form-container" *ngIf="isParent">
   <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="task-form">
     <h2>Opret Opgave</h2>
 

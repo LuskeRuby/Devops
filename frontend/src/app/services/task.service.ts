@@ -21,22 +21,26 @@ export class TaskService {
 
   constructor(private http: HttpClient) {}
 
-  createTask(task: Task, userIds: number[]): Observable<Task> {
-    return this.http.post<Task>(this.baseUrl, {
+  createTask(task: Task, userIds: number[], requesterId?: number): Observable<Task> {
+    const url = requesterId ? `${this.baseUrl}?requesterId=${requesterId}` : this.baseUrl;
+    return this.http.post<Task>(url, {
       task,
       userIds
     });
   }
 
-  getTasksForUser(userId: number): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.baseUrl}/user/${userId}`);
+  getTasksForUser(userId: number, requesterId?: number): Observable<Task[]> {
+    const url = requesterId ? `${this.baseUrl}/user/${userId}?requesterId=${requesterId}` : `${this.baseUrl}/user/${userId}`;
+    return this.http.get<Task[]>(url);
   }
 
-  completeTask(taskId: number): Observable<Task> {
-    return this.http.put<Task>(`${this.baseUrl}/${taskId}/complete`, {});
+  completeTask(taskId: number, requesterId?: number): Observable<Task> {
+    const url = requesterId ? `${this.baseUrl}/${taskId}/complete?requesterId=${requesterId}` : `${this.baseUrl}/${taskId}/complete`;
+    return this.http.put<Task>(url, {});
   }
 
-  getTasksForFamily(familyEmail: string): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.baseUrl}/family/${familyEmail}`);
+  getTasksForFamily(familyEmail: string, requesterId?: number): Observable<Task[]> {
+    const url = requesterId ? `${this.baseUrl}/family/${familyEmail}?requesterId=${requesterId}` : `${this.baseUrl}/family/${familyEmail}`;
+    return this.http.get<Task[]>(url);
   }
 }

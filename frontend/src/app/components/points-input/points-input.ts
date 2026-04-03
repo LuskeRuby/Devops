@@ -10,6 +10,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class PointsInputComponent {
   @Input() taskPoints: number = 0;
+  @Input() disabled: boolean = false;
   @Output() taskPointsChange = new EventEmitter<number>();
 
   onPointsChange(newValue: number): void {

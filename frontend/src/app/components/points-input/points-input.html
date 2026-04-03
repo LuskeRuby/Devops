@@ -6,7 +6,8 @@
       id="pointInput" 
       placeholder="0" 
       [ngModel]="taskPoints"
-      (ngModelChange)="onPointsChange($event)">
+      (ngModelChange)="onPointsChange($event)"
+      [disabled]="disabled">
     <span class="points-label">p</span>
   </div>
 </div>

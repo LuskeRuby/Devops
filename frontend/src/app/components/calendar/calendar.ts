@@ -70,11 +70,17 @@ export class CalendarComponent implements OnInit {
   familyUsers: User[] = [];
   loadError: string | null = null;
   refresh = new Subject<void>();
+  currentUser: User | null = null;
+
+  get isParent(): boolean {
+    return this.currentUser?.role?.toUpperCase() === 'PARENT';
+  }
 
   private readonly STORAGE_KEY = 'calendar_view_preference';
 
   ngOnInit(): void {
-    const role = this.userService.currentUser()?.role?.toUpperCase();
+    this.currentUser = this.userService.currentUser();
+    const role = this.currentUser?.role?.toUpperCase();
     const savedView = localStorage.getItem(this.STORAGE_KEY);
 
     this.isDayView = savedView
@@ -94,6 +100,7 @@ export class CalendarComponent implements OnInit {
 
   loadEvents(): void {
     const familyEmail = this.getFamilyEmail();
+    const userId = this.currentUser?.id;
 
     if (!familyEmail) {
       this.events = [];
@@ -102,15 +109,26 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    this.calendarEventService.loadFamilyEvents(familyEmail).subscribe({
+    const request$ = this.isParent
+      ? this.calendarEventService.loadFamilyEvents(familyEmail, userId)
+      : this.calendarEventService.loadUserEvents(userId!);
+
+    request$.subscribe({
       next: events => {
-        console.log('Loaded events:', events); // debug
-        this.events = events;
+        console.log('Loaded events:', events);
+        this.events = events.map(event => ({
+          ...event,
+          draggable: this.isParent && !event.meta?.checked,
+          resizable: {
+            beforeStart: this.isParent && !event.meta?.checked,
+            afterEnd: this.isParent && !event.meta?.checked
+          }
+        }));
         this.loadError = null;
         this.refresh.next();
       },
       error: () => {
-        console.error('Error loading events:'); // debug
+        console.error('Error loading events:');
         this.events = [];
         this.loadError = 'Failed to load events';
         this.refresh.next();
@@ -136,6 +154,7 @@ export class CalendarComponent implements OnInit {
   // ---------------- CLICK HANDLING ----------------
 
   onHourSegmentClicked(event: { date: Date; sourceEvent?: MouseEvent }): void {
+    if (!this.isParent) return;
     const target = event.sourceEvent?.target as HTMLElement;
 
     if (target?.closest('.custom-event')) return;
@@ -149,7 +168,9 @@ export class CalendarComponent implements OnInit {
   ): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
-    this.openEditDialog(event);
+    if (this.isParent) {
+      this.openEditDialog(event);
+    }
   }
 
   // drag and drop and resize
@@ -198,7 +219,8 @@ export class CalendarComponent implements OnInit {
         start,
         end,
         users: this.familyUsers,
-        selectedUserIds: current ? [current.id] : []
+        selectedUserIds: current ? [current.id] : [],
+        isReadOnly: !this.isParent
       }
     });
 
@@ -216,7 +238,8 @@ export class CalendarComponent implements OnInit {
         end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
         users: this.familyUsers,
         selectedUserIds: event.meta?.assignedUserIds ?? [],
-        points: event.meta?.points ?? 0
+        points: event.meta?.points ?? 0,
+        isReadOnly: !this.isParent
       }
     });
 
@@ -241,8 +264,8 @@ export class CalendarComponent implements OnInit {
     };
 
     const request$ = result.mode === 'update'
-      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload)
-      : this.calendarEventService.createEvent(payload);
+      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload, this.currentUser?.id)
+      : this.calendarEventService.createEvent(payload, this.currentUser?.id);
 
     request$.subscribe({
       next: () => this.loadEvents(),
@@ -261,10 +284,10 @@ export class CalendarComponent implements OnInit {
     const taskId = event.id as number;
     if (!taskId || event.meta?.checked) return;
 
-    this.calendarEventService.completeEvent(taskId).subscribe({
+    this.calendarEventService.completeEvent(taskId, this.currentUser?.id).subscribe({
       next: () => {
         this.loadEvents();
-        const user = this.userService.currentUser();
+        const user = this.currentUser;
         if (user) {
           this.pointsStore.loadUser(user.id);
         }

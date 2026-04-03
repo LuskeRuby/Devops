@@ -6,26 +6,26 @@
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Titel</mat-label>
-    <input matInput [(ngModel)]="title">
+    <input matInput [(ngModel)]="title" [disabled]="isReadOnly">
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Beskrivelse</mat-label>
-    <textarea matInput [(ngModel)]="description"></textarea>
+    <textarea matInput [(ngModel)]="description" [disabled]="isReadOnly"></textarea>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Start</mat-label>
-    <input matInput type="datetime-local" [(ngModel)]="startLocal" />
+    <input matInput type="datetime-local" [(ngModel)]="startLocal" [disabled]="isReadOnly" />
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Slut</mat-label>
-    <input matInput type="datetime-local" [(ngModel)]="endLocal" />
+    <input matInput type="datetime-local" [(ngModel)]="endLocal" [disabled]="isReadOnly" />
   </mat-form-field>
 
   <div class="points-section">
-    <app-points-input [(taskPoints)]="points"></app-points-input>
+    <app-points-input [(taskPoints)]="points" [disabled]="isReadOnly"></app-points-input>
   </div>
 
   <div class="users-section">
@@ -38,6 +38,7 @@
             type="checkbox"
             [checked]="selectedUserIds.includes(user.id)"
             (change)="toggleUser(user.id)"
+            [disabled]="isReadOnly"
           />
           <span>{{ user.name }}</span>
         </label>
@@ -53,7 +54,8 @@
   <button mat-button (click)="close()">Annuller</button>
   <button mat-raised-button color="primary"
           (click)="save()"
-          [disabled]="!canSave()">
+          [disabled]="!canSave()"
+          *ngIf="!isReadOnly">
     Gem
   </button>
 </div>
