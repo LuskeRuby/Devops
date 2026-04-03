@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, LOCALE_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, CalendarComponent, SidebarComponent],
+  providers: [{ provide: LOCALE_ID, useValue: 'da' }],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
 })

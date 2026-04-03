@@ -65,7 +65,7 @@ export class CalendarComponent implements OnInit {
   @Input() isDayView = false;
   @Output() viewChange = new EventEmitter<boolean>();
 
-  locale = 'da-DK';
+  locale = 'da';
   weekStartsOn = 1;
 
   events: CalendarEvent<CalendarTaskMeta>[] = [];

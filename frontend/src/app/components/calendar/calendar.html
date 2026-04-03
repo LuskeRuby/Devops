@@ -33,9 +33,9 @@
           {{ (calEvent.end || calEvent.start) | date:'shortTime' }}
         </div>
 
-        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned'">
+        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt'">
           <i class="ph ph-user"></i>
-          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned' }}
+          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt' }}
         </div>
 
       </div>

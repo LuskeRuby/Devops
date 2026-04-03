@@ -7,13 +7,13 @@
     <section class="calendar-shell">
       <div class="calendar-header">
         <div class="calendar-controls">
-          <button (click)="previous()" title="Previous">◀</button>
-          <button (click)="next()" title="Next">▶</button>
+          <button (click)="previous()" title="Forrige">◀</button>
+          <button (click)="next()" title="Næste">▶</button>
         </div>
 
         <div class="calendar-title">
           <ng-container *ngIf="isDayView">
-            {{ isToday() ? 'Today' : (viewDate | date:'EEEE, MMM d') }}
+            {{ isToday() ? 'Idag' : (viewDate | date:'EEEE, d. MMM') }}
           </ng-container>
           <ng-container *ngIf="!isDayView">
             {{ viewDate | date:'MMMM yyyy' }}
