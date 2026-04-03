@@ -1,4 +1,8 @@
-import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode, importProvidersFrom } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode, importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeDa from '@angular/common/locales/da';
+
+registerLocaleData(localeDa);
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -19,6 +23,7 @@ export const appConfig: ApplicationConfig = {
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
 
     provideAnimations(),
+    { provide: LOCALE_ID, useValue: 'da' },
     {
       provide: APP_INITIALIZER,
       multi: true,
