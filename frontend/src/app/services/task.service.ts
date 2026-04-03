@@ -39,6 +39,11 @@ export class TaskService {
     return this.http.put<Task>(url, {});
   }
 
+  uncompleteTask(taskId: number, requesterId?: number): Observable<Task> {
+    const url = requesterId ? `${this.baseUrl}/${taskId}/uncomplete?requesterId=${requesterId}` : `${this.baseUrl}/${taskId}/uncomplete`;
+    return this.http.put<Task>(url, {});
+  }
+
   getTasksForFamily(familyEmail: string, requesterId?: number): Observable<Task[]> {
     const url = requesterId ? `${this.baseUrl}/family/${familyEmail}?requesterId=${requesterId}` : `${this.baseUrl}/family/${familyEmail}`;
     return this.http.get<Task[]>(url);

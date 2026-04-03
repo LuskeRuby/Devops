@@ -5,6 +5,7 @@
       type="number" 
       id="pointInput" 
       placeholder="0" 
+      min="0"
       [ngModel]="taskPoints"
       (ngModelChange)="onPointsChange($event)"
       [disabled]="disabled">

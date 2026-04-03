@@ -14,7 +14,7 @@ export class PointsInputComponent {
   @Output() taskPointsChange = new EventEmitter<number>();
 
   onPointsChange(newValue: number): void {
-    this.taskPoints = newValue;
+    this.taskPoints = newValue < 0 ? 0 : newValue;
     this.taskPointsChange.emit(this.taskPoints);
   }
 }

@@ -131,12 +131,18 @@ export class TaskPageComponent implements OnInit {
     });
   }
 
-  completeTask(id: number): void {
-    this.taskService.completeTask(id, this.currentUser?.id).subscribe(() => {
+  toggleTaskStatus(task: Task): void {
+    const userId = this.currentUser?.id;
+    if (!userId || !task.id) return;
+
+    const action$ = task.checked 
+      ? this.taskService.uncompleteTask(task.id, userId)
+      : this.taskService.completeTask(task.id, userId);
+
+    action$.subscribe(() => {
       this.loadTasks();
-      const user = this.currentUser;
-      if (user) {
-        this.pointsStore.loadUser(user.id);
+      if (this.currentUser) {
+        this.pointsStore.loadUser(this.currentUser.id);
       }
     });
   }

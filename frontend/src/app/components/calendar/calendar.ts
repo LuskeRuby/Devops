@@ -1,5 +1,5 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -62,9 +62,11 @@ export class CalendarComponent implements OnInit {
   ) {}
 
   @Input() viewDate: Date = new Date();
+  @Input() isDayView = false;
+  @Output() viewChange = new EventEmitter<boolean>();
+
   locale = 'da-DK';
   weekStartsOn = 1;
-  isDayView = false;
 
   events: CalendarEvent<CalendarTaskMeta>[] = [];
   familyUsers: User[] = [];
@@ -76,24 +78,15 @@ export class CalendarComponent implements OnInit {
     return this.currentUser?.role?.toUpperCase() === 'PARENT';
   }
 
-  private readonly STORAGE_KEY = 'calendar_view_preference';
-
   ngOnInit(): void {
     this.currentUser = this.userService.currentUser();
-    const role = this.currentUser?.role?.toUpperCase();
-    const savedView = localStorage.getItem(this.STORAGE_KEY);
-
-    this.isDayView = savedView
-      ? savedView === 'day'
-      : role === 'CHILD';
-
     this.loadFamilyUsers();
     this.loadEvents();
   }
 
   toggleView(): void {
     this.isDayView = !this.isDayView;
-    localStorage.setItem(this.STORAGE_KEY, this.isDayView ? 'day' : 'week');
+    this.viewChange.emit(this.isDayView);
   }
 
   // ---------------- EVENTS ----------------
@@ -273,18 +266,51 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {
+    mouseEvent.stopPropagation();
+    
+    if (this.isParent && !this.canToggleTask(event)) {
+      // Parents clicking a child's task checkbox should get the edit dialog
+      this.openEditDialog(event);
+      return;
+    }
+
+    if (this.canToggleTask(event)) {
+      this.toggleFromCalendar(event);
+    }
+  }
+
+  canToggleTask(event: CalendarEvent<CalendarTaskMeta>): boolean {
+    if (!this.currentUser || !event.meta) return false;
+    
+    const userId = this.currentUser.id;
+    const isAssigned = event.meta.assignedUserIds?.includes(userId);
+    if (!isAssigned) return false;
+
+    // Parents can only toggle their OWN tasks (no children assigned)
+    if (this.isParent) {
+      const hasAssignedChildren = event.meta.assignedUserIds.some(aid => {
+        const u = this.familyUsers.find(fu => fu.id === aid);
+        return u?.role?.toUpperCase() === 'CHILD';
+      });
+      return !hasAssignedChildren;
+    }
+    
+    // Children can toggle anything they are assigned to
+    return true;
+  }
+
   // ---------------- COMPLETE ----------------
 
-  completeFromCalendar(
-    event: CalendarEvent<CalendarTaskMeta>,
-    mouseEvent: MouseEvent
-  ): void {
-    mouseEvent.stopPropagation();
-
+  toggleFromCalendar(event: CalendarEvent<CalendarTaskMeta>): void {
     const taskId = event.id as number;
-    if (!taskId || event.meta?.checked) return;
+    if (!taskId) return;
 
-    this.calendarEventService.completeEvent(taskId, this.currentUser?.id).subscribe({
+    const action$ = event.meta?.checked
+      ? this.calendarEventService.uncompleteEvent(taskId, this.currentUser?.id)
+      : this.calendarEventService.completeEvent(taskId, this.currentUser?.id);
+
+    action$.subscribe({
       next: () => {
         this.loadEvents();
         const user = this.currentUser;
@@ -292,7 +318,11 @@ export class CalendarComponent implements OnInit {
           this.pointsStore.loadUser(user.id);
         }
       },
-      error: () => this.loadError = 'Failed to update task'
+      error: (err) => {
+        console.error('Task update failed:', err);
+        this.loadError = 'Failed to update task';
+        this.loadEvents();
+      }
     });
   }
 
