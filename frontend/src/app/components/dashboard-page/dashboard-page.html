@@ -19,6 +19,13 @@
             {{ viewDate | date:'MMMM yyyy' }}
           </ng-container>
         </div>
+
+        <div class="calendar-actions" *ngIf="isParent">
+          <button class="create-task-btn" (click)="createTask()">
+            <i class="ph ph-plus-circle"></i>
+            <span>Opret opgave</span>
+          </button>
+        </div>
       </div>
 
       <div class="calendar-section">
