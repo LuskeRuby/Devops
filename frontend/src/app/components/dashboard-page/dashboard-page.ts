@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, LOCALE_ID } from '@angular/core';
+import { Component, OnInit, inject, LOCALE_ID, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -14,6 +14,7 @@ import { UserService } from '../../services/user.service';
 })
 export class DashboardPage implements OnInit {
   private userService = inject(UserService);
+  @ViewChild(CalendarComponent) calendarComponent!: CalendarComponent;
   viewDate: Date = new Date();
   isDayView = false;
 
@@ -63,5 +64,15 @@ export class DashboardPage implements OnInit {
   onViewChanged(isDay: boolean) {
     this.isDayView = isDay;
     localStorage.setItem(this.STORAGE_KEY, isDay ? 'day' : 'week');
+  }
+
+  get isParent(): boolean {
+    return this.userService.currentUser()?.role?.toUpperCase() === 'PARENT';
+  }
+
+  createTask(): void {
+    if (this.calendarComponent) {
+      this.calendarComponent.openCreateDialog(new Date());
+    }
   }
 }
