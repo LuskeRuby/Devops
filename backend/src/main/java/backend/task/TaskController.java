@@ -59,6 +59,11 @@ public class TaskController {
         return taskService.markAsCompleted(taskId, requesterId);
     }
 
+    @PutMapping("/{taskId}/uncomplete")
+    public Task uncompleteTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
+        return taskService.unmarkAsCompleted(taskId, requesterId);
+    }
+
     @PutMapping("/{taskId}")
     public Task updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();

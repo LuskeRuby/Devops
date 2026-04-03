@@ -57,6 +57,9 @@ public class TaskService {
 
         task.setUsers(users);
         task.setChecked(false);
+        if (task.getPoints() != null && task.getPoints() < 0) {
+            task.setPoints(0);
+        }
 
         return taskRepository.save(task);
     }
@@ -78,19 +81,28 @@ public class TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         if (requesterId != null) {
-             User requester = userRepository.findById(requesterId)
+            User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
              
-             // If child, they can only complete their own tasks
-             if ("CHILD".equalsIgnoreCase(requester.getRole())) {
-                 boolean isAssigned = task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
-                 if (!isAssigned) {
-                     throw new RuntimeException("Access denied: You can only complete your own tasks");
-                 }
-             }
+            boolean isAssigned = task.getUsers() != null && 
+                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
+            
+            if (!isAssigned) {
+                throw new RuntimeException("Access denied: You can only complete your own tasks");
+            }
+
+            if ("PARENT".equalsIgnoreCase(requester.getRole())) {
+                // Parents cannot complete tasks if any children are also assigned
+                boolean hasAssignedChildren = task.getUsers() != null && 
+                        task.getUsers().stream().anyMatch(u -> "CHILD".equalsIgnoreCase(u.getRole()));
+                
+                if (hasAssignedChildren) {
+                    throw new RuntimeException("Access denied: Only children can complete shared tasks");
+                }
+            }
         }
 
-        if (task.getChecked())
+        if (Boolean.TRUE.equals(task.getChecked()))
             return task;
 
         task.setChecked(true);
@@ -98,6 +110,47 @@ public class TaskService {
         if (task.getUsers() != null && task.getPoints() != null && task.getPoints() > 0) {
             for (User user : task.getUsers()) {
                 user.setTotalPoints(user.getTotalPoints() + task.getPoints());
+                userRepository.save(user);
+            }
+        }
+
+        return taskRepository.save(task);
+    }
+
+    @Transactional
+    public Task unmarkAsCompleted(Long taskId, Long requesterId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        if (requesterId != null) {
+            User requester = userRepository.findById(requesterId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
+             
+            boolean isAssigned = task.getUsers() != null && 
+                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
+
+            if (!isAssigned) {
+                throw new RuntimeException("Access denied: You can only uncomplete your own tasks");
+            }
+
+            if ("PARENT".equalsIgnoreCase(requester.getRole())) {
+                boolean hasAssignedChildren = task.getUsers() != null && 
+                        task.getUsers().stream().anyMatch(u -> "CHILD".equalsIgnoreCase(u.getRole()));
+                
+                if (hasAssignedChildren) {
+                    throw new RuntimeException("Access denied: Only children can uncomplete shared tasks");
+                }
+            }
+        }
+
+        if (!Boolean.TRUE.equals(task.getChecked()))
+            return task;
+
+        task.setChecked(false);
+
+        if (task.getUsers() != null && task.getPoints() != null && task.getPoints() > 0) {
+            for (User user : task.getUsers()) {
+                user.setTotalPoints(Math.max(0, user.getTotalPoints() - task.getPoints()));
                 userRepository.save(user);
             }
         }
@@ -136,7 +189,8 @@ public class TaskService {
 
         existing.setName(updatedTask.getName());
         existing.setDescription(updatedTask.getDescription());
-        existing.setPoints(updatedTask.getPoints() != null ? updatedTask.getPoints() : 0);
+        int points = updatedTask.getPoints() != null ? updatedTask.getPoints() : 0;
+        existing.setPoints(Math.max(0, points));
         existing.setTimestamp(updatedTask.getTimestamp());
         existing.setRepeatEvery(updatedTask.getRepeatEvery());
         existing.setRepeatUntil(updatedTask.getRepeatUntil());

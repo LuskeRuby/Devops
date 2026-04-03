@@ -86,6 +86,11 @@ export class CalendarEventService {
     return this.http.put<TaskDTO>(url, {});
   }
 
+  uncompleteEvent(id: number, requesterId?: number): Observable<TaskDTO> {
+    const url = requesterId ? `${this.tasksUrl}/${id}/uncomplete?requesterId=${requesterId}` : `${this.tasksUrl}/${id}/uncomplete`;
+    return this.http.put<TaskDTO>(url, {});
+  }
+
   /** Delete a calendar event by its task ID */
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.tasksUrl}/${id}`);
