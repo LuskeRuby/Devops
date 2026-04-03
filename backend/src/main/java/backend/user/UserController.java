@@ -41,8 +41,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}/tasks")
-    public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id) {
-        List<Task> tasks = taskService.getTasksByUserId(id);
+    public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id, @RequestParam(required = false) Long requesterId) {
+        List<Task> tasks = taskService.getTasksByUserId(id, requesterId);
         List<TaskDto> taskDTOs = tasks.stream()
                 .map(TaskController::convertToDto)
                 .toList();

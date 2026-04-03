@@ -23,6 +23,11 @@ export class TaskPageComponent implements OnInit {
   selectedUserIds: number[] = [];
 
   familyEmail = '';
+  currentUser: User | null = null;
+
+  get isParent(): boolean {
+    return this.currentUser?.role?.toUpperCase() === 'PARENT';
+  }
 
   constructor(
     private taskService: TaskService,
@@ -42,10 +47,11 @@ export class TaskPageComponent implements OnInit {
   ngOnInit(): void {
     console.log("TaskPage initialized");
 
-    const currentUser = this.userService.currentUser();
-    this.familyEmail = currentUser?.familyEmail ?? '';
+    this.currentUser = this.userService.currentUser();
+    this.familyEmail = this.currentUser?.familyEmail ?? '';
 
     this.loadUsers();
+    this.loadTasks();
 
     const title = this.route.snapshot.queryParamMap.get('title');
 
@@ -98,7 +104,8 @@ export class TaskPageComponent implements OnInit {
         timestamp: this.toLocalDateTime(new Date()),
         repeatEvery: formValue.repeatEvery
       },
-      this.selectedUserIds
+      this.selectedUserIds,
+      this.currentUser?.id
     ).subscribe(() => {
       this.taskForm.reset({
         name: '',
@@ -112,17 +119,22 @@ export class TaskPageComponent implements OnInit {
   }
 
   loadTasks(): void {
-    this.taskService
-      .getTasksForFamily(this.familyEmail)
-      .subscribe(res => {
-        this.tasks = res;
-      });
+    const userId = this.currentUser?.id;
+    if (!userId) return;
+
+    const request$ = this.isParent
+      ? this.taskService.getTasksForFamily(this.familyEmail, userId)
+      : this.taskService.getTasksForUser(userId, userId);
+
+    request$.subscribe(res => {
+      this.tasks = res;
+    });
   }
 
   completeTask(id: number): void {
-    this.taskService.completeTask(id).subscribe(() => {
+    this.taskService.completeTask(id, this.currentUser?.id).subscribe(() => {
       this.loadTasks();
-      const user = this.userService.currentUser();
+      const user = this.currentUser;
       if (user) {
         this.pointsStore.loadUser(user.id);
       }

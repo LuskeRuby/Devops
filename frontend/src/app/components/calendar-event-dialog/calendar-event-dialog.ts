@@ -17,6 +17,7 @@ interface CalendarEventDialogData {
   eventId?: number;
   users?: { id: number; name: string }[];
   points?: number;
+  isReadOnly?: boolean;
 }
 
 export type CalendarEventDialogResult = {
@@ -52,6 +53,7 @@ export class CalendarEventDialogComponent {
   endLocal = '';
   selectedUserIds: number[] = [];
   points = 0;
+  isReadOnly = false;
 
   constructor(
     public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
@@ -69,6 +71,7 @@ export class CalendarEventDialogComponent {
     this.endLocal = this.toLocalInput(this.data.end);
     this.selectedUserIds = [...(this.data.selectedUserIds ?? [])];
     this.points = this.data.points ?? 0;
+    this.isReadOnly = !!this.data.isReadOnly;
   }
 
   // ---------------- USERS ----------------
