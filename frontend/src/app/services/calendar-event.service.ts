@@ -12,6 +12,7 @@ export interface CalendarQuickCreatePayload {
   start: Date;
   end: Date;
   userIds: number[];
+  isSeparateTasks?: boolean;
   points: number;
   color: string;
 }
@@ -55,7 +56,8 @@ export class CalendarEventService {
         checked: false,
         repeatEvery: null
       },
-      userIds: payload.userIds
+      userIds: payload.userIds,
+      separateTasks: payload.isSeparateTasks
     };
 
     const url = requesterId ? `${this.tasksUrl}?requesterId=${requesterId}` : this.tasksUrl;

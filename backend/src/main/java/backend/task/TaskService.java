@@ -90,16 +90,6 @@ public class TaskService {
             if (!isAssigned) {
                 throw new RuntimeException("Access denied: You can only complete your own tasks");
             }
-
-            if ("PARENT".equalsIgnoreCase(requester.getRole())) {
-                // Parents cannot complete tasks if any children are also assigned
-                boolean hasAssignedChildren = task.getUsers() != null && 
-                        task.getUsers().stream().anyMatch(u -> "CHILD".equalsIgnoreCase(u.getRole()));
-                
-                if (hasAssignedChildren) {
-                    throw new RuntimeException("Access denied: Only children can complete shared tasks");
-                }
-            }
         }
 
         if (Boolean.TRUE.equals(task.getChecked()))
@@ -131,15 +121,6 @@ public class TaskService {
 
             if (!isAssigned) {
                 throw new RuntimeException("Access denied: You can only uncomplete your own tasks");
-            }
-
-            if ("PARENT".equalsIgnoreCase(requester.getRole())) {
-                boolean hasAssignedChildren = task.getUsers() != null && 
-                        task.getUsers().stream().anyMatch(u -> "CHILD".equalsIgnoreCase(u.getRole()));
-                
-                if (hasAssignedChildren) {
-                    throw new RuntimeException("Access denied: Only children can uncomplete shared tasks");
-                }
             }
         }
 

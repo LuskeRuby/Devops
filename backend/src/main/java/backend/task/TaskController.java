@@ -37,6 +37,22 @@ public class TaskController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one userId is required");
         }
 
+        if (Boolean.TRUE.equals(request.getSeparateTasks())) {
+            Task lastTask = null;
+            for (Long userId : request.getUserIds()) {
+                Task task = new Task();
+                task.setName(payload.getName().trim());
+                task.setDescription(payload.getDescription());
+                task.setPoints(payload.getPoints() != null ? payload.getPoints() : 0);
+                task.setChecked(false);
+                task.setTimestamp(payload.getTimestamp());
+                task.setRepeatEvery(payload.getRepeatEvery());
+                task.setRepeatUntil(payload.getRepeatUntil());
+                lastTask = taskService.createTask(task, List.of(userId), requesterId);
+            }
+            return lastTask;
+        }
+
         Task task = new Task();
         task.setName(payload.getName().trim());
         task.setDescription(payload.getDescription());
