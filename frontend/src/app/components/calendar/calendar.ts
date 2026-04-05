@@ -59,7 +59,7 @@ export class CalendarComponent implements OnInit {
     private calendarEventService: CalendarEventService,
     private userService: UserService,
     private pointsStore: PointsStore
-  ) {}
+  ) { }
 
   @Input() viewDate: Date = new Date();
   @Input() isDayView = false;
@@ -252,6 +252,7 @@ export class CalendarComponent implements OnInit {
       start: result.start,
       end: result.end,
       userIds: result.userIds,
+      isSeparateTasks: result.isSeparateTasks,
       points: result.points,
       color: '#4285f4'
     };
@@ -268,7 +269,7 @@ export class CalendarComponent implements OnInit {
 
   handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {
     mouseEvent.stopPropagation();
-    
+
     if (this.isParent && !this.canToggleTask(event)) {
       // Parents clicking a child's task checkbox should get the edit dialog
       this.openEditDialog(event);
@@ -282,22 +283,11 @@ export class CalendarComponent implements OnInit {
 
   canToggleTask(event: CalendarEvent<CalendarTaskMeta>): boolean {
     if (!this.currentUser || !event.meta) return false;
-    
+
     const userId = this.currentUser.id;
     const isAssigned = event.meta.assignedUserIds?.includes(userId);
-    if (!isAssigned) return false;
 
-    // Parents can only toggle their OWN tasks (no children assigned)
-    if (this.isParent) {
-      const hasAssignedChildren = event.meta.assignedUserIds.some(aid => {
-        const u = this.familyUsers.find(fu => fu.id === aid);
-        return u?.role?.toUpperCase() === 'CHILD';
-      });
-      return !hasAssignedChildren;
-    }
-    
-    // Children can toggle anything they are assigned to
-    return true;
+    return !!isAssigned;
   }
 
   // ---------------- COMPLETE ----------------

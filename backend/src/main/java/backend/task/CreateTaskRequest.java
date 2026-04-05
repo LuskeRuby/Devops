@@ -19,9 +19,19 @@ public class CreateTaskRequest {
     private LocalDateTime start;
     @JsonAlias("end")
     private LocalDateTime end;
+    @JsonAlias("separateTasks")
+    private Boolean separateTasks;
 
     public TaskPayload getTask() {
         return task;
+    }
+
+    public Boolean getSeparateTasks() {
+        return separateTasks;
+    }
+
+    public void setSeparateTasks(Boolean separateTasks) {
+        this.separateTasks = separateTasks;
     }
 
     public List<Long> getUserIds() {
