@@ -186,11 +186,11 @@ export class CalendarComponent implements OnInit {
       start: newStart,
       end: newEnd ?? event.end ?? new Date(newStart.getTime() + 60 * 60 * 1000),
       userIds: event.meta?.assignedUserIds ?? [],
-      points: 0,
+      points: event.meta?.points ?? 0,
       color: '#4285f4'
     };
 
-    this.calendarEventService.updateEvent(taskId, payload).subscribe({
+    this.calendarEventService.updateEvent(taskId, payload, this.currentUser?.id).subscribe({
       next: () => this.loadEvents(),
       error: () => {
         this.loadError = 'Failed to move event';
