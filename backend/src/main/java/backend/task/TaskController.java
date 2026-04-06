@@ -26,7 +26,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public Task createTask(@RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto createTask(@RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -50,7 +50,7 @@ public class TaskController {
                 task.setRepeatUntil(payload.getRepeatUntil());
                 lastTask = taskService.createTask(task, List.of(userId), requesterId);
             }
-            return lastTask;
+            return convertToDto(lastTask);
         }
 
         Task task = new Task();
@@ -62,7 +62,7 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return taskService.createTask(task, request.getUserIds(), requesterId);
+        return convertToDto(taskService.createTask(task, request.getUserIds(), requesterId));
     }
 
     @GetMapping("/user/{userId}")
@@ -71,17 +71,17 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}/complete")
-    public Task completeTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
-        return taskService.markAsCompleted(taskId, requesterId);
+    public TaskDto completeTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
+        return convertToDto(taskService.markAsCompleted(taskId, requesterId));
     }
 
     @PutMapping("/{taskId}/uncomplete")
-    public Task uncompleteTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
-        return taskService.unmarkAsCompleted(taskId, requesterId);
+    public TaskDto uncompleteTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
+        return convertToDto(taskService.unmarkAsCompleted(taskId, requesterId));
     }
 
     @PutMapping("/{taskId}")
-    public Task updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -101,7 +101,7 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return taskService.updateTask(taskId, task, request.getUserIds(), requesterId);
+        return convertToDto(taskService.updateTask(taskId, task, request.getUserIds(), requesterId));
     }
 
     @GetMapping("/family/{familyEmail}")
@@ -118,13 +118,13 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id);
+    public TaskDto getTaskById(@PathVariable Long id) {
+        return convertToDto(taskService.getTaskById(id));
     }
 
     @GetMapping
-    public Task getTaskByUserId(@PathVariable Long userId) {
-        return taskService.getTaskById(userId);
+    public TaskDto getTaskByUserId(@PathVariable Long userId) {
+        return convertToDto(taskService.getTaskById(userId));
     }
 
     public static TaskDto convertToDto(Task task) {
