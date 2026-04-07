@@ -1,8 +1,14 @@
-<div class="opgave-point">
-  <label for="pointInput">Point for denne opgave:</label>
-  <input 
-    type="number" 
-    id="pointInput" 
-    placeholder="Indtast point..." 
-    [(ngModel)]="taskPoints">
+<div class="points-input-container">
+  <label for="pointInput">Opgave Point:</label>
+  <div class="input-wrapper">
+    <input 
+      type="number" 
+      id="pointInput" 
+      placeholder="0" 
+      min="0"
+      [ngModel]="taskPoints"
+      (ngModelChange)="onPointsChange($event)"
+      [disabled]="disabled">
+    <span class="points-label">p</span>
+  </div>
 </div>

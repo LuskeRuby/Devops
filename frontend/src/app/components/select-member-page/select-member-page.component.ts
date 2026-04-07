@@ -22,8 +22,19 @@ export class SelectMemberPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.familyEmail = this.authService.getFamilyEmail();
-    this.loadUsers();
+    console.log('[SelectMemberPage] ngOnInit: Subscribing to familyEmail$');
+  
+    // Use the observable instead of the synchronous getter
+    this.authService.familyEmail$.subscribe(email => {
+      console.log(`[SelectMemberPage] Received email from stream: ${email}`);
+      this.familyEmail = email;
+      
+      if (this.familyEmail) {
+        this.loadUsers();
+      } else {
+        console.warn('[SelectMemberPage] Waiting for family email...');
+      }
+    });
   }
 
   loadUsers(): void {
@@ -44,10 +55,6 @@ export class SelectMemberPageComponent implements OnInit {
 
   selectUser(user: User): void {
     this.router.navigate(['/member-pin'], { state: { user } });
-  }
-
-  addMember(): void {
-    this.router.navigate(['/create-member-page']);
   }
 
   calculateRewards(totalPoints: number): number {

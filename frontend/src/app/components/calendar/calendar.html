@@ -14,13 +14,17 @@
           <input
             type="checkbox"
             [checked]="calEvent.meta?.checked"
-            [disabled]="calEvent.meta?.checked"
-            (click)="completeFromCalendar(calEvent, $event)"
-            aria-label="Mark task complete"
+            [disabled]="!canToggleTask(calEvent)"
+            (click)="handleCheckboxClick(calEvent, $event)"
+            aria-label="Toggle task status"
           />
 
           <div class="event-title">
             {{ calEvent.title }}
+          </div>
+
+          <div class="points-badge" *ngIf="calEvent.meta?.points > 0">
+            {{ calEvent.meta?.points }}p
           </div>
         </div>
 
@@ -29,9 +33,9 @@
           {{ (calEvent.end || calEvent.start) | date:'shortTime' }}
         </div>
 
-        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned'">
+        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt'">
           <i class="ph ph-user"></i>
-          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Unassigned' }}
+          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt' }}
         </div>
 
       </div>

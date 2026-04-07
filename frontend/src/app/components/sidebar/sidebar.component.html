@@ -6,6 +6,13 @@
     <span class="current-user-name">{{ currentUser()?.name }}</span>
   </div>
 
+  <div class="points-summary">
+    <app-total-points-display
+      [totalPoints]="currentUser()?.totalPoints ?? 0"
+      [userId]="currentUser()?.id ?? null">
+    </app-total-points-display>
+  </div>
+
   <div class="nav-section">
     <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
       <i class="ph ph-house"></i>

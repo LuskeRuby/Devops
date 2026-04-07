@@ -4,11 +4,13 @@ import {Task, TaskService} from '../../services/task.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, User } from '../../services/user.service';
 import { ActivatedRoute } from '@angular/router';
+import { PointsStore } from '../../services/points-store.service';
+import { PointsInputComponent } from '../points-input/points-input';
 
 @Component({
   selector: 'app-task-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PointsInputComponent],
   templateUrl: './task-page.html',
   styleUrl: './task-page.scss'
 })
@@ -21,12 +23,18 @@ export class TaskPageComponent implements OnInit {
   selectedUserIds: number[] = [];
 
   familyEmail = '';
+  currentUser: User | null = null;
+
+  get isParent(): boolean {
+    return this.currentUser?.role?.toUpperCase() === 'PARENT';
+  }
 
   constructor(
     private taskService: TaskService,
     private userService: UserService,
     private fb: FormBuilder,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pointsStore: PointsStore
   ) {
     this.taskForm = this.fb.group({
       name: ['', Validators.required],
@@ -39,10 +47,11 @@ export class TaskPageComponent implements OnInit {
   ngOnInit(): void {
     console.log("TaskPage initialized");
 
-    const currentUser = this.userService.currentUser();
-    this.familyEmail = currentUser?.familyEmail ?? '';
+    this.currentUser = this.userService.currentUser();
+    this.familyEmail = this.currentUser?.familyEmail ?? '';
 
     this.loadUsers();
+    this.loadTasks();
 
     const title = this.route.snapshot.queryParamMap.get('title');
 
@@ -95,7 +104,8 @@ export class TaskPageComponent implements OnInit {
         timestamp: this.toLocalDateTime(new Date()),
         repeatEvery: formValue.repeatEvery
       },
-      this.selectedUserIds
+      this.selectedUserIds,
+      this.currentUser?.id
     ).subscribe(() => {
       this.taskForm.reset({
         name: '',
@@ -109,16 +119,31 @@ export class TaskPageComponent implements OnInit {
   }
 
   loadTasks(): void {
-    this.taskService
-      .getTasksForFamily(this.familyEmail)
-      .subscribe(res => {
-        this.tasks = res;
-      });
+    const userId = this.currentUser?.id;
+    if (!userId) return;
+
+    const request$ = this.isParent
+      ? this.taskService.getTasksForFamily(this.familyEmail, userId)
+      : this.taskService.getTasksForUser(userId, userId);
+
+    request$.subscribe(res => {
+      this.tasks = res;
+    });
   }
 
-  completeTask(id: number): void {
-    this.taskService.completeTask(id).subscribe(() => {
+  toggleTaskStatus(task: Task): void {
+    const userId = this.currentUser?.id;
+    if (!userId || !task.id) return;
+
+    const action$ = task.checked 
+      ? this.taskService.uncompleteTask(task.id, userId)
+      : this.taskService.completeTask(task.id, userId);
+
+    action$.subscribe(() => {
       this.loadTasks();
+      if (this.currentUser) {
+        this.pointsStore.loadUser(this.currentUser.id);
+      }
     });
   }
 

@@ -1,5 +1,5 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -21,6 +21,7 @@ import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../cale
 import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
+import { PointsStore } from '../../services/points-store.service';
 
 registerLocaleData(localeDa);
 
@@ -56,42 +57,43 @@ export class CalendarComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private calendarEventService: CalendarEventService,
-    private userService: UserService
-  ) {}
+    private userService: UserService,
+    private pointsStore: PointsStore
+  ) { }
 
   @Input() viewDate: Date = new Date();
-  locale = 'da-DK';
+  @Input() isDayView = false;
+  @Output() viewChange = new EventEmitter<boolean>();
+
+  locale = 'da';
   weekStartsOn = 1;
-  isDayView = false;
 
   events: CalendarEvent<CalendarTaskMeta>[] = [];
   familyUsers: User[] = [];
   loadError: string | null = null;
   refresh = new Subject<void>();
+  currentUser: User | null = null;
 
-  private readonly STORAGE_KEY = 'calendar_view_preference';
+  get isParent(): boolean {
+    return this.currentUser?.role?.toUpperCase() === 'PARENT';
+  }
 
   ngOnInit(): void {
-    const role = this.userService.currentUser()?.role?.toUpperCase();
-    const savedView = localStorage.getItem(this.STORAGE_KEY);
-
-    this.isDayView = savedView
-      ? savedView === 'day'
-      : role === 'CHILD';
-
+    this.currentUser = this.userService.currentUser();
     this.loadFamilyUsers();
     this.loadEvents();
   }
 
   toggleView(): void {
     this.isDayView = !this.isDayView;
-    localStorage.setItem(this.STORAGE_KEY, this.isDayView ? 'day' : 'week');
+    this.viewChange.emit(this.isDayView);
   }
 
   // ---------------- EVENTS ----------------
 
   loadEvents(): void {
     const familyEmail = this.getFamilyEmail();
+    const userId = this.currentUser?.id;
 
     if (!familyEmail) {
       this.events = [];
@@ -100,15 +102,26 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    this.calendarEventService.loadFamilyEvents(familyEmail).subscribe({
+    const request$ = this.isParent
+      ? this.calendarEventService.loadFamilyEvents(familyEmail, userId)
+      : this.calendarEventService.loadUserEvents(userId!);
+
+    request$.subscribe({
       next: events => {
-        console.log('Loaded events:', events); // debug
-        this.events = events;
+        console.log('Loaded events:', events);
+        this.events = events.map(event => ({
+          ...event,
+          draggable: this.isParent && !event.meta?.checked,
+          resizable: {
+            beforeStart: this.isParent && !event.meta?.checked,
+            afterEnd: this.isParent && !event.meta?.checked
+          }
+        }));
         this.loadError = null;
         this.refresh.next();
       },
       error: () => {
-        console.error('Error loading events:'); // debug
+        console.error('Error loading events:');
         this.events = [];
         this.loadError = 'Failed to load events';
         this.refresh.next();
@@ -134,6 +147,7 @@ export class CalendarComponent implements OnInit {
   // ---------------- CLICK HANDLING ----------------
 
   onHourSegmentClicked(event: { date: Date; sourceEvent?: MouseEvent }): void {
+    if (!this.isParent) return;
     const target = event.sourceEvent?.target as HTMLElement;
 
     if (target?.closest('.custom-event')) return;
@@ -147,7 +161,9 @@ export class CalendarComponent implements OnInit {
   ): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
-    this.openEditDialog(event);
+    if (this.isParent) {
+      this.openEditDialog(event);
+    }
   }
 
   // drag and drop and resize
@@ -170,11 +186,11 @@ export class CalendarComponent implements OnInit {
       start: newStart,
       end: newEnd ?? event.end ?? new Date(newStart.getTime() + 60 * 60 * 1000),
       userIds: event.meta?.assignedUserIds ?? [],
-      points: 0,
+      points: event.meta?.points ?? 0,
       color: '#4285f4'
     };
 
-    this.calendarEventService.updateEvent(taskId, payload).subscribe({
+    this.calendarEventService.updateEvent(taskId, payload, this.currentUser?.id).subscribe({
       next: () => this.loadEvents(),
       error: () => {
         this.loadError = 'Failed to move event';
@@ -196,7 +212,8 @@ export class CalendarComponent implements OnInit {
         start,
         end,
         users: this.familyUsers,
-        selectedUserIds: current ? [current.id] : []
+        selectedUserIds: current ? [current.id] : [],
+        isReadOnly: !this.isParent
       }
     });
 
@@ -213,7 +230,9 @@ export class CalendarComponent implements OnInit {
         start: event.start,
         end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
         users: this.familyUsers,
-        selectedUserIds: event.meta?.assignedUserIds ?? []
+        selectedUserIds: event.meta?.assignedUserIds ?? [],
+        points: event.meta?.points ?? 0,
+        isReadOnly: !this.isParent
       }
     });
 
@@ -233,13 +252,14 @@ export class CalendarComponent implements OnInit {
       start: result.start,
       end: result.end,
       userIds: result.userIds,
-      points: 0,
+      isSeparateTasks: result.isSeparateTasks,
+      points: result.points,
       color: '#4285f4'
     };
 
     const request$ = result.mode === 'update'
-      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload)
-      : this.calendarEventService.createEvent(payload);
+      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload, this.currentUser?.id)
+      : this.calendarEventService.createEvent(payload, this.currentUser?.id);
 
     request$.subscribe({
       next: () => this.loadEvents(),
@@ -247,20 +267,52 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  // ---------------- COMPLETE ----------------
-
-  completeFromCalendar(
-    event: CalendarEvent<CalendarTaskMeta>,
-    mouseEvent: MouseEvent
-  ): void {
+  handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {
     mouseEvent.stopPropagation();
 
-    const taskId = event.id as number;
-    if (!taskId || event.meta?.checked) return;
+    if (this.isParent && !this.canToggleTask(event)) {
+      // Parents clicking a child's task checkbox should get the edit dialog
+      this.openEditDialog(event);
+      return;
+    }
 
-    this.calendarEventService.completeEvent(taskId).subscribe({
-      next: () => this.loadEvents(),
-      error: () => this.loadError = 'Failed to update task'
+    if (this.canToggleTask(event)) {
+      this.toggleFromCalendar(event);
+    }
+  }
+
+  canToggleTask(event: CalendarEvent<CalendarTaskMeta>): boolean {
+    if (!this.currentUser || !event.meta) return false;
+
+    const userId = this.currentUser.id;
+    const isAssigned = event.meta.assignedUserIds?.includes(userId);
+
+    return !!isAssigned;
+  }
+
+  // ---------------- COMPLETE ----------------
+
+  toggleFromCalendar(event: CalendarEvent<CalendarTaskMeta>): void {
+    const taskId = event.id as number;
+    if (!taskId) return;
+
+    const action$ = event.meta?.checked
+      ? this.calendarEventService.uncompleteEvent(taskId, this.currentUser?.id)
+      : this.calendarEventService.completeEvent(taskId, this.currentUser?.id);
+
+    action$.subscribe({
+      next: () => {
+        this.loadEvents();
+        const user = this.currentUser;
+        if (user) {
+          this.pointsStore.loadUser(user.id);
+        }
+      },
+      error: (err) => {
+        console.error('Task update failed:', err);
+        this.loadError = 'Failed to update task';
+        this.loadEvents();
+      }
     });
   }
 

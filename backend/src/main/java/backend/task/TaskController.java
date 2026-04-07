@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public Task createTask(@RequestBody CreateTaskRequest request) {
+    public TaskDto createTask(@RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -34,6 +35,22 @@ public class TaskController {
 
         if (request.getUserIds() == null || request.getUserIds().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one userId is required");
+        }
+
+        if (Boolean.TRUE.equals(request.getSeparateTasks())) {
+            Task lastTask = null;
+            for (Long userId : request.getUserIds()) {
+                Task task = new Task();
+                task.setName(payload.getName().trim());
+                task.setDescription(payload.getDescription());
+                task.setPoints(payload.getPoints() != null ? payload.getPoints() : 0);
+                task.setChecked(false);
+                task.setTimestamp(payload.getTimestamp());
+                task.setRepeatEvery(payload.getRepeatEvery());
+                task.setRepeatUntil(payload.getRepeatUntil());
+                lastTask = taskService.createTask(task, List.of(userId), requesterId);
+            }
+            return convertToDto(lastTask);
         }
 
         Task task = new Task();
@@ -45,21 +62,26 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return taskService.createTask(task, request.getUserIds());
+        return convertToDto(taskService.createTask(task, request.getUserIds(), requesterId));
     }
 
     @GetMapping("/user/{userId}")
-    public List<Task> getTasksForUser(@PathVariable Long userId) {
-        return taskService.getTasksForUser(userId);
+    public List<Task> getTasksForUser(@PathVariable Long userId, @RequestParam(required = false) Long requesterId) {
+        return taskService.getTasksForUser(userId, requesterId);
     }
 
     @PutMapping("/{taskId}/complete")
-    public Task completeTask(@PathVariable Long taskId) {
-        return taskService.markAsCompleted(taskId);
+    public TaskDto completeTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
+        return convertToDto(taskService.markAsCompleted(taskId, requesterId));
+    }
+
+    @PutMapping("/{taskId}/uncomplete")
+    public TaskDto uncompleteTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
+        return convertToDto(taskService.unmarkAsCompleted(taskId, requesterId));
     }
 
     @PutMapping("/{taskId}")
-    public Task updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request) {
+    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -79,30 +101,30 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return taskService.updateTask(taskId, task, request.getUserIds());
+        return convertToDto(taskService.updateTask(taskId, task, request.getUserIds(), requesterId));
     }
 
     @GetMapping("/family/{familyEmail}")
-    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail) {
-        return taskService.getTasksForFamily(familyEmail).stream()
+    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail, @RequestParam(required = false) Long requesterId) {
+        return taskService.getTasksForFamily(familyEmail, requesterId).stream()
                 .map(TaskController::convertToDto)
                 .toList();
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTask(@PathVariable Long id) {
-        taskService.deleteTask(id);
+    public void deleteTask(@PathVariable Long id, @RequestParam(required = false) Long requesterId) {
+        taskService.deleteTask(id, requesterId);
     }
 
     @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id);
+    public TaskDto getTaskById(@PathVariable Long id) {
+        return convertToDto(taskService.getTaskById(id));
     }
 
     @GetMapping
-    public Task getTaskByUserId(@PathVariable Long userId) {
-        return taskService.getTaskById(userId);
+    public TaskDto getTaskByUserId(@PathVariable Long userId) {
+        return convertToDto(taskService.getTaskById(userId));
     }
 
     public static TaskDto convertToDto(Task task) {

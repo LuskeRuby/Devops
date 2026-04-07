@@ -7,18 +7,33 @@
     <section class="calendar-shell">
       <div class="calendar-header">
         <div class="calendar-controls">
-          <button (click)="previousWeek()">◀</button>
-          <button class="today-btn" (click)="goToToday()">Today</button>
-          <button (click)="nextWeek()">▶</button>
+          <button (click)="previous()" title="Forrige">◀</button>
+          <button (click)="next()" title="Næste">▶</button>
         </div>
 
         <div class="calendar-title">
-          {{ viewDate | date:'MMMM yyyy' }}
+          <ng-container *ngIf="isDayView">
+            {{ isToday() ? 'Idag' : (viewDate | date:'EEEE, d. MMM') }}
+          </ng-container>
+          <ng-container *ngIf="!isDayView">
+            {{ viewDate | date:'MMMM yyyy' }}
+          </ng-container>
+        </div>
+
+        <div class="calendar-actions" *ngIf="isParent">
+          <button class="create-task-btn" (click)="createTask()">
+            <i class="ph ph-plus-circle"></i>
+            <span>Opret opgave</span>
+          </button>
         </div>
       </div>
 
       <div class="calendar-section">
-        <app-calendar [viewDate]="viewDate"></app-calendar>
+        <app-calendar 
+          [viewDate]="viewDate" 
+          [isDayView]="isDayView"
+          (viewChange)="onViewChanged($event)">
+        </app-calendar>
       </div>
     </section>
   </main>

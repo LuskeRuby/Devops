@@ -26,7 +26,7 @@ public class Task {
 
     private Integer points;
     
-    private Boolean checked;
+    private Boolean checked = false;
     
     private LocalDateTime timestamp;
     
