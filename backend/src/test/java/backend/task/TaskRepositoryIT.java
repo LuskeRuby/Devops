@@ -30,7 +30,7 @@ class TaskRepositoryIT {
     @Autowired
     private TestEntityManager entityManager;
 
-    // --- helpers ---
+    // ─── helpers ─────────────────────────────────────────────────────────────────
 
     private Family persistFamily(String email) {
         Family family = new Family();
@@ -57,26 +57,24 @@ class TaskRepositoryIT {
         return entityManager.persist(task);
     }
 
+    // ─── findByUsers_Id ──────────────────────────────────────────────────────────
+
     @Test
     @DisplayName("findByUsers_Id returns tasks assigned to a specific user")
     void findByUsers_Id_returnsMatchingTasks() {
-        // Arrange
         Family family = persistFamily("task-test@family.com");
         User user = persistUser("Anders", "a@a.com", "PARENT", family);
 
-        Task task1 = persistTask("Clean kitchen", List.of(user));
-        Task task2 = persistTask("Do laundry", List.of(user));
+        persistTask("Clean kitchen", List.of(user));
+        persistTask("Do laundry", List.of(user));
 
-        // task for a different user that should NOT appear
         User otherUser = persistUser("Svend", "s@s.com", "CHILD", family);
         persistTask("Walk dog", List.of(otherUser));
 
         entityManager.flush();
 
-        // Act
         List<Task> result = taskRepository.findByUsers_Id(user.getId());
 
-        // Assert
         assertThat(result).hasSize(2);
         assertThat(result).extracting(Task::getName)
                 .containsExactlyInAnyOrder("Clean kitchen", "Do laundry");
@@ -94,10 +92,11 @@ class TaskRepositoryIT {
         assertThat(result).isEmpty();
     }
 
+    // ─── findDistinctByUsers_Family_Email ────────────────────────────────────────
+
     @Test
     @DisplayName("findDistinctByUsers_Family_Email returns tasks for all users in a family")
     void findDistinctByUsers_Family_Email_returnsAllFamilyTasks() {
-        // Arrange
         Family family = persistFamily("fam@family.com");
         User parent = persistUser("Hans", "h@h.com", "PARENT", family);
         User child = persistUser("Lotte", "l@l.com", "CHILD", family);
@@ -105,38 +104,31 @@ class TaskRepositoryIT {
         persistTask("Cook dinner", List.of(parent));
         persistTask("Homework", List.of(child));
 
-        // unrelated family — should not appear
         Family otherFamily = persistFamily("other@family.com");
         User otherUser = persistUser("Bob", "b@b.com", "PARENT", otherFamily);
         persistTask("Mow lawn", List.of(otherUser));
 
         entityManager.flush();
 
-        // Act
         List<Task> result = taskRepository.findDistinctByUsers_Family_Email("fam@family.com");
 
-        // Assert
         assertThat(result).hasSize(2);
         assertThat(result).extracting(Task::getName)
                 .containsExactlyInAnyOrder("Cook dinner", "Homework");
     }
 
     @Test
-    @DisplayName("findDistinctByUsers_Family_Email returns each task only once when assigned to multiple family members")
+    @DisplayName("findDistinctByUsers_Family_Email returns each shared task only once")
     void findDistinctByUsers_Family_Email_returnsEachTaskOnce() {
-        // Arrange
         Family family = persistFamily("distinct@family.com");
         User parent = persistUser("Per", "p@p.com", "PARENT", family);
         User child = persistUser("Maja", "m@m.com", "CHILD", family);
 
-        // Task shared by two users in the same family — must appear only once
         persistTask("Shared chore", List.of(parent, child));
         entityManager.flush();
 
-        // Act
         List<Task> result = taskRepository.findDistinctByUsers_Family_Email("distinct@family.com");
 
-        // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Shared chore");
     }
@@ -149,10 +141,11 @@ class TaskRepositoryIT {
         assertThat(result).isEmpty();
     }
 
+    // ─── persistence ─────────────────────────────────────────────────────────────
+
     @Test
     @DisplayName("save and retrieve task persists all fields correctly")
     void saveAndRetrieve_persistsAllFields() {
-        // Arrange
         Family family = persistFamily("persist@family.com");
         User user = persistUser("Karl", "k@k.com", "PARENT", family);
 
@@ -166,14 +159,12 @@ class TaskRepositoryIT {
         task.setRepeatUntil(LocalDateTime.of(2026, 12, 31, 0, 0));
         task.setUsers(List.of(user));
 
-        // Act
         Task saved = taskRepository.save(task);
         entityManager.flush();
         entityManager.clear();
 
         Task found = taskRepository.findById(saved.getId()).orElseThrow();
 
-        // Assert
         assertThat(found.getName()).isEqualTo("Buy groceries");
         assertThat(found.getDescription()).isEqualTo("Milk and eggs");
         assertThat(found.getPoints()).isEqualTo(15);
