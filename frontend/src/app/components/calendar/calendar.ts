@@ -25,6 +25,9 @@ import { PointsStore } from '../../services/points-store.service';
 
 registerLocaleData(localeDa);
 
+import { Injectable } from '@angular/core';
+
+@Injectable()
 export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   override weekViewHour({ date }: DateFormatterParams): string {
     return format(date, 'HH:mm');
