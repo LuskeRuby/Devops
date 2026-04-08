@@ -3,6 +3,23 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MessageComponent } from './message-page.component';
 import { UserService } from '../../services/user.service';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { RouterTestingModule } from '@angular/router/testing';
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-sidebar',
+  standalone: true,
+  template: ''
+})
+class MockSidebarComponent {}
+
+@Component({
+  selector: 'app-chat',
+  standalone: true,
+  template: ''
+})
+class MockChatComponent {}
 
 describe('MessageComponent (page)', () => {
   let component: MessageComponent;
@@ -15,12 +32,23 @@ describe('MessageComponent (page)', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [MessageComponent],
+      imports: [
+        MessageComponent,
+        RouterTestingModule.withRoutes([]),
+      ],
       providers: [
         { provide: UserService, useValue: userService },
-      ],
-      schemas: [NO_ERRORS_SCHEMA], // Ignores app-sidebar and app-chat
-    }).compileComponents();
+      ]
+    })
+      .overrideComponent(MessageComponent, {
+        set: {
+          imports: [
+            MockSidebarComponent,
+            MockChatComponent
+          ]
+        }
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(MessageComponent);
     component = fixture.componentInstance;
