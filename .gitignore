@@ -8,6 +8,8 @@
 frontend/dist/
 target/
 frontend/dist/
+coverage/
+frontend/coverage/
 
 # Node
 .angular/
