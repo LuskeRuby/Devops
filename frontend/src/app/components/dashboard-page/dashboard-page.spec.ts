@@ -17,26 +17,24 @@ describe('DashboardPage', () => {
   let userService: any;
 
   const mockParent = { id: 1, name: 'Anders', role: 'PARENT', familyEmail: 'test@family.com' };
-  const mockChild  = { id: 2, name: 'Maja',   role: 'CHILD',  familyEmail: 'test@family.com' };
+  const mockChild = { id: 2, name: 'Maja', role: 'CHILD', familyEmail: 'test@family.com' };
 
   beforeEach(async () => {
     localStorage.clear();
 
     userService = {
-      currentUser: vi.fn().mockReturnValue(mockParent)
+      currentUser: vi.fn().mockReturnValue(mockParent),
     };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
-      providers: [
-        { provide: UserService, useValue: userService }
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{ provide: UserService, useValue: userService }],
+      schemas: [NO_ERRORS_SCHEMA],
     })
       .overrideComponent(DashboardPage, {
         set: {
-          imports: [MockCalendarComponent, MockSidebarComponent]
-        }
+          imports: [MockCalendarComponent, MockSidebarComponent],
+        },
       })
       .compileComponents();
 

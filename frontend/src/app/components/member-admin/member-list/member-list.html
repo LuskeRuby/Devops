@@ -1,12 +1,12 @@
 <div class="list-container">
   <div class="list-header">
     <h2>Medlemmer</h2>
-  @if (members().length > 0) {
-    <button class="toggle-edit-btn" (click)="toggleEditMode()">
-      <lucide-icon [name]="isEditMode() ? DoneIcon : EditIcon" [size]="20"></lucide-icon>
-      {{ isEditMode() ? 'Færdig' : 'Rediger' }}
-    </button>
-  }
+    @if (members().length > 0) {
+      <button class="toggle-edit-btn" (click)="toggleEditMode()">
+        <lucide-icon [name]="isEditMode() ? DoneIcon : EditIcon" [size]="20"></lucide-icon>
+        {{ isEditMode() ? 'Færdig' : 'Rediger' }}
+      </button>
+    }
   </div>
 
   @for (member of members(); track member.id) {
@@ -20,7 +20,7 @@
     </app-member-item>
   }
 
-  @if (!isEditMode() || members().length == 0) {
+  @if (!isEditMode() || members().length === 0) {
     <div class="add-member-container" (click)="handleAdd()">
       <div class="plus-box">
         <lucide-icon [name]="PlusIcon" [size]="28" color="white"></lucide-icon>

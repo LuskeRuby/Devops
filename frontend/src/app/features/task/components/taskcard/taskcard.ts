@@ -7,12 +7,12 @@ import { DatePipe } from '@angular/common';
   standalone: true,
   imports: [DatePipe],
   templateUrl: './taskcard.html',
-  styleUrls: ['./taskcard.scss']
+  styleUrls: ['./taskcard.scss'],
 })
 export class TaskcardComponent {
   // Receives the task data from the parent list
-  @Input() task!: TaskDTO; 
-  
+  @Input() task!: TaskDTO;
+
   // Emits an event to the parent when the checkmark is clicked
   @Output() toggleStatus = new EventEmitter<TaskDTO>();
 

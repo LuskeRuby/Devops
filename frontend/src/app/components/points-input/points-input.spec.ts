@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PointsInputComponent } from './points-input'; 
+import { PointsInputComponent } from './points-input';
 
 describe('PointsInputComponent', () => {
   let component: PointsInputComponent;
@@ -8,10 +8,8 @@ describe('PointsInputComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-     
-      imports: [PointsInputComponent]
-    })
-    .compileComponents();
+      imports: [PointsInputComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(PointsInputComponent);
     component = fixture.componentInstance;

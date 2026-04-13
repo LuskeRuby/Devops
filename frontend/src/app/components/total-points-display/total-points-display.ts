@@ -8,7 +8,7 @@ import { PointsStore } from '../../services/points-store.service';
   standalone: true,
   imports: [PointsProgressComponent, RewardsDisplayComponent],
   templateUrl: './total-points-display.html',
-  styleUrl: './total-points-display.scss'
+  styleUrl: './total-points-display.scss',
 })
 export class TotalPointsDisplayComponent {
   totalPoints = input<number>(0);

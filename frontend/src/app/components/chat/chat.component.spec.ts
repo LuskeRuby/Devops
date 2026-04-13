@@ -24,8 +24,22 @@ describe('ChatComponent', () => {
   const mockUser = { id: 1, name: 'Anders', email: 'test@family.com' };
 
   const mockMessages: MessageResponse[] = [
-    { id: 1, content: 'Hej!', timestamp: '2026-03-28T10:00:00', username: 'Anders', userId: 1, imageId: 1 },
-    { id: 2, content: 'Godmorgen', timestamp: '2026-03-28T10:05:00', username: 'Svend', userId: 2, imageId: 2 },
+    {
+      id: 1,
+      content: 'Hej!',
+      timestamp: '2026-03-28T10:00:00',
+      username: 'Anders',
+      userId: 1,
+      imageId: 1,
+    },
+    {
+      id: 2,
+      content: 'Godmorgen',
+      timestamp: '2026-03-28T10:05:00',
+      username: 'Svend',
+      userId: 2,
+      imageId: 2,
+    },
   ];
 
   beforeEach(async () => {
@@ -87,9 +101,11 @@ describe('ChatComponent', () => {
 
     it('sets isConnected when WebSocket connects', () => {
       // Capture the onConnected callback and invoke it
-      wsService.connect.mockImplementation((_email: string, _onMsg: any, onConnected: () => void) => {
-        onConnected();
-      });
+      wsService.connect.mockImplementation(
+        (_email: string, _onMsg: any, onConnected: () => void) => {
+          onConnected();
+        },
+      );
 
       fixture.detectChanges();
 
@@ -98,8 +114,12 @@ describe('ChatComponent', () => {
 
     it('appends incoming WebSocket messages to the list', () => {
       const incomingMsg: MessageResponse = {
-        id: 3, content: 'Ny besked!', timestamp: '2026-03-28T10:10:00',
-        username: 'Ida', userId: 3, imageId: 3,
+        id: 3,
+        content: 'Ny besked!',
+        timestamp: '2026-03-28T10:10:00',
+        username: 'Ida',
+        userId: 3,
+        imageId: 3,
       };
 
       wsService.connect.mockImplementation((_email: string, onMsg: (msg: any) => void) => {
@@ -116,9 +136,11 @@ describe('ChatComponent', () => {
 
   describe('send', () => {
     beforeEach(() => {
-      wsService.connect.mockImplementation((_email: string, _onMsg: any, onConnected: () => void) => {
-        onConnected();
-      });
+      wsService.connect.mockImplementation(
+        (_email: string, _onMsg: any, onConnected: () => void) => {
+          onConnected();
+        },
+      );
       fixture.detectChanges();
     });
 

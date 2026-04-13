@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
@@ -22,14 +22,14 @@ const STORAGE_KEY = 'currentUser';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
   private apiUrl = '/api/users';
 
   readonly currentUser = signal<User | null>(
-    JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? 'null')
+    JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? 'null'),
   );
-
-  constructor(private http: HttpClient, private router: Router) { }
 
   setCurrentUser(user: User): void {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
@@ -42,16 +42,16 @@ export class UserService {
     this.router.navigate(['/select-member']);
   }
 
-  getUser(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}`);
+  getUser(id: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`);
   }
 
-  deleteUser(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  deleteUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  addPoints(id: number, points: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/add-points/${points}`, {});
+  addPoints(id: number, points: number): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/${id}/add-points/${points}`, {});
   }
 
   getUsersByFamilyEmail(familyEmail: string): Observable<User[]> {

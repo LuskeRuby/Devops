@@ -26,7 +26,16 @@ describe('SidebarComponent', () => {
 
   const mockMembers: User[] = [
     mockUser,
-    { id: 2, name: 'Maja', email: 'maja@test.com', role: 'CHILD', totalPoints: 30, imageId: 2, family: { email: 'test@family.com' }, familyEmail: 'test@family.com' },
+    {
+      id: 2,
+      name: 'Maja',
+      email: 'maja@test.com',
+      role: 'CHILD',
+      totalPoints: 30,
+      imageId: 2,
+      family: { email: 'test@family.com' },
+      familyEmail: 'test@family.com',
+    },
   ];
 
   let userService: any;
@@ -40,7 +49,7 @@ describe('SidebarComponent', () => {
     userService = {
       currentUser: currentUserSignal,
       getUsersByFamilyEmail: vi.fn().mockReturnValue(of(mockMembers)),
-      getImageUrl: vi.fn((id: number) => id ? `/api/images/${id}` : 'assets/default-avatar.png'),
+      getImageUrl: vi.fn((id: number) => (id ? `/api/images/${id}` : 'assets/default-avatar.png')),
       logoutUser: vi.fn(),
     };
 
@@ -146,6 +155,8 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.empty-msg')?.textContent).toContain('Ingen familiemedlemmer fundet');
+    expect(compiled.querySelector('.empty-msg')?.textContent).toContain(
+      'Ingen familiemedlemmer fundet',
+    );
   });
 });

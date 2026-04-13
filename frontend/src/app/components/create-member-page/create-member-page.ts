@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
@@ -9,11 +9,16 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-create-member-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './create-member-page.html',
-  styleUrls: ['./create-member-page.scss']
+  styleUrls: ['./create-member-page.scss'],
 })
 export class CreateMemberPageComponent implements OnInit {
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+
   name = '';
   pinCode = '';
   role = 'child';
@@ -21,13 +26,6 @@ export class CreateMemberPageComponent implements OnInit {
   showError = false;
   isFirstUser = false;
   private returnUrl = history.state?.returnUrl || '/select-member';
-
-  constructor(
-    private router: Router,
-    private http: HttpClient,
-    private authService: AuthService,
-    private userService: UserService
-  ) { }
 
   ngOnInit(): void {
     this.familyEmail = this.authService.getFamilyEmail();
@@ -46,7 +44,7 @@ export class CreateMemberPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error checking family users:', error);
-      }
+      },
     });
   }
 
@@ -73,8 +71,8 @@ export class CreateMemberPageComponent implements OnInit {
       role: this.role,
       totalPoints: 0,
       family: {
-        email: this.familyEmail
-      }
+        email: this.familyEmail,
+      },
     };
 
     this.http.post('/api/users', newUser).subscribe({
@@ -84,7 +82,7 @@ export class CreateMemberPageComponent implements OnInit {
       error: (error) => {
         console.error('Error creating member:', error);
         this.showError = true;
-      }
+      },
     });
   }
 

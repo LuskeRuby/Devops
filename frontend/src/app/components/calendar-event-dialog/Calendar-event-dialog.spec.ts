@@ -16,21 +16,21 @@ describe('CalendarEventDialogComponent', () => {
     selectedUserIds: [1],
     users: [{ id: 1, name: 'User 1' }],
     points: 5,
-    isReadOnly: false
+    isReadOnly: false,
   };
 
   beforeEach(async () => {
     dialogRef = {
-      close: vi.fn()
+      close: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
       imports: [CalendarEventDialogComponent],
       providers: [
         { provide: MatDialogRef, useValue: dialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: { ...mockData } }
+        { provide: MAT_DIALOG_DATA, useValue: { ...mockData } },
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CalendarEventDialogComponent);
@@ -142,8 +142,8 @@ describe('CalendarEventDialogComponent', () => {
         description: 'Desc',
         userIds: [1],
         points: 10,
-        isSeparateTasks: true
-      })
+        isSeparateTasks: true,
+      }),
     );
   });
 
@@ -160,8 +160,8 @@ describe('CalendarEventDialogComponent', () => {
     expect(dialogRef.close).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: 'update',
-        eventId: 123
-      })
+        eventId: 123,
+      }),
     );
   });
 

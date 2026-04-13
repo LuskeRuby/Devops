@@ -1,20 +1,19 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+
 import { RouterModule } from '@angular/router';
-import { UserService, User } from '../../services/user.service';
-import {MemberService} from '../../services/member/member-service';
+import { UserService } from '../../services/user.service';
+import { MemberService } from '../../services/member/member-service';
 import { TotalPointsDisplayComponent } from '../total-points-display/total-points-display';
 import { PointsStore } from '../../services/points-store.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TotalPointsDisplayComponent],
+  imports: [RouterModule, TotalPointsDisplayComponent],
   templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.scss'
+  styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent implements OnInit {
-
   private memberService = inject(MemberService);
   private userService: UserService = inject(UserService);
   private pointsStore = inject(PointsStore);

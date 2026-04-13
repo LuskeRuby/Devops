@@ -1,44 +1,32 @@
 <div class="chat-messages" #scrollContainer>
-
-  <ng-container *ngFor="let message of messages; let i = index">
-
-    <div class="date-separator"
-         *ngIf="i === 0 || isDifferentDay(messages[i - 1].timestamp, message.timestamp)">
-      <span>{{ formatDateLabel(message.timestamp) }}</span>
-    </div>
-
-    <div class="message-wrapper"
-         [ngClass]="{
-           'mine':  message.userId === selectedUserId,
-           'other': message.userId !== selectedUserId
-         }">
-
+  @for (message of messages; track message; let i = $index) {
+    @if (i === 0 || isDifferentDay(messages[i - 1].timestamp, message.timestamp)) {
+      <div class="date-separator">
+        <span>{{ formatDateLabel(message.timestamp) }}</span>
+      </div>
+    }
+    <div
+      class="message-wrapper"
+      [ngClass]="{
+        mine: message.userId === selectedUserId,
+        other: message.userId !== selectedUserId,
+      }"
+    >
       @if (message.userId !== selectedUserId) {
-        <img
-          class="message-avatar"
-          [src]="getImageUrl(message.imageId)"
-          [alt]="message.username"
-        />
+        <img class="message-avatar" [src]="getImageUrl(message.imageId)" [alt]="message.username" />
       }
-
       <div class="message-body">
-        <div class="timestamp">{{ message.timestamp | date:'HH:mm' }}</div>
+        <div class="timestamp">{{ message.timestamp | date: 'HH:mm' }}</div>
         <div class="bubble">
           <strong>{{ message.username }}</strong>
           {{ message.content }}
         </div>
       </div>
-
     </div>
-
-  </ng-container>
+  }
 </div>
 
 <div class="chat-input">
-  <input
-    [(ngModel)]="messageText"
-    placeholder="Aa"
-    (keyup.enter)="send()"
-  />
+  <input [(ngModel)]="messageText" placeholder="Aa" (keyup.enter)="send()" />
   <button (click)="send()" [disabled]="!isConnected">Send</button>
 </div>

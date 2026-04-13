@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {Task, TaskService} from '../../services/task.service';
+import { Component, OnInit, inject } from '@angular/core';
+
+import { Task, TaskService } from '../../services/task.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, User } from '../../services/user.service';
 import { ActivatedRoute } from '@angular/router';
@@ -10,11 +10,16 @@ import { PointsInputComponent } from '../points-input/points-input';
 @Component({
   selector: 'app-task-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PointsInputComponent],
+  imports: [ReactiveFormsModule, PointsInputComponent],
   templateUrl: './task-page.html',
-  styleUrl: './task-page.scss'
+  styleUrl: './task-page.scss',
 })
 export class TaskPageComponent implements OnInit {
+  private taskService = inject(TaskService);
+  private userService = inject(UserService);
+  private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private pointsStore = inject(PointsStore);
 
   tasks: Task[] = [];
   taskForm: FormGroup;
@@ -29,23 +34,17 @@ export class TaskPageComponent implements OnInit {
     return this.currentUser?.role?.toUpperCase() === 'PARENT';
   }
 
-  constructor(
-    private taskService: TaskService,
-    private userService: UserService,
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private pointsStore: PointsStore
-  ) {
+  constructor() {
     this.taskForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
       points: [0, Validators.required],
-      repeatEvery: ['Daily']
+      repeatEvery: ['Daily'],
     });
   }
 
   ngOnInit(): void {
-    console.log("TaskPage initialized");
+    console.log('TaskPage initialized');
 
     this.currentUser = this.userService.currentUser();
     this.familyEmail = this.currentUser?.familyEmail ?? '';
@@ -57,7 +56,7 @@ export class TaskPageComponent implements OnInit {
 
     if (title) {
       this.taskForm.patchValue({
-        name: title
+        name: title,
       });
     }
   }
@@ -68,16 +67,14 @@ export class TaskPageComponent implements OnInit {
       return;
     }
 
-    this.userService
-      .getUsersByFamilyEmail(this.familyEmail)
-      .subscribe(res => {
-        this.users = res;
-      });
+    this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe((res) => {
+      this.users = res;
+    });
   }
 
   toggleUser(userId: number): void {
     if (this.selectedUserIds.includes(userId)) {
-      this.selectedUserIds = this.selectedUserIds.filter(id => id !== userId);
+      this.selectedUserIds = this.selectedUserIds.filter((id) => id !== userId);
     } else {
       this.selectedUserIds.push(userId);
     }
@@ -85,37 +82,39 @@ export class TaskPageComponent implements OnInit {
 
   createTask(): void {
     if (this.selectedUserIds.length === 0) {
-      console.error("Please select at least one user");
+      console.error('Please select at least one user');
       return;
     }
 
     if (this.taskForm.invalid) {
-      console.error("Please fill in all required fields");
+      console.error('Please fill in all required fields');
       return;
     }
 
     const formValue = this.taskForm.value;
 
-    this.taskService.createTask(
-      {
-        name: formValue.name,
-        description: formValue.description,
-        points: formValue.points,
-        timestamp: this.toLocalDateTime(new Date()),
-        repeatEvery: formValue.repeatEvery
-      },
-      this.selectedUserIds,
-      this.currentUser?.id
-    ).subscribe(() => {
-      this.taskForm.reset({
-        name: '',
-        description: '',
-        points: 0,
-        repeatEvery: 'Daily'
+    this.taskService
+      .createTask(
+        {
+          name: formValue.name,
+          description: formValue.description,
+          points: formValue.points,
+          timestamp: this.toLocalDateTime(new Date()),
+          repeatEvery: formValue.repeatEvery,
+        },
+        this.selectedUserIds,
+        this.currentUser?.id,
+      )
+      .subscribe(() => {
+        this.taskForm.reset({
+          name: '',
+          description: '',
+          points: 0,
+          repeatEvery: 'Daily',
+        });
+        this.selectedUserIds = [];
+        this.loadTasks();
       });
-      this.selectedUserIds = [];
-      this.loadTasks();
-    });
   }
 
   loadTasks(): void {
@@ -126,7 +125,7 @@ export class TaskPageComponent implements OnInit {
       ? this.taskService.getTasksForFamily(this.familyEmail, userId)
       : this.taskService.getTasksForUser(userId, userId);
 
-    request$.subscribe(res => {
+    request$.subscribe((res) => {
       this.tasks = res;
     });
   }
@@ -135,7 +134,7 @@ export class TaskPageComponent implements OnInit {
     const userId = this.currentUser?.id;
     if (!userId || !task.id) return;
 
-    const action$ = task.checked 
+    const action$ = task.checked
       ? this.taskService.uncompleteTask(task.id, userId)
       : this.taskService.completeTask(task.id, userId);
 

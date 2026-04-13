@@ -15,10 +15,7 @@ describe('WebSocketService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        WebSocketService,
-        { provide: AuthService, useValue: authService },
-      ],
+      providers: [WebSocketService, { provide: AuthService, useValue: authService }],
     });
 
     service = TestBed.inject(WebSocketService);
@@ -32,7 +29,10 @@ describe('WebSocketService', () => {
       vi.spyOn(client, 'activate').mockImplementation(() => {
         client.onConnect?.();
       });
-      vi.spyOn(client, 'subscribe').mockImplementation(() => ({ id: 'sub-0', unsubscribe: vi.fn() }));
+      vi.spyOn(client, 'subscribe').mockImplementation(() => ({
+        id: 'sub-0',
+        unsubscribe: vi.fn(),
+      }));
 
       service.connect('test@family.com', onMessage, onConnected);
 
@@ -50,7 +50,10 @@ describe('WebSocketService', () => {
       vi.spyOn(client, 'activate').mockImplementation(() => {
         client.onConnect?.();
       });
-      vi.spyOn(client, 'subscribe').mockImplementation(() => ({ id: 'sub-0', unsubscribe: vi.fn() }));
+      vi.spyOn(client, 'subscribe').mockImplementation(() => ({
+        id: 'sub-0',
+        unsubscribe: vi.fn(),
+      }));
 
       service.connect('test@family.com', onMessage, onConnected);
 
@@ -74,7 +77,7 @@ describe('WebSocketService', () => {
 
       expect(subscribeSpy).toHaveBeenCalledWith(
         '/topic/messages/test@family.com',
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -106,7 +109,10 @@ describe('WebSocketService', () => {
       vi.spyOn(client, 'activate').mockImplementation(() => {
         client.onConnect?.();
       });
-      vi.spyOn(client, 'subscribe').mockImplementation(() => ({ id: 'sub-0', unsubscribe: vi.fn() }));
+      vi.spyOn(client, 'subscribe').mockImplementation(() => ({
+        id: 'sub-0',
+        unsubscribe: vi.fn(),
+      }));
 
       service.connect('test@family.com', vi.fn(), vi.fn());
 
@@ -114,7 +120,11 @@ describe('WebSocketService', () => {
 
       expect(publishSpy).toHaveBeenCalledWith({
         destination: '/app/chat',
-        body: JSON.stringify({ userId: 1, content: 'Hej fra test!', familyEmail: 'test@family.com' }),
+        body: JSON.stringify({
+          userId: 1,
+          content: 'Hej fra test!',
+          familyEmail: 'test@family.com',
+        }),
       });
     });
 
@@ -143,7 +153,10 @@ describe('WebSocketService', () => {
       vi.spyOn(client, 'activate').mockImplementation(() => {
         client.onConnect?.();
       });
-      vi.spyOn(client, 'subscribe').mockImplementation(() => ({ id: 'sub-0', unsubscribe: vi.fn() }));
+      vi.spyOn(client, 'subscribe').mockImplementation(() => ({
+        id: 'sub-0',
+        unsubscribe: vi.fn(),
+      }));
       vi.spyOn(client, 'deactivate').mockImplementation(() => {});
       const publishSpy = vi.spyOn(client, 'publish').mockImplementation(() => {});
 

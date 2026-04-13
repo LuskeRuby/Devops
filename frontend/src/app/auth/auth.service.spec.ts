@@ -9,7 +9,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 function fakeJwt(expiresInMs: number): string {
   const header = btoa(JSON.stringify({ alg: 'HS256' }));
   const payload = btoa(
-    JSON.stringify({ sub: 'test@family.com', exp: Math.floor((Date.now() + expiresInMs) / 1000) })
+    JSON.stringify({ sub: 'test@family.com', exp: Math.floor((Date.now() + expiresInMs) / 1000) }),
   );
   return `${header}.${payload}.fake-signature`;
 }
@@ -43,7 +43,10 @@ describe('AuthService', () => {
   });
 
   it('stores token and familyEmail on login', () => {
-    const mockRes: FamilyAuthResponseDto = { accessToken: fakeJwt(60_000), familyEmail: 'test@family.com' };
+    const mockRes: FamilyAuthResponseDto = {
+      accessToken: fakeJwt(60_000),
+      familyEmail: 'test@family.com',
+    };
 
     service.login({ email: 'test@family.com', password: 'pass' }).subscribe((res) => {
       expect(res.familyEmail).toBe('test@family.com');
@@ -114,6 +117,4 @@ describe('AuthService', () => {
     expect(service.getAccessToken()).toBe(token);
     expect(service.isAuthenticated()).toBe(true);
   });
-
-
 });

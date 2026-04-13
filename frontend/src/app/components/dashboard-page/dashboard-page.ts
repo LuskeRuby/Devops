@@ -25,9 +25,7 @@ export class DashboardPage implements OnInit {
     const role = user?.role?.toUpperCase();
     const savedView = localStorage.getItem(this.STORAGE_KEY);
 
-    this.isDayView = savedView
-      ? savedView === 'day'
-      : role === 'CHILD';
+    this.isDayView = savedView ? savedView === 'day' : role === 'CHILD';
   }
 
   previous() {
@@ -56,9 +54,11 @@ export class DashboardPage implements OnInit {
 
   isToday(): boolean {
     const today = new Date();
-    return this.viewDate.getDate() === today.getDate() &&
-           this.viewDate.getMonth() === today.getMonth() &&
-           this.viewDate.getFullYear() === today.getFullYear();
+    return (
+      this.viewDate.getDate() === today.getDate() &&
+      this.viewDate.getMonth() === today.getMonth() &&
+      this.viewDate.getFullYear() === today.getFullYear()
+    );
   }
 
   onViewChanged(isDay: boolean) {

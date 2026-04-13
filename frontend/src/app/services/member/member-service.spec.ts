@@ -21,7 +21,14 @@ describe('MemberService', () => {
 
   const mockMembers: User[] = [
     mockUser,
-    { id: 2, name: 'Maja', email: 'maja@test.com', role: 'CHILD', totalPoints: 30, family: { email: 'test@family.com' } },
+    {
+      id: 2,
+      name: 'Maja',
+      email: 'maja@test.com',
+      role: 'CHILD',
+      totalPoints: 30,
+      family: { email: 'test@family.com' },
+    },
   ];
 
   beforeEach(() => {
@@ -31,10 +38,7 @@ describe('MemberService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        MemberService,
-        { provide: UserService, useValue: userService },
-      ],
+      providers: [MemberService, { provide: UserService, useValue: userService }],
     });
 
     service = TestBed.inject(MemberService);
@@ -61,8 +65,12 @@ describe('MemberService', () => {
       service.setMembers([mockUser]);
 
       const newMember: User = {
-        id: 3, name: 'Svend', email: 'svend@test.com', role: 'CHILD',
-        totalPoints: 0, family: { email: 'test@family.com' },
+        id: 3,
+        name: 'Svend',
+        email: 'svend@test.com',
+        role: 'CHILD',
+        totalPoints: 0,
+        family: { email: 'test@family.com' },
       };
 
       service.addMember(newMember);
@@ -86,10 +94,7 @@ describe('MemberService', () => {
       //with null user
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        providers: [
-          MemberService,
-          { provide: UserService, useValue: userService },
-        ],
+        providers: [MemberService, { provide: UserService, useValue: userService }],
       });
       service = TestBed.inject(MemberService);
 
@@ -101,7 +106,7 @@ describe('MemberService', () => {
 
     it('handles API errors gracefully', () => {
       userService.getUsersByFamilyEmail.mockReturnValue(
-        throwError(() => new Error('Network error'))
+        throwError(() => new Error('Network error')),
       );
 
       service.loadMembers();

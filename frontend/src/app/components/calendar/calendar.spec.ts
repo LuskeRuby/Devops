@@ -20,7 +20,7 @@ describe('CalendarComponent', () => {
   const mockUser = {
     id: 1,
     role: 'PARENT',
-    familyEmail: 'test@family.com'
+    familyEmail: 'test@family.com',
   };
 
   beforeEach(async () => {
@@ -30,22 +30,22 @@ describe('CalendarComponent', () => {
       createEvent: vi.fn().mockReturnValue(of({})),
       updateEvent: vi.fn().mockReturnValue(of({})),
       completeEvent: vi.fn().mockReturnValue(of({})),
-      uncompleteEvent: vi.fn().mockReturnValue(of({}))
+      uncompleteEvent: vi.fn().mockReturnValue(of({})),
     };
 
     userService = {
       currentUser: vi.fn().mockReturnValue(mockUser),
-      getUsersByFamilyEmail: vi.fn().mockReturnValue(of([]))
+      getUsersByFamilyEmail: vi.fn().mockReturnValue(of([])),
     };
 
     pointsStore = {
-      loadUser: vi.fn()
+      loadUser: vi.fn(),
     };
 
     dialog = {
       open: vi.fn().mockReturnValue({
-        afterClosed: () => of(undefined)
-      })
+        afterClosed: () => of(undefined),
+      }),
     };
 
     await TestBed.configureTestingModule({
@@ -54,9 +54,9 @@ describe('CalendarComponent', () => {
         { provide: CalendarEventService, useValue: calendarEventService },
         { provide: UserService, useValue: userService },
         { provide: PointsStore, useValue: pointsStore },
-        { provide: MatDialog, useValue: dialog }
+        { provide: MatDialog, useValue: dialog },
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CalendarComponent);
@@ -93,10 +93,7 @@ describe('CalendarComponent', () => {
 
     component.loadEvents();
 
-    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith(
-      'test@family.com',
-      1
-    );
+    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('test@family.com', 1);
   });
 
   it('should set error if no family email', () => {
@@ -109,9 +106,7 @@ describe('CalendarComponent', () => {
   });
 
   it('should handle load error', () => {
-    calendarEventService.loadFamilyEvents.mockReturnValue(
-      throwError(() => new Error('fail'))
-    );
+    calendarEventService.loadFamilyEvents.mockReturnValue(throwError(() => new Error('fail')));
 
     component.currentUser = mockUser as any;
 
@@ -134,7 +129,7 @@ describe('CalendarComponent', () => {
       end: new Date(),
       userIds: [],
       isSeparateTasks: false,
-      points: 0
+      points: 0,
     } as any);
 
     expect(calendarEventService.createEvent).toHaveBeenCalled();
@@ -152,7 +147,7 @@ describe('CalendarComponent', () => {
       end: new Date(),
       userIds: [],
       isSeparateTasks: false,
-      points: 0
+      points: 0,
     } as any);
 
     expect(calendarEventService.updateEvent).toHaveBeenCalled();
@@ -163,8 +158,8 @@ describe('CalendarComponent', () => {
 
     const event: any = {
       meta: {
-        assignedUserIds: [1]
-      }
+        assignedUserIds: [1],
+      },
     };
 
     expect(component.canToggleTask(event)).toBe(true);
@@ -176,7 +171,7 @@ describe('CalendarComponent', () => {
     component.currentUser = { id: 1, role: 'CHILD' } as any;
 
     const event: any = {
-      meta: { assignedUserIds: [1] }
+      meta: { assignedUserIds: [1] },
     };
 
     component.handleCheckboxClick(event, new MouseEvent('click'));
@@ -191,7 +186,7 @@ describe('CalendarComponent', () => {
 
     const event: any = {
       id: 1,
-      meta: { checked: false }
+      meta: { checked: false },
     };
 
     component.toggleFromCalendar(event);
@@ -208,13 +203,13 @@ describe('CalendarComponent', () => {
       id: 1,
       title: 'Test',
       start: new Date(),
-      meta: {}
+      meta: {},
     };
 
     component.onEventTimesChanged({
       event,
       newStart: new Date(),
-      newEnd: new Date()
+      newEnd: new Date(),
     } as any);
 
     expect(calendarEventService.updateEvent).toHaveBeenCalled();
@@ -234,7 +229,7 @@ describe('CalendarComponent', () => {
     const user = {
       id: 1,
       role: 'PARENT',
-      family: { email: 'fallback@test.com' }
+      family: { email: 'fallback@test.com' },
     };
 
     userService.currentUser.mockReturnValue(user);
@@ -242,14 +237,13 @@ describe('CalendarComponent', () => {
 
     component.loadEvents();
 
-    expect(calendarEventService.loadFamilyEvents)
-      .toHaveBeenCalledWith('fallback@test.com', 1);
+    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('fallback@test.com', 1);
   });
 
   it('should return null family email if none exists', () => {
     userService.currentUser.mockReturnValue({
       id: 1,
-      role: 'PARENT'
+      role: 'PARENT',
     });
 
     component.loadEvents();
@@ -270,17 +264,15 @@ describe('CalendarComponent', () => {
     component.onHourSegmentClicked({
       date: new Date(),
       sourceEvent: {
-        target: fakeTarget
-      } as any
+        target: fakeTarget,
+      } as any,
     });
 
     expect(spy).not.toHaveBeenCalled();
   });
 
   it('should open create dialog when clicking empty slot', () => {
-    const spy = vi
-      .spyOn(component, 'openCreateDialog')
-      .mockImplementation(() => {});
+    const spy = vi.spyOn(component, 'openCreateDialog').mockImplementation(() => {});
 
     component.currentUser = mockUser as any;
 
@@ -290,8 +282,8 @@ describe('CalendarComponent', () => {
     component.onHourSegmentClicked({
       date: new Date(),
       sourceEvent: {
-        target: fakeTarget
-      } as any
+        target: fakeTarget,
+      } as any,
     });
 
     expect(spy).toHaveBeenCalled();
@@ -304,7 +296,7 @@ describe('CalendarComponent', () => {
 
     const fakeEvent = {
       preventDefault: vi.fn(),
-      stopPropagation: vi.fn()
+      stopPropagation: vi.fn(),
     } as any;
 
     component.onEventTemplateClick({} as any, fakeEvent);
@@ -326,7 +318,7 @@ describe('CalendarComponent', () => {
         end: new Date(),
         userIds: [],
         isSeparateTasks: false,
-        points: 0
+        points: 0,
       } as any);
     });
 
@@ -336,14 +328,12 @@ describe('CalendarComponent', () => {
   });
 
   it('should open dialog if no sourceEvent', () => {
-    const spy = vi
-      .spyOn(component, 'openCreateDialog')
-      .mockImplementation(() => {});
+    const spy = vi.spyOn(component, 'openCreateDialog').mockImplementation(() => {});
 
     component.currentUser = mockUser as any;
 
     component.onHourSegmentClicked({
-      date: new Date()
+      date: new Date(),
     });
 
     expect(spy).toHaveBeenCalled();
@@ -354,7 +344,7 @@ describe('CalendarComponent', () => {
 
     const fakeEvent = {
       preventDefault: vi.fn(),
-      stopPropagation: vi.fn()
+      stopPropagation: vi.fn(),
     } as any;
 
     // prevent dialog crash
@@ -373,11 +363,11 @@ describe('CalendarComponent', () => {
     component.currentUser = { id: 2, role: 'CHILD' } as any;
 
     const event: any = {
-      meta: { assignedUserIds: [999] }
+      meta: { assignedUserIds: [999] },
     };
 
     component.handleCheckboxClick(event, {
-      stopPropagation: vi.fn()
+      stopPropagation: vi.fn(),
     } as any);
 
     expect(toggleSpy).not.toHaveBeenCalled();
@@ -390,12 +380,11 @@ describe('CalendarComponent', () => {
     component.currentUser = mockUser as any;
 
     const event: any = {
-      meta: { checked: false }
+      meta: { checked: false },
     };
 
     component.toggleFromCalendar(event);
 
     expect(spy).not.toHaveBeenCalled();
   });
-
 });

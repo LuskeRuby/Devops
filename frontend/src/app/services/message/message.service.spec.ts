@@ -32,8 +32,21 @@ describe('MessageService', () => {
 
     it('returns messages from the backend', () => {
       const mockMessages: MessageResponse[] = [
-        { id: 1, content: 'Hej!', timestamp: '2026-03-28T10:00:00', username: 'Anders', userId: 1, imageId: 1 },
-        { id: 2, content: 'Godmorgen', timestamp: '2026-03-28T10:05:00', username: 'Svend', userId: 2 },
+        {
+          id: 1,
+          content: 'Hej!',
+          timestamp: '2026-03-28T10:00:00',
+          username: 'Anders',
+          userId: 1,
+          imageId: 1,
+        },
+        {
+          id: 2,
+          content: 'Godmorgen',
+          timestamp: '2026-03-28T10:05:00',
+          username: 'Svend',
+          userId: 2,
+        },
       ];
 
       service.getMessages('test@family.com').subscribe((messages) => {

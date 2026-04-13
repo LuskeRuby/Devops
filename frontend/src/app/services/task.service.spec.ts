@@ -13,13 +13,13 @@ describe('TaskService', () => {
     points: 10,
     timestamp: '2026-04-12T08:00:00',
     repeatEvery: 'Daily',
-    checked: false
+    checked: false,
   };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [TaskService]
+      providers: [TaskService],
     });
 
     service = TestBed.inject(TaskService);
@@ -70,7 +70,7 @@ describe('TaskService', () => {
 
   it('should return task list for user', () => {
     let result: Task[] = [];
-    service.getTasksForUser(2, 1).subscribe(tasks => (result = tasks));
+    service.getTasksForUser(2, 1).subscribe((tasks) => (result = tasks));
 
     http.expectOne('/api/tasks/user/2?requesterId=1').flush([mockTask]);
 
@@ -98,7 +98,7 @@ describe('TaskService', () => {
 
   it('should return task list for family', () => {
     let result: Task[] = [];
-    service.getTasksForFamily('fam@test.com', 1).subscribe(tasks => (result = tasks));
+    service.getTasksForFamily('fam@test.com', 1).subscribe((tasks) => (result = tasks));
 
     http.expectOne('/api/tasks/family/fam@test.com?requesterId=1').flush([mockTask]);
 

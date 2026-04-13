@@ -10,22 +10,20 @@ describe('MemberItemComponent', () => {
   let fixture: ComponentFixture<MemberItemComponent>;
 
   const userServiceMock = {
-    getImageUrl: vi.fn().mockReturnValue('/img/test.png')
+    getImageUrl: vi.fn().mockReturnValue('/img/test.png'),
   };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MemberItemComponent],
-      providers: [
-        { provide: UserService, useValue: userServiceMock }
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{ provide: UserService, useValue: userServiceMock }],
+      schemas: [NO_ERRORS_SCHEMA],
     })
       .overrideComponent(MemberItemComponent, {
         set: {
           template: '<div></div>',
-          imports: []
-        }
+          imports: [],
+        },
       })
       .compileComponents();
 
@@ -37,7 +35,7 @@ describe('MemberItemComponent', () => {
       name: 'Test',
       role: 'child',
       imageId: 1,
-      totalPoints: 100
+      totalPoints: 100,
     });
 
     (component as any).showActions = () => true;

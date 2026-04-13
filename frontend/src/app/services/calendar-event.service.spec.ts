@@ -15,7 +15,7 @@ describe('CalendarEventService', () => {
     timestamp: '2026-04-10T08:00:00',
     repeatUntil: '2026-04-10T09:00:00',
     assignedUserIds: [1],
-    assignedUserNames: ['Anders']
+    assignedUserNames: ['Anders'],
   };
 
   const mockPayload: CalendarQuickCreatePayload = {
@@ -26,13 +26,13 @@ describe('CalendarEventService', () => {
     userIds: [1, 2],
     points: 5,
     color: '#2563eb',
-    isSeparateTasks: false
+    isSeparateTasks: false,
   };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [CalendarEventService]
+      providers: [CalendarEventService],
     });
 
     service = TestBed.inject(CalendarEventService);
@@ -63,7 +63,7 @@ describe('CalendarEventService', () => {
 
   it('should map TaskDTOs to CalendarEvents', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('fam@test.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('fam@test.com', 1).subscribe((events) => (result = events));
 
     http.expectOne('/api/tasks/family/fam@test.com?requesterId=1').flush([mockTaskDTO]);
 
@@ -92,7 +92,7 @@ describe('CalendarEventService', () => {
 
   it('should map user events with correct meta', () => {
     let result: any[] = [];
-    service.loadUserEvents(2, 1).subscribe(events => (result = events));
+    service.loadUserEvents(2, 1).subscribe((events) => (result = events));
 
     http.expectOne('/api/users/2/tasks?requesterId=1').flush([mockTaskDTO]);
 
@@ -195,9 +195,10 @@ describe('CalendarEventService', () => {
 
   it('should default start to current date when timestamp is missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1')
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
       .flush([{ ...mockTaskDTO, timestamp: undefined }]);
 
     expect(result[0].start).toBeInstanceOf(Date);
@@ -205,9 +206,10 @@ describe('CalendarEventService', () => {
 
   it('should default end to start + 1 hour when repeatUntil is missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1')
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
       .flush([{ ...mockTaskDTO, repeatUntil: undefined }]);
 
     const event = result[0];
@@ -216,9 +218,10 @@ describe('CalendarEventService', () => {
 
   it('should set draggable=false for checked tasks', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1')
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
       .flush([{ ...mockTaskDTO, checked: true }]);
 
     expect(result[0].draggable).toBe(false);
@@ -228,9 +231,10 @@ describe('CalendarEventService', () => {
 
   it('should set draggable=true for unchecked tasks', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1')
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
       .flush([{ ...mockTaskDTO, checked: false }]);
 
     expect(result[0].draggable).toBe(true);
@@ -239,11 +243,13 @@ describe('CalendarEventService', () => {
 
   it('should map meta fields correctly', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1').flush([
-      { ...mockTaskDTO, assignedUserIds: [1, 2], assignedUserNames: ['A', 'B'], points: 20 }
-    ]);
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .flush([
+        { ...mockTaskDTO, assignedUserIds: [1, 2], assignedUserNames: ['A', 'B'], points: 20 },
+      ]);
 
     expect(result[0].meta.assignedUserIds).toEqual([1, 2]);
     expect(result[0].meta.assignedUserNames).toEqual(['A', 'B']);
@@ -252,11 +258,11 @@ describe('CalendarEventService', () => {
 
   it('should default assignedUserIds and assignedUserNames to empty arrays when missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe(events => (result = events));
+    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/f@f.com?requesterId=1').flush([
-      { ...mockTaskDTO, assignedUserIds: undefined, assignedUserNames: undefined }
-    ]);
+    http
+      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .flush([{ ...mockTaskDTO, assignedUserIds: undefined, assignedUserNames: undefined }]);
 
     expect(result[0].meta.assignedUserIds).toEqual([]);
     expect(result[0].meta.assignedUserNames).toEqual([]);

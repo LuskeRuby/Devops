@@ -1,16 +1,16 @@
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-points-input', 
+  selector: 'app-points-input',
   standalone: true,
-  imports: [FormsModule], 
-  templateUrl: './points-input.html', 
-  styleUrl: './points-input.scss'    
+  imports: [FormsModule],
+  templateUrl: './points-input.html',
+  styleUrl: './points-input.scss',
 })
 export class PointsInputComponent {
-  @Input() taskPoints: number = 0;
-  @Input() disabled: boolean = false;
+  @Input() taskPoints = 0;
+  @Input() disabled = false;
   @Output() taskPointsChange = new EventEmitter<number>();
 
   onPointsChange(newValue: number): void {

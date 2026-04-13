@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -15,10 +15,9 @@ export interface MessageResponse {
   providedIn: 'root',
 })
 export class MessageService {
+  private http = inject(HttpClient);
 
   private apiUrl = '/api/messages';
-
-  constructor(private http: HttpClient) { }
 
   getMessages(familyEmail: string): Observable<MessageResponse[]> {
     return this.http.get<MessageResponse[]>(`${this.apiUrl}?familyEmail=${familyEmail}`);

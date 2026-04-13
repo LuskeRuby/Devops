@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { UserService } from './user.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PointsStore {
   private userService = inject(UserService);
@@ -21,7 +21,7 @@ export class PointsStore {
   }
 
   addPoints(delta: number) {
-    this.totalPoints.update(v => Math.max(0, v + (delta ?? 0)));
+    this.totalPoints.update((v) => Math.max(0, v + (delta ?? 0)));
   }
 
   setTargetPoints(value: number) {
@@ -40,7 +40,7 @@ export class PointsStore {
       },
       error: (err) => {
         console.warn('PointsStore.loadUser failed', err);
-      }
+      },
     });
   }
 }

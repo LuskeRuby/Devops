@@ -12,7 +12,7 @@ import { PointsStore } from '../../services/points-store.service';
 
 @Component({ selector: 'app-points-input', standalone: true, template: '' })
 class MockPointsInputComponent {
-  @Input() taskPoints: number = 0;
+  @Input() taskPoints = 0;
 }
 
 describe('TaskPageComponent', () => {
@@ -24,7 +24,7 @@ describe('TaskPageComponent', () => {
   let pointsStore: any;
 
   const mockParent = { id: 1, name: 'Anders', role: 'PARENT', familyEmail: 'test@family.com' };
-  const mockChild  = { id: 2, name: 'Maja',   role: 'CHILD',  familyEmail: 'test@family.com' };
+  const mockChild = { id: 2, name: 'Maja', role: 'CHILD', familyEmail: 'test@family.com' };
 
   const mockTask = {
     id: 1,
@@ -34,21 +34,24 @@ describe('TaskPageComponent', () => {
     checked: false,
     timestamp: '2026-04-12T08:00:00',
     assignedUserIds: [1],
-    assignedUserNames: ['Anders']
+    assignedUserNames: ['Anders'],
   };
 
-  const setupModule = async (currentUser: any = mockParent, queryParams: Record<string, string> = {}) => {
+  const setupModule = async (
+    currentUser: any = mockParent,
+    queryParams: Record<string, string> = {},
+  ) => {
     taskService = {
       getTasksForFamily: vi.fn().mockReturnValue(of([mockTask])),
-      getTasksForUser:   vi.fn().mockReturnValue(of([mockTask])),
-      createTask:        vi.fn().mockReturnValue(of(mockTask)),
-      completeTask:      vi.fn().mockReturnValue(of({ ...mockTask, checked: true })),
-      uncompleteTask:    vi.fn().mockReturnValue(of({ ...mockTask, checked: false }))
+      getTasksForUser: vi.fn().mockReturnValue(of([mockTask])),
+      createTask: vi.fn().mockReturnValue(of(mockTask)),
+      completeTask: vi.fn().mockReturnValue(of({ ...mockTask, checked: true })),
+      uncompleteTask: vi.fn().mockReturnValue(of({ ...mockTask, checked: false })),
     };
 
     userService = {
-      currentUser:           vi.fn().mockReturnValue(currentUser),
-      getUsersByFamilyEmail: vi.fn().mockReturnValue(of([mockParent]))
+      currentUser: vi.fn().mockReturnValue(currentUser),
+      getUsersByFamilyEmail: vi.fn().mockReturnValue(of([mockParent])),
     };
 
     pointsStore = { loadUser: vi.fn() };
@@ -58,22 +61,22 @@ describe('TaskPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TaskPageComponent, ReactiveFormsModule],
       providers: [
-        { provide: TaskService,  useValue: taskService },
-        { provide: UserService,  useValue: userService },
-        { provide: PointsStore,  useValue: pointsStore },
+        { provide: TaskService, useValue: taskService },
+        { provide: UserService, useValue: userService },
+        { provide: PointsStore, useValue: pointsStore },
         {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              queryParamMap: { get: (key: string) => queryParams[key] ?? null }
-            }
-          }
-        }
+              queryParamMap: { get: (key: string) => queryParams[key] ?? null },
+            },
+          },
+        },
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
     })
       .overrideComponent(TaskPageComponent, {
-        set: { imports: [CommonModule, ReactiveFormsModule, MockPointsInputComponent] }
+        set: { imports: [CommonModule, ReactiveFormsModule, MockPointsInputComponent] },
       })
       .compileComponents();
 
@@ -192,14 +195,24 @@ describe('TaskPageComponent', () => {
   it('should call taskService.createTask with correct payload', () => {
     fixture.detectChanges();
     component.selectedUserIds = [1];
-    component.taskForm.patchValue({ name: 'New chore', description: 'Details', points: 5, repeatEvery: 'Weekly' });
+    component.taskForm.patchValue({
+      name: 'New chore',
+      description: 'Details',
+      points: 5,
+      repeatEvery: 'Weekly',
+    });
 
     component.createTask();
 
     expect(taskService.createTask).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'New chore', description: 'Details', points: 5, repeatEvery: 'Weekly' }),
+      expect.objectContaining({
+        name: 'New chore',
+        description: 'Details',
+        points: 5,
+        repeatEvery: 'Weekly',
+      }),
       [1],
-      1
+      1,
     );
   });
 

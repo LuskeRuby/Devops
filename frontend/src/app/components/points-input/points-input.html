@@ -1,14 +1,15 @@
 <div class="points-input-container">
   <label for="pointInput">Opgave Point:</label>
   <div class="input-wrapper">
-    <input 
-      type="number" 
-      id="pointInput" 
-      placeholder="0" 
+    <input
+      type="number"
+      id="pointInput"
+      placeholder="0"
       min="0"
       [ngModel]="taskPoints"
       (ngModelChange)="onPointsChange($event)"
-      [disabled]="disabled">
+      [disabled]="disabled"
+    />
     <span class="points-label">p</span>
   </div>
 </div>

@@ -3,10 +3,9 @@
 </h2>
 
 <div mat-dialog-content>
-
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Titel</mat-label>
-    <input matInput [(ngModel)]="title" [disabled]="isReadOnly">
+    <input matInput [(ngModel)]="title" [disabled]="isReadOnly" />
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
@@ -31,33 +30,40 @@
   <div class="users-section">
     <mat-label>Tildel familiemedlemmer</mat-label>
 
-    <div class="task-type-section" *ngIf="!data.eventId && selectedUserIds.length > 1"
-      style="margin-top: 12px; margin-bottom: 12px;">
-      <mat-radio-group [(ngModel)]="isSeparateTasks" [disabled]="isReadOnly"
-        style="display: flex; flex-direction: column; gap: 8px;">
-        <mat-radio-button [value]="false">Fælles opgave (En opgave til alle)</mat-radio-button>
-        <mat-radio-button [value]="true">Separate opgaver (Hver får sin egen)</mat-radio-button>
-      </mat-radio-group>
-    </div>
+    @if (!data.eventId && selectedUserIds.length > 1) {
+      <div class="task-type-section" style="margin-top: 12px; margin-bottom: 12px">
+        <mat-radio-group
+          [(ngModel)]="isSeparateTasks"
+          [disabled]="isReadOnly"
+          style="display: flex; flex-direction: column; gap: 8px"
+        >
+          <mat-radio-button [value]="false">Fælles opgave (En opgave til alle)</mat-radio-button>
+          <mat-radio-button [value]="true">Separate opgaver (Hver får sin egen)</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    }
 
     <div class="users">
       @for (user of data.users; track user.id) {
-      <label class="user-row">
-        <input type="checkbox" [checked]="selectedUserIds.includes(user.id)" (change)="toggleUser(user.id)"
-          [disabled]="isReadOnly" />
-        <span>{{ user.name }}</span>
-      </label>
+        <label class="user-row">
+          <input
+            type="checkbox"
+            [checked]="selectedUserIds.includes(user.id)"
+            (change)="toggleUser(user.id)"
+            [disabled]="isReadOnly"
+          />
+          <span>{{ user.name }}</span>
+        </label>
       } @empty {
-      <p>Ingen familiemedlemmer tilgængelige.</p>
+        <p>Ingen familiemedlemmer tilgængelige.</p>
       }
     </div>
   </div>
-
 </div>
 
 <div mat-dialog-actions align="end">
   <button mat-button (click)="close()">Annuller</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave()" *ngIf="!isReadOnly">
-    Gem
-  </button>
+  @if (!isReadOnly) {
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave()">Gem</button>
+  }
 </div>

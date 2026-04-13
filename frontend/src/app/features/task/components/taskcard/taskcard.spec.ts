@@ -9,13 +9,13 @@ describe('TaskcardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TaskcardComponent]
+      imports: [TaskcardComponent],
     })
       .overrideComponent(TaskcardComponent, {
         set: {
           template: '<div></div>',
-          imports: []
-        }
+          imports: [],
+        },
       })
       .compileComponents();
 
@@ -27,7 +27,7 @@ describe('TaskcardComponent', () => {
       title: 'Test task',
       description: '',
       checked: false,
-      createdAt: new Date()
+      createdAt: new Date(),
     } as any;
 
     fixture.detectChanges();

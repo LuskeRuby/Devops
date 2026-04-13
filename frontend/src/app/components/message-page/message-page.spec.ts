@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MessageComponent } from './message-page.component';
 import { UserService } from '../../services/user.service';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -10,14 +9,14 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  template: ''
+  template: '',
 })
 class MockSidebarComponent {}
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  template: ''
+  template: '',
 })
 class MockChatComponent {}
 
@@ -32,21 +31,13 @@ describe('MessageComponent (page)', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [
-        MessageComponent,
-        RouterTestingModule.withRoutes([]),
-      ],
-      providers: [
-        { provide: UserService, useValue: userService },
-      ]
+      imports: [MessageComponent, RouterTestingModule.withRoutes([])],
+      providers: [{ provide: UserService, useValue: userService }],
     })
       .overrideComponent(MessageComponent, {
         set: {
-          imports: [
-            MockSidebarComponent,
-            MockChatComponent
-          ]
-        }
+          imports: [MockSidebarComponent, MockChatComponent],
+        },
       })
       .compileComponents();
 

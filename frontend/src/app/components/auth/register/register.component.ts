@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { form, FormField, required, email, minLength } from '@angular/forms/signals';
 import { AuthFormBase } from '../auth-form.base';
-import {ErrorBannerComponent} from '../../error-banner/error-banner.component';
+import { ErrorBannerComponent } from '../../error-banner/error-banner.component';
 
 interface RegisterData {
-  email:    string;
+  email: string;
   password: string;
 }
 
@@ -19,18 +19,17 @@ interface RegisterData {
   imports: [RouterLink, FormField, ErrorBannerComponent],
 })
 export class RegisterComponent extends AuthFormBase {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
   readonly registerModel = signal<RegisterData>({ email: '', password: '' });
 
   readonly registerForm = form(this.registerModel, (f) => {
-    required(f.email,     { message: 'Email is required.' });
-    email(f.email,        { message: 'Please enter a valid email.' });
-    required(f.password,  { message: 'Password is required.' });
+    required(f.email, { message: 'Email is required.' });
+    email(f.email, { message: 'Please enter a valid email.' });
+    required(f.password, { message: 'Password is required.' });
     minLength(f.password, 8, { message: 'Password must be at least 8 characters.' });
   });
-
-  constructor(private auth: AuthService, private router: Router) {
-    super();
-  }
 
   submit(): void {
     if (this.isLoading()) return;
@@ -41,7 +40,7 @@ export class RegisterComponent extends AuthFormBase {
     const { email, password } = this.registerModel();
 
     this.auth.register({ email, password }).subscribe({
-      next:  () => this.router.navigate(['/login']),
+      next: () => this.router.navigate(['/login']),
       error: (err) => {
         console.error('Register error:', err);
         const status = err?.status;

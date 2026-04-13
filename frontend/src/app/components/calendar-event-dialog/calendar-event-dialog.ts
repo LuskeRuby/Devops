@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,7 +20,7 @@ interface CalendarEventDialogData {
   isReadOnly?: boolean;
 }
 
-export type CalendarEventDialogResult = {
+export interface CalendarEventDialogResult {
   mode: 'save' | 'update';
   eventId?: number;
   isSeparateTasks: boolean;
@@ -31,25 +30,27 @@ export type CalendarEventDialogResult = {
   end: Date;
   userIds: number[];
   points: number;
-};
+}
 
 @Component({
   selector: 'app-calendar-event-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatRadioModule,
-    PointsInputComponent
+    PointsInputComponent,
   ],
   templateUrl: './calendar-event-dialog.html',
-  styleUrl: './calendar-event-dialog.scss'
+  styleUrl: './calendar-event-dialog.scss',
 })
 export class CalendarEventDialogComponent {
+  dialogRef = inject<MatDialogRef<CalendarEventDialogComponent>>(MatDialogRef);
+  data = inject<CalendarEventDialogData>(MAT_DIALOG_DATA);
+
   title = '';
   description = '';
   startLocal = '';
@@ -59,10 +60,7 @@ export class CalendarEventDialogComponent {
   points = 0;
   isReadOnly = false;
 
-  constructor(
-    public dialogRef: MatDialogRef<CalendarEventDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: CalendarEventDialogData
-  ) {
+  constructor() {
     this.initFromData();
   }
 
@@ -82,7 +80,7 @@ export class CalendarEventDialogComponent {
 
   toggleUser(userId: number): void {
     this.selectedUserIds = this.selectedUserIds.includes(userId)
-      ? this.selectedUserIds.filter(id => id !== userId)
+      ? this.selectedUserIds.filter((id) => id !== userId)
       : [...this.selectedUserIds, userId];
   }
 
@@ -112,12 +110,11 @@ export class CalendarEventDialogComponent {
       start: new Date(this.startLocal),
       end: new Date(this.endLocal),
       userIds: this.selectedUserIds,
-      points: this.points
+      points: this.points,
     };
 
     this.dialogRef.close(result);
   }
-
 
   close(): void {
     this.dialogRef.close();

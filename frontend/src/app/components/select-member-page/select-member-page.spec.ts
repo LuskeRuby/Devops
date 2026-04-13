@@ -14,15 +14,15 @@ describe('SelectMemberPageComponent', () => {
 
   const userServiceMock = {
     getUsersByFamilyEmail: vi.fn().mockReturnValue(of([])),
-    getImageUrl: vi.fn().mockReturnValue('/img/test.png')
+    getImageUrl: vi.fn().mockReturnValue('/img/test.png'),
   };
 
   const authServiceMock = {
-    familyEmail$: of('test@family.com')
+    familyEmail$: of('test@family.com'),
   };
 
   const routerMock = {
-    navigate: vi.fn()
+    navigate: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -31,9 +31,9 @@ describe('SelectMemberPageComponent', () => {
       providers: [
         { provide: UserService, useValue: userServiceMock },
         { provide: AuthService, useValue: authServiceMock },
-        { provide: Router, useValue: routerMock }
+        { provide: Router, useValue: routerMock },
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SelectMemberPageComponent);
@@ -46,8 +46,7 @@ describe('SelectMemberPageComponent', () => {
   });
 
   it('should load users on init when familyEmail is present', () => {
-    expect(userServiceMock.getUsersByFamilyEmail)
-      .toHaveBeenCalledWith('test@family.com');
+    expect(userServiceMock.getUsersByFamilyEmail).toHaveBeenCalledWith('test@family.com');
   });
 
   it('should navigate when selecting a user', () => {
@@ -55,10 +54,7 @@ describe('SelectMemberPageComponent', () => {
 
     component.selectUser(user);
 
-    expect(routerMock.navigate).toHaveBeenCalledWith(
-      ['/member-pin'],
-      { state: { user } }
-    );
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/member-pin'], { state: { user } });
   });
 
   it('should calculate rewards correctly', () => {

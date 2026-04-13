@@ -1,16 +1,16 @@
 import { Component, inject, input, OnInit, OnDestroy } from '@angular/core';
 import { LucideAngularModule, Plus, Minus } from 'lucide-angular';
 import { User, UserService } from '../../../services/user.service';
-import { CommonModule } from '@angular/common';
+
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-member-point-editor',
   standalone: true,
-  imports: [LucideAngularModule, CommonModule],
+  imports: [LucideAngularModule],
   templateUrl: 'member-point-editor.html',
-  styleUrl: 'member-point-editor.scss'
+  styleUrl: 'member-point-editor.scss',
 })
 export class MemberPointEditorComponent implements OnInit, OnDestroy {
   member = input.required<User>();
@@ -24,19 +24,18 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
   private accumulatedDelta = 0;
 
   ngOnInit() {
-    this.pointsSubscription = this.pointsSubject.pipe(
-      debounceTime(400)
-    ).subscribe(() => {
+    this.pointsSubscription = this.pointsSubject.pipe(debounceTime(400)).subscribe(() => {
       const deltaToSend = this.accumulatedDelta;
       if (deltaToSend !== 0) {
         this.accumulatedDelta = 0;
         this.userService.addPoints(this.member().id, deltaToSend).subscribe({
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           next: () => {},
-          error: (err: any) => {
+          error: (err: unknown) => {
             console.error('Failed to update points', err);
             // Revert exactly the amount on error
             this.member().totalPoints = (this.member().totalPoints || 0) - deltaToSend;
-          }
+          },
         });
       }
     });
@@ -53,7 +52,7 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
   adjustPoints(rewardDelta: number) {
     const currentPoints = this.member().totalPoints || 0;
     const pointDelta = rewardDelta * 100;
-    
+
     // Prevent the number of rewards from falling below 0
     if (this.totalRewards + rewardDelta < 0) {
       return;
@@ -61,7 +60,7 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
 
     // Optimistically update the UI instantly
     this.member().totalPoints = currentPoints + pointDelta;
-    
+
     // Accumulate the delta and push to the debouncer
     this.accumulatedDelta += pointDelta;
     this.pointsSubject.next(pointDelta);
