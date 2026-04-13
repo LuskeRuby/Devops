@@ -80,4 +80,8 @@ export class UserService {
   setProfileImage(userId: number, imageId: number): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/${userId}/profile-image/${imageId}`, {});
   }
+
+  getAvatarsByCategory(category: string): Observable<number[]> {
+    return this.http.get<number[]>(`/api/images/avatars/${category}`);
+  }
 }

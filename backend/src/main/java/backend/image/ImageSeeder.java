@@ -2,9 +2,13 @@ package backend.image;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import backend.user.UserRepository;
+import java.io.InputStream;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ImageSeeder implements ApplicationRunner {
@@ -18,44 +22,71 @@ public class ImageSeeder implements ApplicationRunner {
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) throws Exception {
-        if (imageRepository.count() > 0) return;
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
-        //avatars
-        String[] avatars = {"avatar1.png", "avatar2.png"};
-        Image firstImage = null;
-
-        for (String filename : avatars) {
-            ClassPathResource resource = new ClassPathResource("static/seed-images/" + filename);
-            byte[] bytes = resource.getInputStream().readAllBytes();
-
-            Image image = new Image();
-            image.setImage(bytes);
-            image.setType("AVATAR");
-            Image saved = imageRepository.save(image);
-
-            if (firstImage == null) firstImage = saved;
+        String[][] categoryMapping = { 
+            { "boy", "boys" }, 
+            { "girl", "girls" }, 
+            { "man", "gents" }, 
+            { "women", "women" } 
+        };
+        
+        for (String[] mapping : categoryMapping) {
+            String folder = mapping[0];
+            String category = mapping[1];
+            Resource[] avatarResources = resolver.getResources("classpath*:static/avatars/" + folder + "/*.png");
+            for (Resource resource : avatarResources) {
+                seedImage(resource, "AVATAR", category);
+            }
         }
 
-        //task
-        String[] taskImages = {"task1.png"};
-        for (String filename : taskImages) {
-            ClassPathResource resource = new ClassPathResource("static/seed-images/" + filename);
-            byte[] bytes = resource.getInputStream().readAllBytes();
-
-            Image image = new Image();
-            image.setImage(bytes);
-            image.setType("TASK");
-            imageRepository.save(image);
+        Resource[] taskResources = resolver.getResources("classpath*:static/seed-images/task*.png");
+        for (Resource resource : taskResources) {
+            seedImage(resource, "TASK", null);
         }
 
-        //placeholder avatar
-        Image defaultImage = firstImage;
-        userRepository.findAll().forEach(user -> {
-            user.setImage(defaultImage);
-            userRepository.save(user);
-        });
+        Resource[] seedResources = resolver.getResources("classpath*:static/seed-images/avatar*.png");
+        for (Resource resource : seedResources) {
+            seedImage(resource, "AVATAR", "legacy");
+        }
 
-        System.out.println("Seeded " + avatars.length + " avatars and " + taskImages.length + " task images.");
+        if (imageRepository.count() > 0) {
+            Image defaultImage = imageRepository.findAll().get(0);
+            userRepository.findAll().forEach(user -> {
+                if (user.getImage() == null) {
+                    user.setImage(defaultImage);
+                    userRepository.save(user);
+                }
+            });
+        }
+
+        System.out.println("Image seeding completed.");
+    }
+
+    private void seedImage(Resource resource, String type, String category) {
+        try {
+            String filename = resource.getFilename();
+            if (filename == null)
+                return;
+
+            if (imageRepository.findByName(filename).isPresent()) {
+                return;
+            }
+
+            try (InputStream is = resource.getInputStream()) {
+                byte[] bytes = is.readAllBytes();
+                Image image = new Image();
+                image.setImage(bytes);
+                image.setType(type);
+                image.setCategory(category);
+                image.setName(filename);
+                imageRepository.save(image);
+                System.out.println("Seeded image: " + filename + " (Type: " + type + ", Category: " + category + ")");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to seed image " + resource.getFilename() + ": " + e.getMessage());
+        }
     }
 }

@@ -28,6 +28,10 @@ export class MemberListComponent {
   members = this.memberService.members;
   currentMember: User | null = this.userService.currentUser();
 
+  loadMembers(): void {
+    this.memberService.loadMembers();
+  }
+
   toggleEditMode() {
     this.isEditMode.update(val => !val);
   }

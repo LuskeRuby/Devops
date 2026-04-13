@@ -1,7 +1,12 @@
 <div class="member-row">
   <div class="member-info">
-    <div class="avatar-container">
+    <div class="avatar-container" [class.editable]="canEditAvatar()" (click)="openAvatarSelector()">
       <img [src]="getImageUrl(member().imageId)" alt="Avatar" class="avatar-img">
+      @if (canEditAvatar()) {
+        <div class="avatar-overlay">
+          <lucide-icon [name]="PencilIcon" [size]="20"></lucide-icon>
+        </div>
+      }
     </div>
     <div class="text-info">
       <div class="name">{{ member().name }}</div>

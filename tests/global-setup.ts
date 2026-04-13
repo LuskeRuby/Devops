@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 
 /**
  * Runs once before all tests.
- * Registers a dedicated E2E test family and parent user via the API so tests
+ * Registers a E2E test family and parent user via the API so tests
  * never depend on seed data with unknown passwords.
  */
 async function globalSetup() {
