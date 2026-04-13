@@ -17,17 +17,14 @@ public class RefreshTokenService {
 
     /**
      * Creates a new refresh token for the given family.
-     * Any existing refresh token for this family is deleted first to enforce
-     * a single active session per family at all times.
+        * Multiple refresh tokens can exist for the same family so each device
+        * can maintain an independent login session.
      *
      * @param family the authenticated family to create a refresh token for
      * @return the newly created and persisted {@link RefreshToken}
      */
     @Transactional
     public RefreshToken createRefreshToken(Family family) {
-        refreshTokenRepository.deleteByFamily(family);
-        refreshTokenRepository.flush();
-
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setFamily(family);
