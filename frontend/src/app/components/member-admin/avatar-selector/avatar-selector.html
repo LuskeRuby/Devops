@@ -1,0 +1,24 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2>Vælg Avatar</h2>
+    <button class="close-btn" (click)="selectAvatar(0)">
+      <lucide-icon [name]="CloseIcon" [size]="24"></lucide-icon>
+    </button>
+  </div>
+
+  <div class="dialog-content">
+    @if (loading()) {
+      <div class="loader">Henter avatarer...</div>
+    } @else {
+      <div class="avatar-grid">
+        @for (id of avatarIds(); track id) {
+          <div class="avatar-item" 
+               [class.selected]="selectedId() === id"
+               (click)="selectAvatar(id)">
+            <img [src]="getImageUrl(id)" alt="Avatar option">
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
