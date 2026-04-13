@@ -1,6 +1,6 @@
 <!-- FULL EVENT TEMPLATE -->
 <ng-template #eventTemplate let-weekEvent="weekEvent">
-  <ng-container *ngIf="(weekEvent.tempEvent || weekEvent.event) as calEvent">
+  @if (weekEvent.tempEvent || weekEvent.event; as calEvent) {
     <div
       class="event-card custom-event"
       [class.is-done]="calEvent.meta?.checked"
@@ -8,8 +8,7 @@
       [style.borderLeft]="'4px solid ' + (calEvent.color?.primary || '#999999')"
       (click)="onEventTemplateClick(calEvent, $event)"
     >
-    <div class="event-content">
-
+      <div class="event-content">
         <div class="event-top-row">
           <input
             type="checkbox"
@@ -18,61 +17,59 @@
             (click)="handleCheckboxClick(calEvent, $event)"
             aria-label="Toggle task status"
           />
-
           <div class="event-title">
             {{ calEvent.title }}
           </div>
-
-          <div class="points-badge" *ngIf="calEvent.meta?.points > 0">
-            {{ calEvent.meta?.points }}p
-          </div>
+          @if (calEvent.meta?.points > 0) {
+            <div class="points-badge">{{ calEvent.meta?.points }}p</div>
+          }
         </div>
-
         <div class="event-time">
-          {{ calEvent.start | date:'shortTime' }} -
-          {{ (calEvent.end || calEvent.start) | date:'shortTime' }}
+          {{ calEvent.start | date: 'shortTime' }} -
+          {{ calEvent.end || calEvent.start | date: 'shortTime' }}
         </div>
-
-        <div class="event-assignee" [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt'">
+        <div
+          class="event-assignee"
+          [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt'"
+        >
           <i class="ph ph-user"></i>
           {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt' }}
         </div>
-
       </div>
     </div>
-  </ng-container>
+  }
 </ng-template>
-
 
 <!-- CALENDAR CONTAINER -->
 <div class="calendar-scroll">
-
   <!-- WEEK VIEW -->
-  <mwl-calendar-week-view
-    *ngIf="!isDayView"
-    [viewDate]="viewDate"
-    [events]="events"
-    [refresh]="refresh"
-    [locale]="locale"
-    [weekStartsOn]="weekStartsOn"
-    [eventTemplate]="eventTemplate"
-    (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
-    (eventTimesChanged)="onEventTimesChanged($event)"
-    (hourSegmentClicked)="onHourSegmentClicked($event)">
-  </mwl-calendar-week-view>
-
+  @if (!isDayView) {
+    <mwl-calendar-week-view
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      [locale]="locale"
+      [weekStartsOn]="weekStartsOn"
+      [eventTemplate]="eventTemplate"
+      (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+      (eventTimesChanged)="onEventTimesChanged($event)"
+      (hourSegmentClicked)="onHourSegmentClicked($event)"
+    >
+    </mwl-calendar-week-view>
+  }
 
   <!-- DAY VIEW -->
-  <mwl-calendar-day-view
-    *ngIf="isDayView"
-    [viewDate]="viewDate"
-    [events]="events"
-    [refresh]="refresh"
-    [locale]="locale"
-    [eventTemplate]="eventTemplate"
-    (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
-    (eventTimesChanged)="onEventTimesChanged($event)"
-    (hourSegmentClicked)="onHourSegmentClicked($event)">
-  </mwl-calendar-day-view>
-
+  @if (isDayView) {
+    <mwl-calendar-day-view
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      [locale]="locale"
+      [eventTemplate]="eventTemplate"
+      (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+      (eventTimesChanged)="onEventTimesChanged($event)"
+      (hourSegmentClicked)="onHourSegmentClicked($event)"
+    >
+    </mwl-calendar-day-view>
+  }
 </div>

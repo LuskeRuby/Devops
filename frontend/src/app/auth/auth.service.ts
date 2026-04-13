@@ -1,7 +1,18 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, firstValueFrom, of, shareReplay, switchMap, tap, finalize, map } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  firstValueFrom,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+  finalize,
+  map,
+} from 'rxjs';
 import { FamilyAuthResponseDto, LoginRequest, RegisterRequest } from './token.model';
 
 /**
@@ -13,6 +24,9 @@ import { FamilyAuthResponseDto, LoginRequest, RegisterRequest } from './token.mo
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+
   /** Base URL for family-related auth endpoints. */
   private apiBase = '/api/families';
 
@@ -34,12 +48,14 @@ export class AuthService {
   public isAuthenticated$ = new BehaviorSubject<boolean>(this._isAuthenticated());
 
   /**
-  * a way to store the familyEmail and a public observable to use it in other pages
-  */
-  private familyEmailSubject = new BehaviorSubject<string | null>(localStorage.getItem('auth.familyEmail'));
+   * a way to store the familyEmail and a public observable to use it in other pages
+   */
+  private familyEmailSubject = new BehaviorSubject<string | null>(
+    localStorage.getItem('auth.familyEmail'),
+  );
   public familyEmail$ = this.familyEmailSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor() {
     this.syncAuthStateFromStorage();
   }
 
@@ -89,22 +105,26 @@ export class AuthService {
 
     const delay = expiry - Date.now() - this.refreshSkewMs;
     if (delay <= 0) {
-      this.refresh().pipe(
-        catchError(() => {
-          this.logout();
-          return of(null);
-        })
-      ).subscribe();
+      this.refresh()
+        .pipe(
+          catchError(() => {
+            this.logout();
+            return of(null);
+          }),
+        )
+        .subscribe();
       return;
     }
 
     this.refreshTimer = setTimeout(() => {
-      this.refresh().pipe(
-        catchError(() => {
-          this.logout();
-          return of(null);
-        })
-      ).subscribe();
+      this.refresh()
+        .pipe(
+          catchError(() => {
+            this.logout();
+            return of(null);
+          }),
+        )
+        .subscribe();
     }, delay);
   }
 
@@ -195,8 +215,8 @@ export class AuthService {
         catchError(() => {
           this.setAccessToken(null);
           return of(void 0);
-        })
-      )
+        }),
+      ),
     );
   }
 
@@ -208,14 +228,16 @@ export class AuthService {
    * @returns An observable that emits the backend auth response.
    */
   login(payload: LoginRequest, remember = true): Observable<FamilyAuthResponseDto> {
-    return this.http.post<FamilyAuthResponseDto>(`${this.apiBase}/login`, payload, { withCredentials: true }).pipe(
-      switchMap((res) => {
-        this.setAccessToken(res.accessToken, remember);
-        localStorage.setItem(this.familyEmailKey, res.familyEmail); // Store family email
-        this.familyEmailSubject.next(res.familyEmail); // Notify subscribers
-        return of(res);
-      })
-    );
+    return this.http
+      .post<FamilyAuthResponseDto>(`${this.apiBase}/login`, payload, { withCredentials: true })
+      .pipe(
+        switchMap((res) => {
+          this.setAccessToken(res.accessToken, remember);
+          localStorage.setItem(this.familyEmailKey, res.familyEmail); // Store family email
+          this.familyEmailSubject.next(res.familyEmail); // Notify subscribers
+          return of(res);
+        }),
+      );
   }
 
   /**
@@ -234,12 +256,14 @@ export class AuthService {
         tap((res) => {
           console.log('[AuthService] Refresh API success, updating email subject');
           this.setAccessToken(res.accessToken, remember);
-          
+
           localStorage.setItem(this.familyEmailKey, res.familyEmail); // Update stored email
-          this.familyEmailSubject.next(res.familyEmail); 
+          this.familyEmailSubject.next(res.familyEmail);
         }),
-        finalize(() => { this.refreshInFlight$ = null; }),
-        shareReplay(1)
+        finalize(() => {
+          this.refreshInFlight$ = null;
+        }),
+        shareReplay(1),
       );
 
     return this.refreshInFlight$;
@@ -287,7 +311,4 @@ export class AuthService {
   getFamilyEmail(): string | null {
     return this.familyEmailSubject.value;
   }
-
-
 }
-

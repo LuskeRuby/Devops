@@ -1,12 +1,12 @@
 import { signal } from '@angular/core';
 
 export abstract class AuthFormBase {
-  isLoading  = signal(false);
-  error      = signal<string | null>(null);
+  isLoading = signal(false);
+  error = signal<string | null>(null);
   showPassword = signal(false);
 
   togglePasswordVisibility(): void {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 
   protected setLoading(value: boolean): void {

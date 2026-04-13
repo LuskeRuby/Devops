@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,31 +17,34 @@ export interface CalendarQuickCreatePayload {
   color: string;
 }
 
-
 @Injectable({ providedIn: 'root' })
 export class CalendarEventService {
+  private http = inject(HttpClient);
 
   private tasksUrl = '/api/tasks';
   private usersUrl = '/api/users';
 
-  constructor(private http: HttpClient) {}
-
   /** Load all tasks for a family (shared family calendar view) */
   loadFamilyEvents(familyEmail: string, requesterId?: number) {
-    const url = requesterId ? `${this.tasksUrl}/family/${familyEmail}?requesterId=${requesterId}` : `${this.tasksUrl}/family/${familyEmail}`;
+    const url = requesterId
+      ? `${this.tasksUrl}/family/${familyEmail}?requesterId=${requesterId}`
+      : `${this.tasksUrl}/family/${familyEmail}`;
     return this.http
       .get<TaskDTO[]>(url)
-      .pipe(
-        map(tasks => tasks.map(task => this.toCalendarEvent(task)))
-      );
+      .pipe(map((tasks) => tasks.map((task) => this.toCalendarEvent(task))));
   }
 
   /** Load tasks assigned to a single user (fallback if no familyEmail) */
-  loadUserEvents(userId: number, requesterId?: number): Observable<CalendarEvent<CalendarTaskMeta>[]> {
-    const url = requesterId ? `${this.usersUrl}/${userId}/tasks?requesterId=${requesterId}` : `${this.usersUrl}/${userId}/tasks`;
+  loadUserEvents(
+    userId: number,
+    requesterId?: number,
+  ): Observable<CalendarEvent<CalendarTaskMeta>[]> {
+    const url = requesterId
+      ? `${this.usersUrl}/${userId}/tasks?requesterId=${requesterId}`
+      : `${this.usersUrl}/${userId}/tasks`;
     return this.http
       .get<TaskDTO[]>(url)
-      .pipe(map(tasks => tasks.map(t => this.toCalendarEvent(t))));
+      .pipe(map((tasks) => tasks.map((t) => this.toCalendarEvent(t))));
   }
 
   /** Create a new calendar event (persisted as a TaskService) */
@@ -54,10 +57,10 @@ export class CalendarEventService {
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
         checked: false,
-        repeatEvery: null
+        repeatEvery: null,
       },
       userIds: payload.userIds,
-      separateTasks: payload.isSeparateTasks
+      separateTasks: payload.isSeparateTasks,
     };
 
     const url = requesterId ? `${this.tasksUrl}?requesterId=${requesterId}` : this.tasksUrl;
@@ -65,7 +68,11 @@ export class CalendarEventService {
   }
 
   /** Update an existing calendar event (persisted TaskService) */
-  updateEvent(taskId: number, payload: CalendarQuickCreatePayload, requesterId?: number): Observable<TaskDTO> {
+  updateEvent(
+    taskId: number,
+    payload: CalendarQuickCreatePayload,
+    requesterId?: number,
+  ): Observable<TaskDTO> {
     const body = {
       task: {
         name: payload.title,
@@ -74,22 +81,28 @@ export class CalendarEventService {
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
         checked: undefined,
-        repeatEvery: null
+        repeatEvery: null,
       },
-      userIds: payload.userIds
+      userIds: payload.userIds,
     };
 
-    const url = requesterId ? `${this.tasksUrl}/${taskId}?requesterId=${requesterId}` : `${this.tasksUrl}/${taskId}`;
+    const url = requesterId
+      ? `${this.tasksUrl}/${taskId}?requesterId=${requesterId}`
+      : `${this.tasksUrl}/${taskId}`;
     return this.http.put<TaskDTO>(url, body);
   }
 
   completeEvent(id: number, requesterId?: number): Observable<TaskDTO> {
-    const url = requesterId ? `${this.tasksUrl}/${id}/complete?requesterId=${requesterId}` : `${this.tasksUrl}/${id}/complete`;
+    const url = requesterId
+      ? `${this.tasksUrl}/${id}/complete?requesterId=${requesterId}`
+      : `${this.tasksUrl}/${id}/complete`;
     return this.http.put<TaskDTO>(url, {});
   }
 
   uncompleteEvent(id: number, requesterId?: number): Observable<TaskDTO> {
-    const url = requesterId ? `${this.tasksUrl}/${id}/uncomplete?requesterId=${requesterId}` : `${this.tasksUrl}/${id}/uncomplete`;
+    const url = requesterId
+      ? `${this.tasksUrl}/${id}/uncomplete?requesterId=${requesterId}`
+      : `${this.tasksUrl}/${id}/uncomplete`;
     return this.http.put<TaskDTO>(url, {});
   }
 
@@ -108,7 +121,7 @@ export class CalendarEventService {
 
     const color = {
       primary: '#2563eb', // blue for active
-      secondary: '#dbeafe '// gray for done
+      secondary: '#dbeafe ', // gray for done
     };
 
     return {
@@ -119,7 +132,7 @@ export class CalendarEventService {
       draggable: !task.checked,
       resizable: {
         beforeStart: !task.checked,
-        afterEnd: !task.checked
+        afterEnd: !task.checked,
       },
       meta: {
         description: task.description,
@@ -127,9 +140,9 @@ export class CalendarEventService {
         checked: task.checked,
         assignedUserIds: task.assignedUserIds ?? [],
         assignedUserNames: task.assignedUserNames ?? [],
-        points: task.points ?? 0
+        points: task.points ?? 0,
       },
-      color
+      color,
     };
   }
 
@@ -143,4 +156,3 @@ export class CalendarEventService {
     return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
   }
 }
-

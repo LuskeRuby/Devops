@@ -1,10 +1,14 @@
 <div class="pin-page-container">
   <div class="pin-content">
-
     <h1 class="member-name">{{ user?.name || 'Member' }}</h1>
 
     <!-- Avatar display / picker trigger -->
-    <div class="picture-placeholder" (click)="openImagePicker()">
+    <div
+      class="picture-placeholder"
+      (click)="openImagePicker()"
+      (keydown.enter)="openImagePicker()"
+      tabindex="0"
+    >
       @if (user?.imageId) {
         <img [src]="getImageUrl(user?.imageId)" alt="Avatar" class="avatar-img" />
       } @else {
@@ -13,29 +17,36 @@
     </div>
 
     <p class="instruction-text">Indtast din pinkode for at få adgang</p>
-    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+    @if (errorMessage) {
+      <p class="error-text">{{ errorMessage }}</p>
+    }
 
     <div class="pin-inputs">
-      <input
-        *ngFor="let digit of pin; let i = index; trackBy: trackByFn"
-        #pinInput
-        type="password"
-        maxlength="1"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        [(ngModel)]="pin[i]"
-        (input)="onPinInput(i, $event)"
-        (keydown)="onKeyDown(i, $event)"
-        class="pin-box"
-      >
+      @for (digit of pin; track $index; let i = $index) {
+        <input
+          #pinInput
+          type="password"
+          maxlength="1"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          [(ngModel)]="pin[i]"
+          (input)="onPinInput(i, $event)"
+          (keydown)="onKeyDown(i, $event)"
+          class="pin-box"
+        />
+      }
     </div>
-
   </div>
 </div>
 
 <!-- Image picker modal -->
 @if (showImagePicker) {
-  <div class="modal-overlay" (click)="closeImagePicker()">
+  <div
+    class="modal-overlay"
+    (click)="closeImagePicker()"
+    (keydown.enter)="closeImagePicker()"
+    tabindex="0"
+  >
     <div class="modal" (click)="$event.stopPropagation()">
       <h2>Vælg avatar</h2>
       <div class="image-grid">
@@ -43,6 +54,9 @@
           <img
             [src]="getImageUrl(id)"
             (click)="selectImage(id)"
+            (keydown.enter)="selectImage(id)"
+            tabindex="0"
+            alt="Avatar option"
             class="avatar-option"
             [class.selected]="id === selectedImageId"
           />

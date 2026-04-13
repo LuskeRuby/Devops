@@ -1,14 +1,14 @@
 // Shared auth form styles — imported by login and register components
 
-$blue:      #2a6fdb;
+$blue: #2a6fdb;
 $blue-dark: #1d55b0;
-$red:       #c0392b;
-$red-bg:    #fdf3f2;
-$grey-1:    #1a1a1a;
-$grey-2:    #555;
-$grey-3:    #888;
-$grey-4:    #ccc;
-$radius:    8px;
+$red: #c0392b;
+$red-bg: #fdf3f2;
+$grey-1: #1a1a1a;
+$grey-2: #555;
+$grey-3: #888;
+$grey-4: #ccc;
+$radius: 8px;
 
 .error-slot {
   min-height: 4rem;
@@ -34,7 +34,9 @@ $radius:    8px;
       color: $blue;
       text-decoration: none;
 
-      &:hover { text-decoration: underline; }
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 }
@@ -56,13 +58,15 @@ $radius:    8px;
       text-decoration: none;
       font-size: 0.75rem;
 
-      &:hover { color: $grey-1; }
+      &:hover {
+        color: $grey-1;
+      }
     }
   }
 
-  input[type=email],
-  input[type=text],
-  input[type=password] {
+  input[type='email'],
+  input[type='text'],
+  input[type='password'] {
     width: 100%;
     padding: 0.625rem 0.75rem;
     border: 1.5px solid $grey-4;
@@ -74,7 +78,9 @@ $radius:    8px;
     box-sizing: border-box;
     transition: border-color 120ms;
 
-    &::placeholder { color: $grey-4; }
+    &::placeholder {
+      color: $grey-4;
+    }
 
     &:focus {
       border-color: $blue;
@@ -84,12 +90,14 @@ $radius:    8px;
 }
 
 .field--error {
-  input[type=email],
-  input[type=text],
-  input[type=password] {
+  input[type='email'],
+  input[type='text'],
+  input[type='password'] {
     border-color: $red;
 
-    &:focus { box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1); }
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+    }
   }
 }
 
@@ -103,7 +111,9 @@ $radius:    8px;
 .password-wrap {
   position: relative;
 
-  input { padding-right: 2.5rem; }
+  input {
+    padding-right: 2.5rem;
+  }
 }
 
 .toggle-password {
@@ -118,10 +128,14 @@ $radius:    8px;
   display: flex;
   padding: 0.2rem;
 
-  &:hover { color: $grey-1; }
+  &:hover {
+    color: $grey-1;
+  }
 }
 
-.remember-row { margin-bottom: 1.5rem; }
+.remember-row {
+  margin-bottom: 1.5rem;
+}
 
 .checkbox-label {
   display: flex;
@@ -132,13 +146,17 @@ $radius:    8px;
   cursor: pointer;
   user-select: none;
 
-  input[type=checkbox] { display: none; }
+  input[type='checkbox'] {
+    display: none;
+  }
 
   input:checked + .checkbox-box {
     background: $blue;
     border-color: $blue;
 
-    &::after { opacity: 1; }
+    &::after {
+      opacity: 1;
+    }
   }
 }
 
@@ -150,7 +168,9 @@ $radius:    8px;
   background: #fff;
   flex-shrink: 0;
   position: relative;
-  transition: background 120ms, border-color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms;
 
   &::after {
     content: '';
@@ -179,7 +199,9 @@ $radius:    8px;
   cursor: pointer;
   transition: background 120ms;
 
-  &:hover:not(:disabled) { background: $blue-dark; }
+  &:hover:not(:disabled) {
+    background: $blue-dark;
+  }
 
   &:disabled {
     opacity: 0.6;

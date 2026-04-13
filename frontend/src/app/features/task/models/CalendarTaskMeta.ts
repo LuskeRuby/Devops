@@ -6,4 +6,3 @@ export interface CalendarTaskMeta {
   assignedUserNames: string[];
   points: number;
 }
-

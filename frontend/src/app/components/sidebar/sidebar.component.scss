@@ -1,13 +1,18 @@
-$font-main: ui-rounded, 'Segoe UI', system-ui, -apple-system, sans-serif;
+$font-main:
+  ui-rounded,
+  'Segoe UI',
+  system-ui,
+  -apple-system,
+  sans-serif;
 $font-mono: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
 
-$bg:          #ffffff;
-$border:      #e5e7eb;
-$accent:      #3b82f6;
+$bg: #ffffff;
+$border: #e5e7eb;
+$accent: #3b82f6;
 $accent-light: rgba(59, 130, 246, 0.08);
-$text:        #6b7280;
+$text: #6b7280;
 $text-active: #111827;
-$muted:       #9ca3af;
+$muted: #9ca3af;
 
 .sidebar {
   width: 210px;
@@ -50,7 +55,7 @@ $muted:       #9ca3af;
   font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
-  overflow: hidden;  // ← add this
+  overflow: hidden; // ← add this
 
   img {
     width: 100%;
@@ -95,7 +100,6 @@ $muted:       #9ca3af;
   font-size: 13px;
   font-weight: 500;
 }
-
 
 .familie-section {
   padding: 16px 0;
@@ -144,7 +148,6 @@ $muted:       #9ca3af;
   flex: 1;
 }
 
-
 .add-member-btn {
   display: flex;
   align-items: center;
@@ -161,7 +164,9 @@ $muted:       #9ca3af;
   &:hover {
     border-color: $accent;
     background: $accent-light;
-    .add-member-label { color: $accent; }
+    .add-member-label {
+      color: $accent;
+    }
   }
 }
 
@@ -171,7 +176,6 @@ $muted:       #9ca3af;
   color: $muted;
   transition: color 0.2s ease;
 }
-
 
 .bottom-section {
   padding-top: 12px;

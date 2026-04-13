@@ -1,23 +1,22 @@
-import {Injectable, signal, computed, inject, OnInit} from '@angular/core';
-import {User, UserService} from '../user.service';
+import { Injectable, signal, inject } from '@angular/core';
+import { User, UserService } from '../user.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MemberService {
   private userService = inject(UserService);
 
-  private familyEmail: string = "";
+  private familyEmail = '';
   private membersSignal = signal<User[]>([]);
 
   members = this.membersSignal.asReadonly();
 
   loadMembers(): void {
-
     const currentUser = this.userService.currentUser();
 
     if (!currentUser) {
-      console.error("No current user found. Cannot load members.");
+      console.error('No current user found. Cannot load members.');
       return;
     }
 
@@ -25,7 +24,7 @@ export class MemberService {
 
     this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
       next: (members) => this.setMembers(members),
-      error: (error) => console.error('Error loading members:', error)
+      error: (error) => console.error('Error loading members:', error),
     });
   }
 
@@ -34,6 +33,6 @@ export class MemberService {
   }
 
   addMember(member: User) {
-    this.membersSignal.update(prev => [...prev, member]);
+    this.membersSignal.update((prev) => [...prev, member]);
   }
 }

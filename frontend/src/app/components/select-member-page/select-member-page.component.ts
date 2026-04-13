@@ -1,34 +1,32 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { UserService, User } from '../../services/user.service';
-import { AuthService } from "../../auth/auth.service";
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-select-member-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './select-member-page.component.html',
-  styleUrls: ['./select-member-page.component.scss']
+  styleUrls: ['./select-member-page.component.scss'],
 })
 export class SelectMemberPageComponent implements OnInit {
+  private router = inject(Router);
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
+
   users = signal([] as User[]);
   familyEmail: string | null = null;
 
-  constructor(
-    private router: Router,
-    private userService: UserService,
-    private authService: AuthService
-  ) {}
-
   ngOnInit(): void {
     console.log('[SelectMemberPage] ngOnInit: Subscribing to familyEmail$');
-  
+
     // Use the observable instead of the synchronous getter
-    this.authService.familyEmail$.subscribe(email => {
+    this.authService.familyEmail$.subscribe((email) => {
       console.log(`[SelectMemberPage] Received email from stream: ${email}`);
       this.familyEmail = email;
-      
+
       if (this.familyEmail) {
         this.loadUsers();
       } else {
@@ -49,7 +47,7 @@ export class SelectMemberPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading users:', error);
-      }
+      },
     });
   }
 

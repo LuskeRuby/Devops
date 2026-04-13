@@ -1,4 +1,13 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../../services/websocket/web-socket.service';
@@ -10,9 +19,12 @@ import { UserService } from '../../services/user.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './chat.component.html',
-  styleUrl: './chat.component.scss'
+  styleUrl: './chat.component.scss',
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
+  private ws = inject(WebSocketService);
+  private cd = inject(ChangeDetectorRef);
+  private messageService = inject(MessageService);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
@@ -27,24 +39,20 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   isConnected = false;
   private shouldScroll = false;
 
-  constructor(
-    private ws: WebSocketService,
-    private cd: ChangeDetectorRef,
-    private messageService: MessageService
-  ) {}
-
   ngOnInit() {
     const familyEmail = this.userService.currentUser()?.email;
     if (!familyEmail) return;
 
-    this.messageService.getMessages(familyEmail).subscribe(data => {
+    this.messageService.getMessages(familyEmail).subscribe((data) => {
       this.messages = data;
       this.shouldScroll = true;
       this.cd.detectChanges();
       setTimeout(() => this.scrollToBottom(), 0);
     });
 
-    this.ws.connect(familyEmail, (msg) => {
+    this.ws.connect(
+      familyEmail,
+      (msg) => {
         this.messages = [...this.messages, msg];
         this.shouldScroll = true;
         this.cd.detectChanges();
@@ -53,7 +61,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       () => {
         this.isConnected = true;
         this.cd.detectChanges();
-      }
+      },
     );
   }
 
@@ -80,7 +88,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     try {
       const el = this.scrollContainer.nativeElement;
       el.scrollTop = el.scrollHeight;
-    } catch {}
+    } catch {
+      /* ignored */
+    }
   }
 
   isDifferentDay(a: string, b: string): boolean {
@@ -97,12 +107,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (date.toDateString() === yesterday.toDateString()) return 'I går';
 
     return date.toLocaleDateString('da-DK', {
-      weekday: 'short', day: 'numeric', month: 'short'
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
     });
   }
 
   getImageUrl(imageId: number | undefined): string {
     return this.userService.getImageUrl(imageId);
   }
-
 }

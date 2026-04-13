@@ -12,27 +12,30 @@
         </div>
 
         <div class="calendar-title">
-          <ng-container *ngIf="isDayView">
-            {{ isToday() ? 'Idag' : (viewDate | date:'EEEE, d. MMM') }}
-          </ng-container>
-          <ng-container *ngIf="!isDayView">
-            {{ viewDate | date:'MMMM yyyy' }}
-          </ng-container>
+          @if (isDayView) {
+            {{ isToday() ? 'Idag' : (viewDate | date: 'EEEE, d. MMM') }}
+          }
+          @if (!isDayView) {
+            {{ viewDate | date: 'MMMM yyyy' }}
+          }
         </div>
 
-        <div class="calendar-actions" *ngIf="isParent">
-          <button class="create-task-btn" (click)="createTask()">
-            <i class="ph ph-plus-circle"></i>
-            <span>Opret opgave</span>
-          </button>
-        </div>
+        @if (isParent) {
+          <div class="calendar-actions">
+            <button class="create-task-btn" (click)="createTask()">
+              <i class="ph ph-plus-circle"></i>
+              <span>Opret opgave</span>
+            </button>
+          </div>
+        }
       </div>
 
       <div class="calendar-section">
-        <app-calendar 
-          [viewDate]="viewDate" 
+        <app-calendar
+          [viewDate]="viewDate"
           [isDayView]="isDayView"
-          (viewChange)="onViewChanged($event)">
+          (viewChange)="onViewChanged($event)"
+        >
         </app-calendar>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 
@@ -7,12 +7,12 @@ import { AuthService } from './auth/auth.service';
   standalone: true,
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
-  protected readonly title = signal('frontend');
+  private auth = inject(AuthService);
 
-  constructor(private auth: AuthService) {}
+  protected readonly title = signal('frontend');
 
   get isAuthenticated() {
     return this.auth.isAuthenticated();

@@ -1,5 +1,5 @@
-import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ElementRef, QueryList, ViewChildren, inject } from '@angular/core';
+
 import { Router } from '@angular/router';
 import { User, UserService } from '../../services/user.service';
 import { FormsModule } from '@angular/forms';
@@ -8,25 +8,25 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-member-pin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './member-pin-page.component.html',
-  styleUrls: ['./member-pin-page.component.scss']
+  styleUrls: ['./member-pin-page.component.scss'],
 })
 export class MemberPinPageComponent implements OnInit {
+  private router = inject(Router);
+  private userService = inject(UserService);
+  private http = inject(HttpClient);
+
   user: User | null = null;
   pin: string[] = ['', '', '', ''];
-  errorMessage: string = '';
+  errorMessage = '';
   showImagePicker = false;
   availableImageIds: number[] = [];
   selectedImageId: number | undefined;
 
   @ViewChildren('pinInput') pinInputs!: QueryList<ElementRef>;
 
-  constructor(
-    private router: Router,
-    private userService: UserService,
-    private http: HttpClient
-  ) {
+  constructor() {
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras.state as { user: User };
     if (state && state.user) {
@@ -40,8 +40,8 @@ export class MemberPinPageComponent implements OnInit {
       return;
     }
     this.http.get<number[]>('/api/images?type=AVATAR').subscribe({
-      next: (ids) => this.availableImageIds = ids,
-      error: (err) => console.error('Failed to load images', err)
+      next: (ids) => (this.availableImageIds = ids),
+      error: (err) => console.error('Failed to load images', err),
     });
     this.selectedImageId = this.user?.imageId;
   }
@@ -65,7 +65,7 @@ export class MemberPinPageComponent implements OnInit {
       next: (updatedUser) => {
         this.user = { ...updatedUser };
       },
-      error: (err) => console.error('Failed to set image', err)
+      error: (err) => console.error('Failed to set image', err),
     });
   }
 
@@ -79,7 +79,7 @@ export class MemberPinPageComponent implements OnInit {
     if (value && index < 3) {
       this.pinInputs.toArray()[index + 1].nativeElement.focus();
     }
-    if (this.pin.every(digit => digit !== '')) {
+    if (this.pin.every((digit) => digit !== '')) {
       this.validatePin();
     }
   }
@@ -104,14 +104,14 @@ export class MemberPinPageComponent implements OnInit {
           this.router.navigate(['/dashboard']);
         }
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('PIN validation failed:', err);
         this.errorMessage = 'Forkert pinkode. Prøv igen.';
         this.pin = ['', '', '', ''];
         setTimeout(() => {
           this.pinInputs.first.nativeElement.focus();
         }, 0);
-      }
+      },
     });
   }
 }

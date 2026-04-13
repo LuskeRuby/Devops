@@ -1,5 +1,5 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -9,7 +9,7 @@ import {
   CalendarEvent,
   CalendarModule,
   DateFormatterParams,
-  DateAdapter
+  DateAdapter,
 } from 'angular-calendar';
 
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
@@ -17,7 +17,10 @@ import { CommonModule, registerLocaleData } from '@angular/common';
 import { format } from 'date-fns';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { CalendarEventDialogComponent, CalendarEventDialogResult } from '../calendar-event-dialog/calendar-event-dialog';
+import {
+  CalendarEventDialogComponent,
+  CalendarEventDialogResult,
+} from '../calendar-event-dialog/calendar-event-dialog';
 import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
@@ -25,6 +28,9 @@ import { PointsStore } from '../../services/points-store.service';
 
 registerLocaleData(localeDa);
 
+import { Injectable } from '@angular/core';
+
+@Injectable()
 export class DanishCalendarDateFormatter extends CalendarDateFormatter {
   override weekViewHour({ date }: DateFormatterParams): string {
     return format(date, 'HH:mm');
@@ -38,28 +44,20 @@ export class DanishCalendarDateFormatter extends CalendarDateFormatter {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [
-    CalendarModule,
-    CommonModule,
-    MatDialogModule,
-    FormsModule
-  ],
+  imports: [CalendarModule, CommonModule, MatDialogModule, FormsModule],
   providers: [
     { provide: LOCALE_ID, useValue: 'da-DK' },
     { provide: CalendarDateFormatter, useClass: DanishCalendarDateFormatter },
-    { provide: DateAdapter, useFactory: adapterFactory }
+    { provide: DateAdapter, useFactory: adapterFactory },
   ],
   templateUrl: './calendar.html',
-  styleUrls: ['./calendar.scss']
+  styleUrls: ['./calendar.scss'],
 })
 export class CalendarComponent implements OnInit {
-
-  constructor(
-    private dialog: MatDialog,
-    private calendarEventService: CalendarEventService,
-    private userService: UserService,
-    private pointsStore: PointsStore
-  ) { }
+  private dialog = inject(MatDialog);
+  private calendarEventService = inject(CalendarEventService);
+  private userService = inject(UserService);
+  private pointsStore = inject(PointsStore);
 
   @Input() viewDate: Date = new Date();
   @Input() isDayView = false;
@@ -107,15 +105,15 @@ export class CalendarComponent implements OnInit {
       : this.calendarEventService.loadUserEvents(userId!);
 
     request$.subscribe({
-      next: events => {
+      next: (events) => {
         console.log('Loaded events:', events);
-        this.events = events.map(event => ({
+        this.events = events.map((event) => ({
           ...event,
           draggable: this.isParent && !event.meta?.checked,
           resizable: {
             beforeStart: this.isParent && !event.meta?.checked,
-            afterEnd: this.isParent && !event.meta?.checked
-          }
+            afterEnd: this.isParent && !event.meta?.checked,
+          },
         }));
         this.loadError = null;
         this.refresh.next();
@@ -125,7 +123,7 @@ export class CalendarComponent implements OnInit {
         this.events = [];
         this.loadError = 'Failed to load events';
         this.refresh.next();
-      }
+      },
     });
   }
 
@@ -139,8 +137,8 @@ export class CalendarComponent implements OnInit {
     }
 
     this.userService.getUsersByFamilyEmail(familyEmail).subscribe({
-      next: users => this.familyUsers = users,
-      error: () => this.familyUsers = user ? [user] : []
+      next: (users) => (this.familyUsers = users),
+      error: () => (this.familyUsers = user ? [user] : []),
     });
   }
 
@@ -157,7 +155,7 @@ export class CalendarComponent implements OnInit {
 
   onEventTemplateClick(
     event: CalendarEvent<CalendarTaskMeta>,
-    mouseEvent: MouseEvent | KeyboardEvent
+    mouseEvent: MouseEvent | KeyboardEvent,
   ): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
@@ -168,15 +166,17 @@ export class CalendarComponent implements OnInit {
 
   // drag and drop and resize
   // TODO: needs validate.  not drag before current time, not drag to end before start, etc
-  onEventTimesChanged({ event, newStart, newEnd }: CalendarEventTimesChangedEvent<CalendarTaskMeta>): void {
+  onEventTimesChanged({
+    event,
+    newStart,
+    newEnd,
+  }: CalendarEventTimesChangedEvent<CalendarTaskMeta>): void {
     const taskId = event.id as number;
     if (!taskId) return;
 
     // optimistic UI update
-    this.events = this.events.map(e =>
-      e.id === event.id
-        ? { ...e, start: newStart, end: newEnd ?? e.end }
-        : e
+    this.events = this.events.map((e) =>
+      e.id === event.id ? { ...e, start: newStart, end: newEnd ?? e.end } : e,
     );
     this.refresh.next();
 
@@ -187,7 +187,7 @@ export class CalendarComponent implements OnInit {
       end: newEnd ?? event.end ?? new Date(newStart.getTime() + 60 * 60 * 1000),
       userIds: event.meta?.assignedUserIds ?? [],
       points: event.meta?.points ?? 0,
-      color: '#4285f4'
+      color: '#4285f4',
     };
 
     this.calendarEventService.updateEvent(taskId, payload, this.currentUser?.id).subscribe({
@@ -195,10 +195,9 @@ export class CalendarComponent implements OnInit {
       error: () => {
         this.loadError = 'Failed to move event';
         this.loadEvents(); // rollback from server truth
-      }
+      },
     });
   }
-
 
   // ---------------- DIALOGS ----------------
 
@@ -213,11 +212,11 @@ export class CalendarComponent implements OnInit {
         end,
         users: this.familyUsers,
         selectedUserIds: current ? [current.id] : [],
-        isReadOnly: !this.isParent
-      }
+        isReadOnly: !this.isParent,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => this.handleDialog(result));
+    dialogRef.afterClosed().subscribe((result) => this.handleDialog(result));
   }
 
   openEditDialog(event: CalendarEvent<CalendarTaskMeta>): void {
@@ -232,13 +231,11 @@ export class CalendarComponent implements OnInit {
         users: this.familyUsers,
         selectedUserIds: event.meta?.assignedUserIds ?? [],
         points: event.meta?.points ?? 0,
-        isReadOnly: !this.isParent
-      }
+        isReadOnly: !this.isParent,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result =>
-      this.handleDialog(result, event.id as number)
-    );
+    dialogRef.afterClosed().subscribe((result) => this.handleDialog(result, event.id as number));
   }
 
   // ---------------- SAVE ----------------
@@ -254,16 +251,21 @@ export class CalendarComponent implements OnInit {
       userIds: result.userIds,
       isSeparateTasks: result.isSeparateTasks,
       points: result.points,
-      color: '#4285f4'
+      color: '#4285f4',
     };
 
-    const request$ = result.mode === 'update'
-      ? this.calendarEventService.updateEvent(result.eventId ?? eventId!, payload, this.currentUser?.id)
-      : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+    const request$ =
+      result.mode === 'update'
+        ? this.calendarEventService.updateEvent(
+            result.eventId ?? eventId!,
+            payload,
+            this.currentUser?.id,
+          )
+        : this.calendarEventService.createEvent(payload, this.currentUser?.id);
 
     request$.subscribe({
       next: () => this.loadEvents(),
-      error: () => this.loadError = 'Failed to save event'
+      error: () => (this.loadError = 'Failed to save event'),
     });
   }
 
@@ -312,7 +314,7 @@ export class CalendarComponent implements OnInit {
         console.error('Task update failed:', err);
         this.loadError = 'Failed to update task';
         this.loadEvents();
-      }
+      },
     });
   }
 

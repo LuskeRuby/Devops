@@ -1,4 +1,11 @@
-import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode, importProvidersFrom, LOCALE_ID } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  isDevMode,
+  importProvidersFrom,
+  LOCALE_ID,
+} from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeDa from '@angular/common/locales/da';
 
@@ -28,19 +35,19 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       multi: true,
       deps: [AuthService],
-      useFactory: (auth: AuthService) => () => auth.initializeSession()
+      useFactory: (auth: AuthService) => () => auth.initializeSession(),
     },
 
     importProvidersFrom(
       CalendarModule.forRoot({
         provide: DateAdapter,
-        useFactory: adapterFactory
-      })
+        useFactory: adapterFactory,
+      }),
     ),
 
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-  ]
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+  ],
 };

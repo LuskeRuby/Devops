@@ -9,7 +9,8 @@
   <div class="points-summary">
     <app-total-points-display
       [totalPoints]="currentUser()?.totalPoints ?? 0"
-      [userId]="currentUser()?.id ?? null">
+      [userId]="currentUser()?.id ?? null"
+    >
     </app-total-points-display>
   </div>
 
@@ -35,9 +36,7 @@
 
     <div class="member-list">
       @for (member of members(); track member.id) {
-        <div
-          class="member-item"
-          [class.me]="member.id === currentUser()?.id">
+        <div class="member-item" [class.me]="member.id === currentUser()?.id">
           <div class="avatar">
             <img [src]="getImageUrl(member.imageId)" [alt]="member.name" />
           </div>
@@ -51,7 +50,8 @@
         <button
           class="add-member-btn"
           routerLink="/create-member-page"
-          [state]="{ returnUrl: '/dashboard' }">
+          [state]="{ returnUrl: '/dashboard' }"
+        >
           <span class="add-member-label">+ Tilføj medlem</span>
         </button>
       }

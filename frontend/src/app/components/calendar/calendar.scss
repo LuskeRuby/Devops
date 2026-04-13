@@ -10,7 +10,7 @@
 /* FORCE layout */
 .event-card {
   display: flex;
-  align-items: flex-start;   // keep child at top
+  align-items: flex-start; // keep child at top
   justify-content: flex-start;
   height: 100%;
   width: 100%;
@@ -29,7 +29,6 @@
   width: 100%;
   height: 100%;
 }
-
 
 /* FORCE TEXT VISIBILITY */
 .event-title,
@@ -62,7 +61,7 @@
   padding: 1px 5px;
   border-radius: 6px;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .event-assignee {

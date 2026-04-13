@@ -1,191 +1,293 @@
 package backend.task;
 
+import backend.image.Image;
 import backend.user.User;
-import backend.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
+@ExtendWith(MockitoExtension.class)
 class TaskControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Mock
+    private TaskService taskService;
 
-    @Autowired
-    private UserRepository userRepository;
+    @InjectMocks
+    private TaskController taskController;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private User testUser;
+    private Task savedTask;
 
-    // currenly using the user/DataInitializer for test
-    @Test
-    void shouldCreateTaskForExistingUser() throws Exception {
+    @BeforeEach
+    void setUp() {
+        testUser = new User();
+        testUser.setId(1L);
+        testUser.setName("Anders");
 
-        // Get any existing user (from DataInitializer)
-        User user = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No users found"));
-
-        String json = """
-        {
-          "task": {
-            "name": "Take out trash",
-            "description": "Kitchen trash",
-            "points": 10,
-            "timestamp": "2026-02-15T18:00:00",
-            "repeatEvery": "Daily"
-          },
-          "userIds": [%d]
-        }
-        """.formatted(user.getId());
-
-        mockMvc.perform(post("/api/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
+        savedTask = new Task();
+        savedTask.setId(10L);
+        savedTask.setName("Clean room");
+        savedTask.setDescription("Tidy up");
+        savedTask.setPoints(15);
+        savedTask.setChecked(false);
+        savedTask.setTimestamp(LocalDateTime.of(2026, 4, 10, 9, 0));
+        savedTask.setUsers(List.of(testUser));
     }
 
-    @Test
-    void shouldCreateTaskFromFlatCalendarPayload() throws Exception {
+    //reateTask
 
-        User user = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No users found"));
+    @Nested
+    @DisplayName("createTask")
+    class CreateTaskEndpoint {
 
-        String json = """
-        {
-          "title": "Calendar event",
-          "description": "From quick create",
-          "start": "2026-02-15T18:00:00",
-          "end": "2026-02-15T19:00:00",
-          "userIds": [%d]
-        }
-        """.formatted(user.getId());
+        @Test
+        @DisplayName("creates task with nested payload")
+        void createsTaskWithNestedPayload() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("Clean room");
+            payload.setPoints(15);
 
-        mockMvc.perform(post("/api/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Calendar event"));
-    }
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of(1L));
 
-    @Test
-    void shouldRejectTaskWithoutUserIds() throws Exception {
-        String json = """
-        {
-          "task": {
-            "name": "No assignee",
-            "description": "Missing userIds",
-            "timestamp": "2026-02-15T18:00:00"
-          }
-        }
-        """;
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+                    .thenReturn(savedTask);
 
-        mockMvc.perform(post("/api/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-    }
+            TaskDto result = taskController.createTask(request, 1L);
 
-    @Test
-    void shouldFetchTasksForUser() throws Exception {
-
-        // Get existing user
-        User user = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No users found"));
-
-        // Create task assigned to that user
-        String createJson = """
-    {
-      "task": {
-        "name": "Do homework",
-        "description": "Math exercises",
-        "points": 15,
-        "timestamp": "2026-02-15T18:00:00",
-        "repeatEvery": "Daily"
-      },
-      "userIds": [%d]
-    }
-    """.formatted(user.getId());
-
-        mockMvc.perform(post("/api/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createJson))
-                .andExpect(status().isOk());
-
-        // Fetch tasks for that user
-        mockMvc.perform(get("/api/tasks/user/" + user.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
-    }
-
-    @Test
-    void shouldMarkTaskAsCompleted() throws Exception {
-
-        // Get existing user
-        User user = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No users found"));
-
-        // Create task
-        String createJson = """
-                {
-                  "task": {
-                    "name": "Clean room",
-                    "description": "Bedroom cleanup",
-                    "points": 20,
-                    "timestamp": "2026-02-15T18:00:00",
-                    "repeatEvery": "Daily"
-                  },
-                  "userIds": [%d]
-                }
-                """.formatted(user.getId());
-
-        String response = mockMvc.perform(post("/api/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createJson))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        // Extract task ID from response
-        Task createdTask = objectMapper.readValue(response, Task.class);
-
-        // Mark as completed
-        mockMvc.perform(put("/api/tasks/" + createdTask.getId() + "/complete"))
-                .andExpect(status().isOk());
-
-        // Verify it is completed
-        String fetchResponse = mockMvc.perform(get("/api/tasks/user/" + user.getId()))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Task[] tasks = objectMapper.readValue(fetchResponse, Task[].class);
-
-        boolean foundCompleted = false;
-        for (Task t : tasks) {
-            if (t.getId().equals(createdTask.getId())
-                    && Boolean.TRUE.equals(t.getChecked())) {
-                foundCompleted = true;
-                break;
-            }
+            assertThat(result.getName()).isEqualTo("Clean room");
+            assertThat(result.getPoints()).isEqualTo(15);
         }
 
-        assertTrue(foundCompleted, "Task should be marked as completed");
+        @Test
+        @DisplayName("creates task from flat calendar payload")
+        void createsTaskFromFlatPayload() {
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTitle("Calendar event");
+            request.setDescription("Auto-created");
+            request.setStart(LocalDateTime.of(2026, 4, 10, 9, 0));
+            request.setUserIds(List.of(1L));
+
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+                    .thenReturn(savedTask);
+
+            TaskDto result = taskController.createTask(request, 1L);
+
+            assertThat(result).isNotNull();
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
+        }
+
+        @Test
+        @DisplayName("creates separate tasks for each user when separateTasks=true")
+        void createsSeparateTasks() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("Individual chore");
+            payload.setPoints(5);
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of(1L, 2L));
+            request.setSeparateTasks(true);
+
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+                    .thenReturn(savedTask);
+            when(taskService.createTask(any(Task.class), eq(List.of(2L)), eq(1L)))
+                    .thenReturn(savedTask);
+
+            taskController.createTask(request, 1L);
+
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
+            verify(taskService).createTask(any(Task.class), eq(List.of(2L)), eq(1L));
+        }
+
+        @Test
+        @DisplayName("throws 400 when payload is null")
+        void throwsWhenPayloadNull() {
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setUserIds(List.of(1L));
+
+            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Task payload with a name is required");
+        }
+
+        @Test
+        @DisplayName("throws 400 when name is blank")
+        void throwsWhenNameBlank() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("   ");
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of(1L));
+
+            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Task payload with a name is required");
+        }
+
+        @Test
+        @DisplayName("throws 400 when userIds is empty")
+        void throwsWhenNoUserIds() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("Valid name");
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of());
+
+            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("At least one userId is required");
+        }
+
+        @Test
+        @DisplayName("defaults points to 0 when null in payload")
+        void defaultsPointsToZero() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("No points task");
+            //points is null
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of(1L));
+
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+                    .thenAnswer(inv -> {
+                        Task t = inv.getArgument(0);
+                        assertThat(t.getPoints()).isEqualTo(0);
+                        t.setId(10L);
+                        t.setUsers(List.of(testUser));
+                        return t;
+                    });
+
+            taskController.createTask(request, 1L);
+
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
+        }
+    }
+
+    //updateTask
+
+    @Nested
+    @DisplayName("updateTask")
+    class UpdateTaskEndpoint {
+
+        @Test
+        @DisplayName("throws 400 when payload name is missing")
+        void throwsWhenPayloadNameMissing() {
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setUserIds(List.of(1L));
+
+            assertThatThrownBy(() -> taskController.updateTask(10L, request, 1L))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Task payload with a name is required");
+        }
+
+        @Test
+        @DisplayName("throws 400 when userIds is null")
+        void throwsWhenUserIdsNull() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("Valid");
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            //userId null
+
+            assertThatThrownBy(() -> taskController.updateTask(10L, request, 1L))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("At least one userId is required");
+        }
+
+        @Test
+        @DisplayName("delegates to service with correct parameters")
+        void delegatesToService() {
+            CreateTaskRequest.TaskPayload payload = new CreateTaskRequest.TaskPayload();
+            payload.setName("Updated name");
+            payload.setPoints(25);
+            payload.setChecked(true);
+
+            CreateTaskRequest request = new CreateTaskRequest();
+            request.setTask(payload);
+            request.setUserIds(List.of(1L));
+
+            when(taskService.updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L)))
+                    .thenReturn(savedTask);
+
+            TaskDto result = taskController.updateTask(10L, request, 1L);
+
+            assertThat(result).isNotNull();
+            verify(taskService).updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L));
+        }
+    }
+
+
+    @Nested
+    @DisplayName("convertToDto")
+    class ConvertToDto {
+
+        @Test
+        @DisplayName("maps all task fields to DTO")
+        void mapsAllFields() {
+            TaskDto dto = TaskController.convertToDto(savedTask);
+
+            assertThat(dto.getId()).isEqualTo(10L);
+            assertThat(dto.getName()).isEqualTo("Clean room");
+            assertThat(dto.getDescription()).isEqualTo("Tidy up");
+            assertThat(dto.getPoints()).isEqualTo(15);
+            assertThat(dto.getChecked()).isFalse();
+            assertThat(dto.getTimestamp()).isEqualTo(LocalDateTime.of(2026, 4, 10, 9, 0));
+            assertThat(dto.getAssignedUserIds()).containsExactly(1L);
+            assertThat(dto.getAssignedUserNames()).containsExactly("Anders");
+        }
+
+        @Test
+        @DisplayName("sets imageId when task has an image")
+        void setsImageId() {
+            Image image = new Image();
+            image.setId(5L);
+            savedTask.setImage(image);
+
+            TaskDto dto = TaskController.convertToDto(savedTask);
+
+            assertThat(dto.getImageId()).isEqualTo(5L);
+        }
+
+        @Test
+        @DisplayName("leaves imageId null when task has no image")
+        void leavesImageIdNull() {
+            savedTask.setImage(null);
+
+            TaskDto dto = TaskController.convertToDto(savedTask);
+
+            assertThat(dto.getImageId()).isNull();
+        }
+
+        @Test
+        @DisplayName("handles task with no users")
+        void handlesNoUsers() {
+            savedTask.setUsers(null);
+
+            TaskDto dto = TaskController.convertToDto(savedTask);
+
+            assertThat(dto.getAssignedUserIds()).isNull();
+            assertThat(dto.getAssignedUserNames()).isNull();
+        }
     }
 }

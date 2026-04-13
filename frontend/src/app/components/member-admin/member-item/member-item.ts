@@ -10,7 +10,7 @@ import { AvatarSelectorComponent } from '../avatar-selector/avatar-selector';
   standalone: true,
   imports: [LucideAngularModule, MemberPointEditorComponent, MatDialogModule],
   templateUrl: 'member-item.html',
-  styleUrl: 'member-item.scss'
+  styleUrl: 'member-item.scss',
 })
 export class MemberItemComponent {
   private userService = inject(UserService);
@@ -41,10 +41,10 @@ export class MemberItemComponent {
 
     const dialogRef = this.dialog.open(AvatarSelectorComponent, {
       width: '500px',
-      data: { memberRole: this.member().role }
+      data: { memberRole: this.member().role },
     });
 
-    dialogRef.afterClosed().subscribe(newImageId => {
+    dialogRef.afterClosed().subscribe((newImageId) => {
       if (newImageId) {
         this.userService.setProfileImage(this.member().id, newImageId).subscribe(() => {
           this.memberUpdated.emit();
