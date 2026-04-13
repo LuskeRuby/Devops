@@ -52,7 +52,7 @@ h1 {
 .avatar {
   width: 140px;
   height: 140px;
-  border-radius: 12px;
+  border-radius: 50%;
   overflow: hidden;
   border: 3px solid transparent;
   transition: all 0.3s ease;
@@ -117,28 +117,4 @@ h1 {
 
 .gift-icon {
   font-size: 0.85rem;
-}
-
-
-.add-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.15);
-  transition: all 0.3s ease;
-}
-
-.add-member-card:hover .add-avatar {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
-.plus-icon {
-  font-size: 3rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 300;
-  transition: color 0.3s ease;
-}
-
-.add-member-card:hover .plus-icon {
-  color: white;
 }

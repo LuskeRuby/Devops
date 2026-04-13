@@ -12,19 +12,50 @@
   gap: 16px;
 }
 .avatar-container {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background-color: #bcf6b1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &.editable {
+    cursor: pointer;
+
+    &:hover {
+      .avatar-overlay {
+        opacity: 1;
+      }
+
+      .avatar-img {
+        filter: blur(1px) brightness(0.8);
+      }
+    }
+  }
 }
+
 .avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 .text-info {
   display: flex;

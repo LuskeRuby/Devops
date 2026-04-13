@@ -30,14 +30,15 @@ public class ImageController {
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Image not found: " + id));
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
+                .contentType(MediaType.IMAGE_PNG)
                 .body(image.getImage());
     }
 
-    @GetMapping
+
+    @GetMapping("/avatars/{category}")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<Long>> getAllImageIds(@RequestParam(required = false) String type) {
-        List<Long> ids = (type != null ? imageRepository.findByType(type) : imageRepository.findAll())
+    public ResponseEntity<List<Long>> getAvatarsByCategory(@PathVariable String category) {
+        List<Long> ids = imageRepository.findByCategory(category)
                 .stream()
                 .map(Image::getId)
                 .toList();
