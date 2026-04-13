@@ -13,6 +13,7 @@
     <app-member-item
       [member]="member"
       [showActions]="isEditMode()"
+      (memberUpdated)="loadMembers()"
       (deleteMember)="handleDelete(member)"
       [isCurrentUser]="member.id === currentMember?.id"
     >

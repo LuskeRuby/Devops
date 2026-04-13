@@ -4,18 +4,13 @@ import {User, UserService} from '../user.service';
 @Injectable({
   providedIn: 'root'
 })
-export class MemberService implements OnInit {
+export class MemberService {
   private userService = inject(UserService);
 
   private familyEmail: string = "";
   private membersSignal = signal<User[]>([]);
 
   members = this.membersSignal.asReadonly();
-
-
-  ngOnInit() {
-    this.loadMembers()
-  }
 
   loadMembers(): void {
 
