@@ -51,16 +51,29 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend-build, frontend-build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
+  steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        # Declare the secrets as environment variables for the action
+        env:
+          SSL_CERTIFICATE: ${{ secrets.SSL_CERTIFICATE }}
+          SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: SSL_CERTIFICATE,SSL_PRIVATE_KEY
           script: |
             cd ~/full-stack-app
             git fetch origin
             git reset --hard origin/main
+            
+            # --- SSL Setup ---
+            mkdir -p certs
+            echo "$SSL_CERTIFICATE" > certs/cert.pem
+            echo "$SSL_PRIVATE_KEY" > certs/key.pem
+            chmod 600 certs/key.pem # Secure the private key
+            # -----------------
+            
             docker compose down
             docker compose up -d --build
