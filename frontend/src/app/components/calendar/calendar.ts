@@ -237,34 +237,35 @@ export class CalendarComponent implements OnInit {
   }
 
   handleDialog(result?: CalendarEventDialogResult, eventId?: number): void {
-      if (!result) return;
+    if (!result) return;
 
-      const targetId = result.eventId ?? eventId!;
-      let request$: Observable<TaskDTO | void>;
+    const targetId = result.eventId ?? eventId!;
+    let request$: Observable<TaskDTO | void>;
 
-      if (result.mode === 'delete') {
-        request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
-      } else {
-        const payload = {
-          title: result.title,
-          description: result.description,
-          start: result.start,
-          end: result.end,
-          userIds: result.userIds,
-          isSeparateTasks: result.isSeparateTasks,
-          points: result.points,
-          color: '#4285f4',
-        };
+    if (result.mode === 'delete') {
+      request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
+    } else {
+      const payload = {
+        title: result.title,
+        description: result.description,
+        start: result.start,
+        end: result.end,
+        userIds: result.userIds,
+        isSeparateTasks: result.isSeparateTasks,
+        points: result.points,
+        color: '#4285f4',
+      };
 
-        request$ = result.mode === 'update'
+      request$ =
+        result.mode === 'update'
           ? this.calendarEventService.updateEvent(targetId, payload, this.currentUser?.id)
           : this.calendarEventService.createEvent(payload, this.currentUser?.id);
-      }
+    }
 
-      request$.subscribe({
-        next: () => this.loadEvents(),
-        error: () => (this.loadError = `Failed to ${result.mode} event`),
-      });
+    request$.subscribe({
+      next: () => this.loadEvents(),
+      error: () => (this.loadError = `Failed to ${result.mode} event`),
+    });
   }
 
   handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {

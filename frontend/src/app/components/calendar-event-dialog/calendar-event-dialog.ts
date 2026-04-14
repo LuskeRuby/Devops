@@ -131,8 +131,8 @@ export class CalendarEventDialogComponent {
       end: new Date(this.endLocal),
       userIds: this.selectedUserIds,
       points: this.points,
-    }
-    
+    };
+
     this.dialogRef.close(result);
   }
 

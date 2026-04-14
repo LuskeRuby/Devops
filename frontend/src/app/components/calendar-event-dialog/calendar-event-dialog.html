@@ -65,8 +65,8 @@
   @if (data.eventId && !isReadOnly) {
     <button mat-button class="delete-btn" (click)="delete()">Slet opgave</button>
   }
-  
-  <span style="flex: 1 1 auto;"></span> <button mat-button (click)="close()">Annuller</button>
+
+  <span style="flex: 1 1 auto"></span> <button mat-button (click)="close()">Annuller</button>
   @if (!isReadOnly) {
     <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave()">Gem</button>
   }
