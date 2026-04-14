@@ -49,6 +49,11 @@ public class UserController {
         return ResponseEntity.ok(taskDTOs);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> editUser(@PathVariable Long id, @RequestBody EditUserRequest user) {
+        return ResponseEntity.ok(userService.editUser(id, user));
+    }
+
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));

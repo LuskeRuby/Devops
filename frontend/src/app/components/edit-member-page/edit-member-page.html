@@ -1,0 +1,58 @@
+<div class="edit-member-container">
+  <form class="edit-member-form" (ngSubmit)="onSubmit()">
+    <h2>Rediger medlem</h2>
+
+    @if (showError()) {
+      <div class="form-error">
+        @if (!name().trim()) {
+          <span>Indtast venligst et navn</span>
+        } @else if (pinCode().length !== 4) {
+          <span>PIN-koden skal være præcis 4 cifre</span>
+        }
+      </div>
+    }
+
+    <div class="form-group">
+      <label for="name">Navn</label>
+      <input
+        type="text"
+        id="name"
+        [(ngModel)]="name"
+        name="name"
+        placeholder="Indtast medlems navn"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="pinCode">Ny PIN-kode (4 cifre)</label>
+      <input
+        type="text"
+        id="pinCode"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        [(ngModel)]="pinCode"
+        (input)="onPinCodeInput($event)"
+        name="pinCode"
+        placeholder="Indtast 4-cifret PIN-kode"
+        maxlength="4"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="role">Rolle</label>
+      <select id="role" [(ngModel)]="role" name="role" required>
+        <option value="parent">Forælder</option>
+        <option value="child" [disabled]="isOnlyParent()">Barn</option>
+      </select>
+    </div>
+    
+    <div class="button-group">
+      <button type="submit" class="submit">Gem ændringer</button>
+      <button type="button" class="cancel" (click)="onCancel(); $event.preventDefault()">
+        Annuller
+      </button>
+    </div>
+    </form>
+</div>

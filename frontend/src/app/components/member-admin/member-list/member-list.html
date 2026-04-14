@@ -9,15 +9,15 @@
     }
   </div>
 
-  @for (member of members(); track member.id) {
+  @for (member of sortedMembers(); track member.id) {
     <app-member-item
       [member]="member"
       [showActions]="isEditMode()"
+      (edit)="handleEdit(member)"
       (memberUpdated)="loadMembers()"
       (deleteMember)="handleDelete(member)"
       [isCurrentUser]="member.id === currentMember?.id"
-    >
-    </app-member-item>
+    />
   }
 
   @if (!isEditMode() || members().length === 0) {
