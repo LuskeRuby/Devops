@@ -41,3 +41,8 @@
   margin: 4px 0;
   cursor: pointer;
 }
+
+.delete-btn {
+  --mdc-text-button-label-text-color: #d32f2f;
+  --mat-text-button-state-layer-color: #d32f2f;
+}

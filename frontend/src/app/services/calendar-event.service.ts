@@ -107,8 +107,11 @@ export class CalendarEventService {
   }
 
   /** Delete a calendar event by its task ID */
-  deleteEvent(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.tasksUrl}/${id}`);
+  deleteEvent(id: number, requesterId?: number): Observable<void> {
+    const url = requesterId
+      ? `${this.tasksUrl}/${id}?requesterId=${requesterId}`
+      : `${this.tasksUrl}/${id}`;
+    return this.http.delete<void>(url, {});
   }
 
   /** Map a TaskDTO to an angular-calendar CalendarEvent */

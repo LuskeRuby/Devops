@@ -21,7 +21,7 @@ interface CalendarEventDialogData {
 }
 
 export interface CalendarEventDialogResult {
-  mode: 'save' | 'update';
+  mode: 'save' | 'update' | 'delete';
   eventId?: number;
   isSeparateTasks: boolean;
   title: string;
@@ -118,6 +118,22 @@ export class CalendarEventDialogComponent {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  delete(): void {
+    const result: CalendarEventDialogResult = {
+      mode: 'delete',
+      eventId: this.data.eventId,
+      isSeparateTasks: this.isSeparateTasks,
+      title: this.title.trim(),
+      description: this.description.trim(),
+      start: new Date(this.startLocal),
+      end: new Date(this.endLocal),
+      userIds: this.selectedUserIds,
+      points: this.points,
+    };
+
+    this.dialogRef.close(result);
   }
 
   // ---------------- HELPERS ----------------

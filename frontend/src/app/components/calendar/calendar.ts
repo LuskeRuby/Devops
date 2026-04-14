@@ -1,7 +1,7 @@
 import localeDa from '@angular/common/locales/da';
 import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
 
 import {
@@ -29,6 +29,7 @@ import { PointsStore } from '../../services/points-store.service';
 registerLocaleData(localeDa);
 
 import { Injectable } from '@angular/core';
+import { TaskDTO } from '../../features/task/models/TaskDto';
 
 @Injectable()
 export class DanishCalendarDateFormatter extends CalendarDateFormatter {
@@ -235,34 +236,35 @@ export class CalendarComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => this.handleDialog(result, event.id as number));
   }
 
-  // ---------------- SAVE ----------------
-
   handleDialog(result?: CalendarEventDialogResult, eventId?: number): void {
     if (!result) return;
 
-    const payload = {
-      title: result.title,
-      description: result.description,
-      start: result.start,
-      end: result.end,
-      userIds: result.userIds,
-      isSeparateTasks: result.isSeparateTasks,
-      points: result.points,
-      color: '#4285f4',
-    };
+    const targetId = result.eventId ?? eventId!;
+    let request$: Observable<TaskDTO | void>;
 
-    const request$ =
-      result.mode === 'update'
-        ? this.calendarEventService.updateEvent(
-            result.eventId ?? eventId!,
-            payload,
-            this.currentUser?.id,
-          )
-        : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+    if (result.mode === 'delete') {
+      request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
+    } else {
+      const payload = {
+        title: result.title,
+        description: result.description,
+        start: result.start,
+        end: result.end,
+        userIds: result.userIds,
+        isSeparateTasks: result.isSeparateTasks,
+        points: result.points,
+        color: '#4285f4',
+      };
+
+      request$ =
+        result.mode === 'update'
+          ? this.calendarEventService.updateEvent(targetId, payload, this.currentUser?.id)
+          : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+    }
 
     request$.subscribe({
       next: () => this.loadEvents(),
-      error: () => (this.loadError = 'Failed to save event'),
+      error: () => (this.loadError = `Failed to ${result.mode} event`),
     });
   }
 
