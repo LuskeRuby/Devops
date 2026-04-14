@@ -1,7 +1,7 @@
 import localeDa from '@angular/common/locales/da';
 import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
 
 import {
@@ -238,35 +238,35 @@ export class CalendarComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => this.handleDialog(result, event.id as number));
   }
 
-  // ---------------- SAVE ----------------
-
   handleDialog(result?: CalendarEventDialogResult, eventId?: number): void {
-    if (!result) return;
+      if (!result) return;
 
-    const payload = {
-      title: result.title,
-      description: result.description,
-      start: result.start,
-      end: result.end,
-      userIds: result.userIds,
-      isSeparateTasks: result.isSeparateTasks,
-      points: result.points,
-      color: '#4285f4',
-    };
+      const targetId = result.eventId ?? eventId!;
+      let request$: Observable<any>;
 
-    const request$ =
-      result.mode === 'update'
-        ? this.calendarEventService.updateEvent(
-            result.eventId ?? eventId!,
-            payload,
-            this.currentUser?.id,
-          )
-        : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+      if (result.mode === 'delete') {
+        request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
+      } else {
+        const payload = {
+          title: result.title,
+          description: result.description,
+          start: result.start,
+          end: result.end,
+          userIds: result.userIds,
+          isSeparateTasks: result.isSeparateTasks,
+          points: result.points,
+          color: '#4285f4',
+        };
 
-    request$.subscribe({
-      next: () => this.loadEvents(),
-      error: () => (this.loadError = 'Failed to save event'),
-    });
+        request$ = result.mode === 'update'
+          ? this.calendarEventService.updateEvent(targetId, payload, this.currentUser?.id)
+          : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+      }
+
+      request$.subscribe({
+        next: () => this.loadEvents(),
+        error: () => (this.loadError = `Failed to ${result.mode} event`),
+      });
   }
 
   handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {

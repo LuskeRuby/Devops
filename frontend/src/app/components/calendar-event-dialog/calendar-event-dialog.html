@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-  {{ data.eventId ? 'Rediger event' : 'Opret event' }}
+  {{ data.eventId ? 'Rediger opgave' : 'Opret opgave' }}
 </h2>
 
 <div mat-dialog-content>
@@ -62,7 +62,11 @@
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Annuller</button>
+  @if (data.eventId && !isReadOnly) {
+    <button mat-button class="delete-btn" (click)="delete()">Slet opgave</button>
+  }
+  
+  <span style="flex: 1 1 auto;"></span> <button mat-button (click)="close()">Annuller</button>
   @if (!isReadOnly) {
     <button mat-raised-button color="primary" (click)="save()" [disabled]="!canSave()">Gem</button>
   }
