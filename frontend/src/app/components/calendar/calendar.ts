@@ -29,6 +29,7 @@ import { PointsStore } from '../../services/points-store.service';
 registerLocaleData(localeDa);
 
 import { Injectable } from '@angular/core';
+import { TaskDTO } from '../../features/task/models/TaskDto';
 
 @Injectable()
 export class DanishCalendarDateFormatter extends CalendarDateFormatter {
@@ -239,7 +240,7 @@ export class CalendarComponent implements OnInit {
       if (!result) return;
 
       const targetId = result.eventId ?? eventId!;
-      let request$: Observable<any>;
+      let request$: Observable<TaskDTO | void>;
 
       if (result.mode === 'delete') {
         request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
