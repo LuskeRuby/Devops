@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { MemberItemComponent } from '../member-item/member-item';
 import { LucideAngularModule, Plus, Settings, Check } from 'lucide-angular';
 import { User, UserService } from '../../../services/user.service';
@@ -12,7 +12,7 @@ import { MemberService } from '../../../services/member/member-service';
   templateUrl: 'member-list.html',
   styleUrl: 'member-list.scss',
 })
-export class MemberListComponent {
+export class MemberListComponent implements OnInit {
   readonly PlusIcon = Plus;
   readonly EditIcon = Settings;
   readonly DoneIcon = Check;
@@ -26,12 +26,28 @@ export class MemberListComponent {
   members = this.memberService.members;
   currentMember: User | null = this.userService.currentUser();
 
+  sortedMembers = computed(() => {
+    return [...this.members()].sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  ngOnInit(): void {
+    if (this.currentMember?.role != 'parent') {
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
   loadMembers(): void {
     this.memberService.loadMembers();
   }
 
   toggleEditMode() {
     this.isEditMode.update((val) => !val);
+  }
+
+  handleEdit(memberToEdit: User) {
+    this.router.navigate(['/edit-member', memberToEdit.id], {
+      state: { returnUrl: this.router.url },
+    });
   }
 
   handleDelete(memberToDelete: User) {

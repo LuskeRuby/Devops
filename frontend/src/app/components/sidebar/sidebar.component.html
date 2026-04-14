@@ -35,7 +35,7 @@
     <div class="section-header">Familie</div>
 
     <div class="member-list">
-      @for (member of members(); track member.id) {
+      @for (member of sortedMembers(); track member.id) {
         <div class="member-item" [class.me]="member.id === currentUser()?.id">
           <div class="avatar">
             <img [src]="getImageUrl(member.imageId)" [alt]="member.name" />

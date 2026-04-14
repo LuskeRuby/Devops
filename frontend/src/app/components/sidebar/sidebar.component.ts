@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { UserService } from '../../services/user.service';
@@ -20,6 +20,10 @@ export class SidebarComponent implements OnInit {
   currentUser = this.userService.currentUser;
 
   members = this.memberService.members;
+
+  sortedMembers = computed(() => {
+    return [...this.members()].sort((a, b) => a.name.localeCompare(b.name));
+  });
 
   get isParent(): boolean {
     return this.currentUser()?.role?.toUpperCase() === 'PARENT';

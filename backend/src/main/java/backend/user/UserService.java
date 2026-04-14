@@ -50,6 +50,25 @@ public class UserService {
         return toDto(userRepository.save(user));
     }
 
+    public UserResponseDto editUser(Long id, EditUserRequest updatedUserData) {
+        User existingUser = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+        
+            if(updatedUserData.pincode() != null && !updatedUserData.pincode().isEmpty()) {
+                existingUser.setPincode(updatedUserData.pincode());
+            }
+
+            if(updatedUserData.name() != null) {
+                existingUser.setName(updatedUserData.name());
+            }
+
+            if(updatedUserData.role() != null) {
+                existingUser.setRole(updatedUserData.role());
+            }
+
+        return toDto(userRepository.save(existingUser));
+    }
+
     public UserResponseDto addPoints(Long id, int points) {
         User user = getUserEntityById(id);
         user.setTotalPoints(user.getTotalPoints() + points);

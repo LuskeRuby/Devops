@@ -2,7 +2,14 @@
   <h1>Vælg medlem</h1>
   <div class="user-grid">
     @for (user of users(); track user.id) {
-      <div class="user-card" (click)="selectUser(user)">
+      <div
+        class="user-card"
+        (click)="selectUser(user)"
+        (keydown.enter)="selectUser(user)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'Vælg ' + user.name"
+      >
         <div class="avatar">
           <img [src]="getImageUrl(user.imageId)" [alt]="user.name" />
         </div>
