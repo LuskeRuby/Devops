@@ -12,10 +12,14 @@
     } @else {
       <div class="avatar-grid">
         @for (id of avatarIds(); track id) {
-          <div
+            <div
             class="avatar-item"
+            role="button"
+            tabindex="0"
             [class.selected]="selectedId() === id"
             (click)="selectAvatar(id)"
+            (keydown.enter)="selectAvatar(id)"
+            (keydown.space)="selectAvatar(id)"
           >
             <img [src]="getImageUrl(id)" alt="Avatar option" />
           </div>

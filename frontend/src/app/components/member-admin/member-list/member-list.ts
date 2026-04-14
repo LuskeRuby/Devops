@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { MemberItemComponent } from '../member-item/member-item';
 import { LucideAngularModule, Plus, Settings, Check } from 'lucide-angular';
 import { User, UserService } from '../../../services/user.service';
@@ -12,7 +12,7 @@ import { MemberService } from '../../../services/member/member-service';
   templateUrl: 'member-list.html',
   styleUrl: 'member-list.scss',
 })
-export class MemberListComponent {
+export class MemberListComponent implements OnInit {
   readonly PlusIcon = Plus;
   readonly EditIcon = Settings;
   readonly DoneIcon = Check;

@@ -2,12 +2,15 @@
 <ng-template #eventTemplate let-weekEvent="weekEvent">
   @if (weekEvent.tempEvent || weekEvent.event; as calEvent) {
     <div
-      class="event-card custom-event"
-      [class.is-done]="calEvent.meta?.checked"
-      [style.backgroundColor]="calEvent.color?.secondary || '#eef3ff'"
-      [style.borderLeft]="'4px solid ' + (calEvent.color?.primary || '#999999')"
-      (click)="onEventTemplateClick(calEvent, $event)"
-    >
+        class="event-card custom-event"
+        (click)="onEventTemplateClick(calEvent, $event)"
+        (keydown.enter)="onEventTemplateClick(calEvent, $event)"
+        [class.is-done]="calEvent.meta?.checked"
+        [style.backgroundColor]="calEvent.color?.secondary || '#eef3ff'"
+        [style.borderLeft]="'4px solid ' + (calEvent.color?.primary || '#999999')"
+        tabindex="0"
+        role="button"
+      >
       <div class="event-content">
         <div class="event-top-row">
           <input

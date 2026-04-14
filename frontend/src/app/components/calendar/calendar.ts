@@ -155,7 +155,7 @@ export class CalendarComponent implements OnInit {
 
   onEventTemplateClick(
     event: CalendarEvent<CalendarTaskMeta>,
-    mouseEvent: MouseEvent | KeyboardEvent,
+    mouseEvent: Event,
   ): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
