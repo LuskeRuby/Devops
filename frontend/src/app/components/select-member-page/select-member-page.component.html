@@ -2,8 +2,8 @@
   <h1>Vælg medlem</h1>
   <div class="user-grid">
     @for (user of users(); track user.id) {
-      <div 
-        class="user-card" 
+      <div
+        class="user-card"
         (click)="selectUser(user)"
         (keydown.enter)="selectUser(user)"
         tabindex="0"

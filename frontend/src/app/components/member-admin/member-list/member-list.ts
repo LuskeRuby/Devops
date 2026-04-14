@@ -31,7 +31,7 @@ export class MemberListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if(this.currentMember?.role != "parent") {
+    if (this.currentMember?.role != 'parent') {
       this.router.navigate(['/dashboard']);
     }
   }

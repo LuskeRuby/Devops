@@ -153,10 +153,7 @@ export class CalendarComponent implements OnInit {
     this.openCreateDialog(event.date);
   }
 
-  onEventTemplateClick(
-    event: CalendarEvent<CalendarTaskMeta>,
-    mouseEvent: Event,
-  ): void {
+  onEventTemplateClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: Event): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
     if (this.isParent) {

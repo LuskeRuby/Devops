@@ -22,18 +22,18 @@ export class EditMemberPageComponent implements OnInit {
   // 1. Define your state as Signals
   user = signal<User | null>(null);
   name = signal('');
-  pinCode = signal(''); 
+  pinCode = signal('');
   role = signal('child');
   showError = signal(false);
   isOnlyParent = signal(false);
-  
+
   familyEmail: string | null = null;
   private returnUrl = history.state?.returnUrl;
 
   ngOnInit(): void {
     const userId = this.route.snapshot.paramMap.get('id');
     this.familyEmail = this.authService.getFamilyEmail();
-    
+
     if (!this.familyEmail) {
       this.router.navigate(['/login']);
       return;
@@ -46,15 +46,15 @@ export class EditMemberPageComponent implements OnInit {
           this.name.set(userData.name);
           this.role.set(userData.role!);
         },
-        error: (err) => console.error(err)
+        error: (err) => console.error(err),
       });
     }
 
     this.userService.getUsersByFamilyEmail(this.familyEmail).subscribe({
       next: (users) => {
-        const onlyParent = users.filter(u => u.role == 'parent').length <= 1;
+        const onlyParent = users.filter((u) => u.role == 'parent').length <= 1;
         this.isOnlyParent.set(onlyParent);
-      }
+      },
     });
   }
 
@@ -66,8 +66,8 @@ export class EditMemberPageComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log("Submit!");
-    
+    console.log('Submit!');
+
     if (!this.familyEmail || !this.user()?.id) {
       this.showError.set(true);
       return;
@@ -82,10 +82,9 @@ export class EditMemberPageComponent implements OnInit {
     };
 
     console.log(updatedUser);
-    
 
     this.http.put(`/api/users/${this.user()!.id}`, updatedUser).subscribe({
-      next: () => this.router.navigateByUrl(this.returnUrl)
+      next: () => this.router.navigateByUrl(this.returnUrl),
     });
   }
 
