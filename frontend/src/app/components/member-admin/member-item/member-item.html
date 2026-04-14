@@ -1,7 +1,16 @@
 <div class="member-row">
   <div class="member-info">
-    <div class="avatar-container" [class.editable]="canEditAvatar()" (click)="openAvatarSelector()">
+    <div
+      class="avatar-container"
+      [class.editable]="canEditAvatar()"
+      (click)="openAvatarSelector()"
+      (keydown.enter)="openAvatarSelector()"
+      tabindex="0"
+      role="button"
+      aria-label="Skift avatar"
+    >
       <img [src]="getImageUrl(member().imageId)" alt="Avatar" class="avatar-img" />
+
       @if (canEditAvatar()) {
         <div class="avatar-overlay">
           <lucide-icon [name]="PencilIcon" [size]="20"></lucide-icon>
