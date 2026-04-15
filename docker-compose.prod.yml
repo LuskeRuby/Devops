@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      # Use env vars for prod!
+      SPRING_DATASOURCE_PASSWORD: ${PROD_DB_PASSWORD} 
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
