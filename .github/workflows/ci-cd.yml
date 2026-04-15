@@ -58,11 +58,13 @@ jobs:
         env:
           SSL_CERTIFICATE: ${{ secrets.SSL_CERTIFICATE }}
           SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
+          PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: SSL_CERTIFICATE,SSL_PRIVATE_KEY
+          envs: SSL_CERTIFICATE,SSL_PRIVATE_KEY,PROD_DB_USER,PROD_DB_PASSWORD
           script: |
             cd ~/full-stack-app
             git fetch origin
@@ -75,5 +77,8 @@ jobs:
             chmod 600 certs/key.pem # Secure the private key
             # -----------------
             
-            docker compose down
-            docker compose up -d --build
+            export PROD_DB_USER="$PROD_DB_USER"
+            export PROD_DB_PASSWORD="$PROD_DB_PASSWORD"
+            
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
