@@ -26,7 +26,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./certs:/etc/nginx/certs:ro
+      - ./certs:/etc/nginx/ssl:ro
     restart: always
 
 volumes:
