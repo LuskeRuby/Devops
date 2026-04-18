@@ -20,9 +20,6 @@ export class MemberPinPageComponent implements OnInit {
   user: User | null = null;
   pin: string[] = ['', '', '', ''];
   errorMessage = '';
-  showImagePicker = false;
-  availableImageIds: number[] = [];
-  selectedImageId: number | undefined;
 
   @ViewChildren('pinInput') pinInputs!: QueryList<ElementRef>;
 
@@ -39,34 +36,10 @@ export class MemberPinPageComponent implements OnInit {
       this.router.navigate(['/select-member']);
       return;
     }
-    this.http.get<number[]>('/api/images?type=AVATAR').subscribe({
-      next: (ids) => (this.availableImageIds = ids),
-      error: (err) => console.error('Failed to load images', err),
-    });
-    this.selectedImageId = this.user?.imageId;
   }
 
   getImageUrl(imageId: number | undefined): string {
     return this.userService.getImageUrl(imageId);
-  }
-
-  openImagePicker(): void {
-    this.showImagePicker = true;
-  }
-
-  closeImagePicker(): void {
-    this.showImagePicker = false;
-  }
-
-  selectImage(imageId: number): void {
-    if (!this.user) return;
-    this.selectedImageId = imageId;
-    this.userService.setProfileImage(this.user.id, imageId).subscribe({
-      next: (updatedUser) => {
-        this.user = { ...updatedUser };
-      },
-      error: (err) => console.error('Failed to set image', err),
-    });
   }
 
   trackByFn(index: number): number {
