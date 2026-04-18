@@ -1,12 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { UserService } from '../../services/user.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 
 import { PointsInputComponent } from '../points-input/points-input';
+import { TaskImageSelectorComponent } from '../task-image-selector/task-image-selector';
 
 interface CalendarEventDialogData {
   title?: string;
@@ -17,6 +19,7 @@ interface CalendarEventDialogData {
   eventId?: number;
   users?: { id: number; name: string }[];
   points?: number;
+  imageId?: number;
   isReadOnly?: boolean;
 }
 
@@ -30,6 +33,7 @@ export interface CalendarEventDialogResult {
   end: Date;
   userIds: number[];
   points: number;
+  imageId?: number;
 }
 
 @Component({
@@ -47,9 +51,12 @@ export interface CalendarEventDialogResult {
   templateUrl: './calendar-event-dialog.html',
   styleUrl: './calendar-event-dialog.scss',
 })
-export class CalendarEventDialogComponent {
+export class CalendarEventDialogComponent implements OnInit {
   dialogRef = inject<MatDialogRef<CalendarEventDialogComponent>>(MatDialogRef);
   data = inject<CalendarEventDialogData>(MAT_DIALOG_DATA);
+  dialog = inject(MatDialog);
+  userService = inject(UserService);
+  private cd = inject(ChangeDetectorRef);
 
   title = '';
   description = '';
@@ -58,13 +65,15 @@ export class CalendarEventDialogComponent {
   selectedUserIds: number[] = [];
   isSeparateTasks = false;
   points = 0;
+  imageId: number | null = null;
   isReadOnly = false;
 
-  constructor() {
-    this.initFromData();
-  }
+  constructor() {}
 
-  // ---------------- INIT ----------------
+  ngOnInit(): void {
+    this.initFromData();
+    this.cd.detectChanges();
+  }
 
   private initFromData(): void {
     this.title = this.data.title ?? '';
@@ -73,10 +82,10 @@ export class CalendarEventDialogComponent {
     this.endLocal = this.toLocalInput(this.data.end);
     this.selectedUserIds = [...(this.data.selectedUserIds ?? [])];
     this.points = this.data.points ?? 0;
+    const rawImageId = this.data.imageId;
+    this.imageId = rawImageId && rawImageId > 0 ? rawImageId : null;
     this.isReadOnly = !!this.data.isReadOnly;
   }
-
-  // ---------------- USERS ----------------
 
   toggleUser(userId: number): void {
     this.selectedUserIds = this.selectedUserIds.includes(userId)
@@ -84,23 +93,16 @@ export class CalendarEventDialogComponent {
       : [...this.selectedUserIds, userId];
   }
 
-  // ---------------- VALIDATION ----------------
-
   canSave(): boolean {
     if (this.title.trim().length === 0) return false;
     if (this.selectedUserIds.length === 0) return false;
-
     const start = new Date(this.startLocal);
     const end = new Date(this.endLocal);
-
     return !isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start;
   }
 
-  // ---------------- SAVE ----------------
-
   save(): void {
     if (!this.canSave()) return;
-
     const result: CalendarEventDialogResult = {
       mode: this.data.eventId ? 'update' : 'save',
       eventId: this.data.eventId,
@@ -111,8 +113,8 @@ export class CalendarEventDialogComponent {
       end: new Date(this.endLocal),
       userIds: this.selectedUserIds,
       points: this.points,
+      imageId: this.imageId ?? undefined,
     };
-
     this.dialogRef.close(result);
   }
 
@@ -131,16 +133,34 @@ export class CalendarEventDialogComponent {
       end: new Date(this.endLocal),
       userIds: this.selectedUserIds,
       points: this.points,
+      imageId: this.imageId ?? undefined,
     };
-
     this.dialogRef.close(result);
   }
-
-  // ---------------- HELPERS ----------------
 
   private toLocalInput(date: Date): string {
     const d = new Date(date);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().slice(0, 16);
+  }
+
+  openImageSelector(): void {
+    const dialogRef = this.dialog.open(TaskImageSelectorComponent, {
+      width: '400px',
+    });
+
+    dialogRef.afterClosed().subscribe((selectedId: number | undefined) => {
+      if (selectedId !== undefined) {
+        setTimeout(() => {
+          this.imageId = selectedId;
+          this.cd.detectChanges();
+        });
+      }
+    });
+  }
+
+  getImageUrl(id: number | null): string | null {
+    if (!id) return null;
+    return this.userService.getImageUrl(id);
   }
 }

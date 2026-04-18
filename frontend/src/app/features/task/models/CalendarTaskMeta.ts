@@ -5,4 +5,5 @@ export interface CalendarTaskMeta {
   assignedUserIds: number[];
   assignedUserNames: string[];
   points: number;
+  imageId?: number;
 }

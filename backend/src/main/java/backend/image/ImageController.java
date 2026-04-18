@@ -44,4 +44,14 @@ public class ImageController {
                 .toList();
         return ResponseEntity.ok(ids);
     }
+
+    @GetMapping("/type/{type}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Long>> getImagesByType(@PathVariable String type) {
+        List<Long> ids = imageRepository.findByType(type)
+                .stream()
+                .map(Image::getId)
+                .toList();
+        return ResponseEntity.ok(ids);
+    }
 }
