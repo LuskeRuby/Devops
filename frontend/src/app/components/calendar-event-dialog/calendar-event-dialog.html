@@ -5,12 +5,25 @@
 <div mat-dialog-content>
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Titel</mat-label>
-    <input matInput [(ngModel)]="title" [disabled]="isReadOnly" />
+    <input matInput [(ngModel)]="title" [disabled]="isReadOnly" maxlength="15" #titleInput />
+    <mat-hint align="end">{{titleInput.value.length}} / 15</mat-hint>
   </mat-form-field>
+
+  <div class="image-selection-section" style="margin-bottom: 16px;">
+    <button mat-stroked-button color="primary" type="button" (click)="openImageSelector()" [disabled]="isReadOnly">
+      Billeder
+    </button>
+    @if (imageId) {
+      <div class="image-preview" style="margin-top: 8px;">
+        <img [src]="getImageUrl(imageId)" alt="Selected Task Image" style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain; border: 1px solid #ccc; background: white;" />
+      </div>
+    }
+  </div>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Beskrivelse</mat-label>
-    <textarea matInput [(ngModel)]="description" [disabled]="isReadOnly"></textarea>
+    <textarea matInput [(ngModel)]="description" [disabled]="isReadOnly" maxlength="250" #descInput></textarea>
+    <mat-hint align="end">{{descInput.value.length}} / 250</mat-hint>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
@@ -30,7 +43,7 @@
   <div class="users-section">
     <mat-label>Tildel familiemedlemmer</mat-label>
 
-    @if (!data.eventId && selectedUserIds.length > 1) {
+    @if (selectedUserIds.length > 1) {
       <div class="task-type-section" style="margin-top: 12px; margin-bottom: 12px">
         <mat-radio-group
           [(ngModel)]="isSeparateTasks"

@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
-    
+
     private final TaskService taskService;
 
     public TaskController(TaskService taskService) {
@@ -26,7 +26,8 @@ public class TaskController {
     }
 
     @PostMapping
-    public TaskDto createTask(@RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto createTask(@RequestBody CreateTaskRequest request,
+            @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -48,7 +49,7 @@ public class TaskController {
                 task.setTimestamp(payload.getTimestamp());
                 task.setRepeatEvery(payload.getRepeatEvery());
                 task.setRepeatUntil(payload.getRepeatUntil());
-                lastTask = taskService.createTask(task, List.of(userId), requesterId);
+                lastTask = taskService.createTask(task, List.of(userId), requesterId, payload.getImageId());
             }
             return convertToDto(lastTask);
         }
@@ -62,7 +63,7 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return convertToDto(taskService.createTask(task, request.getUserIds(), requesterId));
+        return convertToDto(taskService.createTask(task, request.getUserIds(), requesterId, payload.getImageId()));
     }
 
     @GetMapping("/user/{userId}")
@@ -81,7 +82,8 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}")
-    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request,
+            @RequestParam(required = false) Long requesterId) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -101,11 +103,34 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return convertToDto(taskService.updateTask(taskId, task, request.getUserIds(), requesterId));
+        if (Boolean.TRUE.equals(request.getSeparateTasks()) && request.getUserIds().size() > 1) {
+
+            Long firstUserId = request.getUserIds().get(0);
+            Task updatedFirst = taskService.updateTask(taskId, task, List.of(firstUserId), requesterId,
+                    payload.getImageId());
+
+            for (int i = 1; i < request.getUserIds().size(); i++) {
+                Long nextUserId = request.getUserIds().get(i);
+                Task newTask = new Task();
+                newTask.setName(task.getName());
+                newTask.setDescription(task.getDescription());
+                newTask.setPoints(task.getPoints());
+                newTask.setChecked(false);
+                newTask.setTimestamp(task.getTimestamp());
+                newTask.setRepeatEvery(task.getRepeatEvery());
+                newTask.setRepeatUntil(task.getRepeatUntil());
+                taskService.createTask(newTask, List.of(nextUserId), requesterId, payload.getImageId());
+            }
+            return convertToDto(updatedFirst);
+        }
+
+        return convertToDto(
+                taskService.updateTask(taskId, task, request.getUserIds(), requesterId, payload.getImageId()));
     }
 
     @GetMapping("/family/{familyEmail}")
-    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail, @RequestParam(required = false) Long requesterId) {
+    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail,
+            @RequestParam(required = false) Long requesterId) {
         return taskService.getTasksForFamily(familyEmail, requesterId).stream()
                 .map(TaskController::convertToDto)
                 .toList();
@@ -137,7 +162,7 @@ public class TaskController {
         dto.setTimestamp(task.getTimestamp());
         dto.setRepeatEvery(task.getRepeatEvery());
         dto.setRepeatUntil(task.getRepeatUntil());
-        
+
         if (task.getImage() != null) {
             dto.setImageId(task.getImage().getId());
         }
@@ -146,5 +171,5 @@ public class TaskController {
             dto.setAssignedUserNames(task.getUsers().stream().map(user -> user.getName()).toList());
         }
         return dto;
-    }   
+    }
 }

@@ -102,7 +102,7 @@ describe('CalendarComponent', () => {
     component.loadEvents();
 
     expect(component.loadError).toBe('Missing family');
-    expect(component.events).toEqual([]);
+    expect(component.events()).toEqual([]);
   });
 
   it('should handle load error', () => {
@@ -113,7 +113,7 @@ describe('CalendarComponent', () => {
     component.loadEvents();
 
     expect(component.loadError).toBe('Failed to load events');
-    expect(component.events).toEqual([]);
+    expect(component.events()).toEqual([]);
   });
 
   // ---------------- DIALOG SAVE ----------------
