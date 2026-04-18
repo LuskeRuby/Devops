@@ -66,7 +66,7 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
                     .thenReturn(savedTask);
 
             TaskDto result = taskController.createTask(request, 1L);
@@ -84,13 +84,13 @@ class TaskControllerTest {
             request.setStart(LocalDateTime.of(2026, 4, 10, 9, 0));
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
                     .thenReturn(savedTask);
 
             TaskDto result = taskController.createTask(request, 1L);
 
             assertThat(result).isNotNull();
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
         }
 
         @Test
@@ -105,15 +105,15 @@ class TaskControllerTest {
             request.setUserIds(List.of(1L, 2L));
             request.setSeparateTasks(true);
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
                     .thenReturn(savedTask);
-            when(taskService.createTask(any(Task.class), eq(List.of(2L)), eq(1L)))
+            when(taskService.createTask(any(Task.class), eq(List.of(2L)), eq(1L), any()))
                     .thenReturn(savedTask);
 
             taskController.createTask(request, 1L);
 
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
-            verify(taskService).createTask(any(Task.class), eq(List.of(2L)), eq(1L));
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
+            verify(taskService).createTask(any(Task.class), eq(List.of(2L)), eq(1L), any());
         }
 
         @Test
@@ -168,7 +168,7 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L)))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
                     .thenAnswer(inv -> {
                         Task t = inv.getArgument(0);
                         assertThat(t.getPoints()).isEqualTo(0);
@@ -179,7 +179,7 @@ class TaskControllerTest {
 
             taskController.createTask(request, 1L);
 
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L));
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
         }
     }
 
@@ -227,13 +227,13 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L)))
+            when(taskService.updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L), any()))
                     .thenReturn(savedTask);
 
             TaskDto result = taskController.updateTask(10L, request, 1L);
 
             assertThat(result).isNotNull();
-            verify(taskService).updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L));
+            verify(taskService).updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L), any());
         }
     }
 

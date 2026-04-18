@@ -75,7 +75,7 @@ class TaskServiceTest {
                 return t;
             });
 
-            Task result = taskService.createTask(testTask, List.of(2L), 1L);
+            Task result = taskService.createTask(testTask, List.of(2L), 1L, null);
 
             assertThat(result.getId()).isEqualTo(99L);
             assertThat(result.getChecked()).isFalse();
@@ -91,7 +91,7 @@ class TaskServiceTest {
             when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(child));
             when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            Task result = taskService.createTask(testTask, List.of(2L), 1L);
+            Task result = taskService.createTask(testTask, List.of(2L), 1L, null);
 
             assertThat(result.getPoints()).isEqualTo(0);
         }
@@ -101,7 +101,7 @@ class TaskServiceTest {
         void childCannotCreateTask() {
             when(userRepository.findById(2L)).thenReturn(Optional.of(child));
 
-            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(2L), 2L))
+            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(2L), 2L, null))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Only parents");
         }
@@ -109,7 +109,7 @@ class TaskServiceTest {
         @Test
         @DisplayName("throws when requesterId is null")
         void throwsWhenRequesterIdIsNull() {
-            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(2L), null))
+            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(2L), null, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Requester ID is required");
         }
@@ -119,7 +119,7 @@ class TaskServiceTest {
         void throwsWhenTaskIsNull() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(parent));
 
-            assertThatThrownBy(() -> taskService.createTask(null, List.of(2L), 1L))
+            assertThatThrownBy(() -> taskService.createTask(null, List.of(2L), 1L, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Task is required");
         }
@@ -129,7 +129,7 @@ class TaskServiceTest {
         void throwsWhenUserIdsEmpty() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(parent));
 
-            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(), 1L))
+            assertThatThrownBy(() -> taskService.createTask(testTask, List.of(), 1L, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("At least one userId is required");
         }
@@ -385,7 +385,7 @@ class TaskServiceTest {
             when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(child));
             when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            Task result = taskService.updateTask(10L, updated, List.of(2L), 1L);
+            Task result = taskService.updateTask(10L, updated, List.of(2L), 1L, null);
 
             assertThat(result.getName()).isEqualTo("Wash dishes");
             assertThat(result.getDescription()).isEqualTo("After dinner");
@@ -407,7 +407,7 @@ class TaskServiceTest {
             when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(child));
             when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            Task result = taskService.updateTask(10L, updated, List.of(2L), 1L);
+            Task result = taskService.updateTask(10L, updated, List.of(2L), 1L, null);
 
             assertThat(result.getPoints()).isEqualTo(0);
         }
@@ -417,7 +417,7 @@ class TaskServiceTest {
         void childCannotUpdateTask() {
             when(userRepository.findById(2L)).thenReturn(Optional.of(child));
 
-            assertThatThrownBy(() -> taskService.updateTask(10L, testTask, List.of(2L), 2L))
+            assertThatThrownBy(() -> taskService.updateTask(10L, testTask, List.of(2L), 2L, null))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Only parents");
         }
@@ -428,7 +428,7 @@ class TaskServiceTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(parent));
             when(taskRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> taskService.updateTask(99L, testTask, List.of(2L), 1L))
+            assertThatThrownBy(() -> taskService.updateTask(99L, testTask, List.of(2L), 1L, null))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Task not found with id: 99");
         }
@@ -438,7 +438,7 @@ class TaskServiceTest {
         void throwsWhenUpdatedTaskIsNull() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(parent));
 
-            assertThatThrownBy(() -> taskService.updateTask(10L, null, List.of(2L), 1L))
+            assertThatThrownBy(() -> taskService.updateTask(10L, null, List.of(2L), 1L, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Task payload is required");
         }
@@ -448,7 +448,7 @@ class TaskServiceTest {
         void throwsWhenUserIdsEmpty() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(parent));
 
-            assertThatThrownBy(() -> taskService.updateTask(10L, testTask, List.of(), 1L))
+            assertThatThrownBy(() -> taskService.updateTask(10L, testTask, List.of(), 1L, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("At least one userId is required");
         }
