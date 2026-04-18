@@ -1,5 +1,5 @@
 <div class="chat-messages" #scrollContainer>
-  @for (message of messages; track message; let i = $index) {
+  @for (message of messages; track i; let i = $index) {
     @if (i === 0 || isDifferentDay(messages[i - 1].timestamp, message.timestamp)) {
       <div class="date-separator">
         <span>{{ formatDateLabel(message.timestamp) }}</span>
@@ -9,7 +9,7 @@
       class="message-wrapper"
       [ngClass]="{
         mine: message.userId === selectedUserId,
-        other: message.userId !== selectedUserId,
+        other: message.userId !== selectedUserId
       }"
     >
       @if (message.userId !== selectedUserId) {
@@ -27,6 +27,9 @@
 </div>
 
 <div class="chat-input">
-  <input [(ngModel)]="messageText" placeholder="Aa" (keyup.enter)="send()" />
-  <button (click)="send()" [disabled]="!isConnected">Send</button>
+  <input [(ngModel)]="messageText" placeholder="Skriv en hyggelig besked her... 😊" (keyup.enter)="send()" />
+  <button (click)="send()" [disabled]="!isConnected || !messageText.trim()">
+    <span>Send</span>
+    <span class="icon">✈️</span>
+  </button>
 </div>

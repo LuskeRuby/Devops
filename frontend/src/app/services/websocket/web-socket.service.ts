@@ -26,7 +26,6 @@ export class WebSocketService {
     };
 
     this.client.onConnect = () => {
-      console.log('Connected to backend');
       this.connected = true;
       onConnected();
 

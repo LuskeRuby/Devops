@@ -25,13 +25,17 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private ws = inject(WebSocketService);
   private cd = inject(ChangeDetectorRef);
   private messageService = inject(MessageService);
+  private userService = inject(UserService);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
-  private userService = inject(UserService);
-
   get selectedUserId(): number | null {
     return this.userService.currentUser()?.id ?? null;
+  }
+
+  get familyEmail(): string | null {
+    const user = this.userService.currentUser();
+    return user?.familyEmail || user?.family?.email || user?.email || null;
   }
 
   messageText = '';
@@ -40,10 +44,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private shouldScroll = false;
 
   ngOnInit() {
-    const familyEmail = this.userService.currentUser()?.email;
+    const familyEmail = this.familyEmail;
     if (!familyEmail) return;
 
     this.messageService.getMessages(familyEmail).subscribe((data) => {
+      console.log(`Chat history loaded: ${data.length} messages.`);
       this.messages = data;
       this.shouldScroll = true;
       this.cd.detectChanges();
@@ -53,12 +58,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.ws.connect(
       familyEmail,
       (msg) => {
+        console.log('New message received via WebSocket:', msg);
         this.messages = [...this.messages, msg];
         this.shouldScroll = true;
         this.cd.detectChanges();
         setTimeout(() => this.scrollToBottom(), 0);
       },
       () => {
+        console.log('Chat system connected and ready.');
         this.isConnected = true;
         this.cd.detectChanges();
       },
@@ -77,7 +84,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   send() {
-    const familyEmail = this.userService.currentUser()?.email;
+    const familyEmail = this.familyEmail;
     if (this.messageText.trim() && this.isConnected && familyEmail) {
       this.ws.send(this.selectedUserId!, this.messageText, familyEmail);
       this.messageText = '';
