@@ -6,17 +6,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import backend.image.Image;
+import backend.image.ImageRepository;
 
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
 
     public TaskService(TaskRepository taskRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ImageRepository imageRepository) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.imageRepository = imageRepository;
     }
 
     public List<Task> getTasksForFamily(String familyEmail, Long requesterId) {
@@ -43,7 +48,7 @@ public class TaskService {
         }
     }
 
-    public Task createTask(Task task, List<Long> userIds, Long requesterId) {
+    public Task createTask(Task task, List<Long> userIds, Long requesterId, Long imageId) {
         validateParentRole(requesterId);
         if (task == null) {
             throw new IllegalArgumentException("Task is required");
@@ -59,6 +64,11 @@ public class TaskService {
         task.setChecked(false);
         if (task.getPoints() != null && task.getPoints() < 0) {
             task.setPoints(0);
+        }
+
+        if (imageId != null) {
+            Image image = imageRepository.findById(imageId).orElse(null);
+            task.setImage(image);
         }
 
         return taskRepository.save(task);
@@ -87,8 +97,10 @@ public class TaskService {
             boolean isAssigned = task.getUsers() != null && 
                                  task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
             
-            if (!isAssigned) {
-                throw new RuntimeException("Access denied: You can only complete your own tasks");
+            boolean isParent = "PARENT".equalsIgnoreCase(requester.getRole());
+
+            if (!isAssigned && !isParent) {
+                throw new RuntimeException("Access denied: You must be assigned to this task or be a parent to complete it");
             }
         }
 
@@ -119,8 +131,10 @@ public class TaskService {
             boolean isAssigned = task.getUsers() != null && 
                                  task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
 
-            if (!isAssigned) {
-                throw new RuntimeException("Access denied: You can only uncomplete your own tasks");
+            boolean isParent = "PARENT".equalsIgnoreCase(requester.getRole());
+
+            if (!isAssigned && !isParent) {
+                throw new RuntimeException("Access denied: You must be assigned to this task or be a parent to uncomplete it");
             }
         }
 
@@ -153,7 +167,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public Task updateTask(Long taskId, Task updatedTask, List<Long> userIds, Long requesterId) {
+    public Task updateTask(Long taskId, Task updatedTask, List<Long> userIds, Long requesterId, Long imageId) {
         validateParentRole(requesterId);
         if (updatedTask == null) {
             throw new IllegalArgumentException("Task payload is required");
@@ -179,6 +193,11 @@ public class TaskService {
 
         if (updatedTask.getChecked() != null) {
             existing.setChecked(updatedTask.getChecked());
+        }
+
+        if (imageId != null) {
+            Image image = imageRepository.findById(imageId).orElse(null);
+            existing.setImage(image);
         }
 
         return taskRepository.save(existing);

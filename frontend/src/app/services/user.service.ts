@@ -88,4 +88,8 @@ export class UserService {
   getAvatarsByCategory(category: string): Observable<number[]> {
     return this.http.get<number[]>(`/api/images/avatars/${category}`);
   }
+
+  getImagesByType(type: string): Observable<number[]> {
+    return this.http.get<number[]>(`/api/images/type/${type}`);
+  }
 }

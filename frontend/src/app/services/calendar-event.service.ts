@@ -14,6 +14,7 @@ export interface CalendarQuickCreatePayload {
   userIds: number[];
   isSeparateTasks?: boolean;
   points: number;
+  imageId?: number;
   color: string;
 }
 
@@ -56,6 +57,7 @@ export class CalendarEventService {
         timestamp: this.toLocalDateTime(payload.start),
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
+        imageId: payload.imageId,
         checked: false,
         repeatEvery: null,
       },
@@ -80,6 +82,7 @@ export class CalendarEventService {
         timestamp: this.toLocalDateTime(payload.start),
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
+        imageId: payload.imageId,
         checked: undefined,
         repeatEvery: null,
       },
@@ -127,7 +130,7 @@ export class CalendarEventService {
       secondary: '#dbeafe ', // gray for done
     };
 
-    return {
+    const event = {
       id: task.id,
       title: task.name,
       start,
@@ -144,9 +147,19 @@ export class CalendarEventService {
         assignedUserIds: task.assignedUserIds ?? [],
         assignedUserNames: task.assignedUserNames ?? [],
         points: task.points ?? 0,
+        imageId: task.imageId,
       },
       color,
     };
+
+    console.log('[CalendarEventService] Mapped task to Event:', {
+      taskId: task.id,
+      name: task.name,
+      checked: task.checked,
+      description: task.description
+    });
+
+    return event;
   }
 
   private toLocalDateTime(date: Date): string {

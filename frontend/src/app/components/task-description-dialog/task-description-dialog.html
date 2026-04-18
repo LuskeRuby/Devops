@@ -1,0 +1,39 @@
+<div class="fun-dialog">
+  <div class="dialog-header">
+    <div class="icon-bubble">📖</div>
+    <h1 class="dialog-title">{{ data.title }}</h1>
+  </div>
+
+  <div class="dialog-content">
+    <div class="scroll-box">
+      <p class="description-text">{{ data.description || 'Ingen yderligere information... men du klarer den fantastisk! 🚀' }}</p>
+    </div>
+    
+    @if (data.points > 0) {
+      <div class="bonus-badge">
+        <span class="emoji">💎</span>
+        <span class="text">+{{ data.points }} Point til dig!</span>
+      </div>
+    }
+
+    @if (data.assignedUserNames.length > 1) {
+      <div class="partners-section">
+        <p class="partners-label">Dine partnere på opgaven: 🤝</p>
+        <div class="partners-list">
+          @for (name of data.assignedUserNames; track name) {
+            <div class="partner-bubble" [title]="name">
+              {{ getInitials(name) }}
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="dialog-actions">
+    <button class="fun-close-btn" (click)="close()">
+      <span class="btn-text">OKAY, JEG ER KLAR!</span>
+      <span class="btn-emoji">💪</span>
+    </button>
+  </div>
+</div>
