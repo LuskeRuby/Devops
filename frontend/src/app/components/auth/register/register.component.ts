@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  signal,
+  inject,
+  ViewEncapsulation,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { form, FormField, required, email, minLength } from '@angular/forms/signals';
@@ -14,6 +20,7 @@ interface RegisterData {
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, FormField, ErrorBannerComponent],
@@ -25,10 +32,10 @@ export class RegisterComponent extends AuthFormBase {
   readonly registerModel = signal<RegisterData>({ email: '', password: '' });
 
   readonly registerForm = form(this.registerModel, (f) => {
-    required(f.email, { message: 'Email is required.' });
-    email(f.email, { message: 'Please enter a valid email.' });
-    required(f.password, { message: 'Password is required.' });
-    minLength(f.password, 8, { message: 'Password must be at least 8 characters.' });
+    required(f.email, { message: 'Email er påkrævet.' });
+    email(f.email, { message: 'Indtast venligst en gyldig email.' });
+    required(f.password, { message: 'Adgangskode er påkrævet.' });
+    minLength(f.password, 8, { message: 'Adgangskode skal være mindst 8 tegn.' });
   });
 
   submit(): void {
@@ -48,9 +55,9 @@ export class RegisterComponent extends AuthFormBase {
         if (serverMsg) {
           this.setError(serverMsg);
         } else if (status === 409) {
-          this.setError('An account with that email already exists.');
+          this.setError('Der findes allerede en konto med den email.');
         } else {
-          this.setError('Registration failed. Please try again.');
+          this.setError('Registrering mislykkedes. Prøv igen.');
         }
         this.setLoading(false);
       },
