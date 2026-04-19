@@ -66,10 +66,10 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), any()))
                     .thenReturn(savedTask);
 
-            TaskDto result = taskController.createTask(request, 1L);
+            TaskDto result = taskController.createTask(request);
 
             assertThat(result.getName()).isEqualTo("Clean room");
             assertThat(result.getPoints()).isEqualTo(15);
@@ -84,13 +84,13 @@ class TaskControllerTest {
             request.setStart(LocalDateTime.of(2026, 4, 10, 9, 0));
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), any()))
                     .thenReturn(savedTask);
 
-            TaskDto result = taskController.createTask(request, 1L);
+            TaskDto result = taskController.createTask(request);
 
             assertThat(result).isNotNull();
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), any());
         }
 
         @Test
@@ -105,15 +105,15 @@ class TaskControllerTest {
             request.setUserIds(List.of(1L, 2L));
             request.setSeparateTasks(true);
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), any()))
                     .thenReturn(savedTask);
-            when(taskService.createTask(any(Task.class), eq(List.of(2L)), eq(1L), any()))
+            when(taskService.createTask(any(Task.class), eq(List.of(2L)), any()))
                     .thenReturn(savedTask);
 
-            taskController.createTask(request, 1L);
+            taskController.createTask(request);
 
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
-            verify(taskService).createTask(any(Task.class), eq(List.of(2L)), eq(1L), any());
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), any());
+            verify(taskService).createTask(any(Task.class), eq(List.of(2L)), any());
         }
 
         @Test
@@ -122,7 +122,7 @@ class TaskControllerTest {
             CreateTaskRequest request = new CreateTaskRequest();
             request.setUserIds(List.of(1L));
 
-            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+            assertThatThrownBy(() -> taskController.createTask(request))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("Task payload with a name is required");
         }
@@ -137,7 +137,7 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+            assertThatThrownBy(() -> taskController.createTask(request))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("Task payload with a name is required");
         }
@@ -152,7 +152,7 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of());
 
-            assertThatThrownBy(() -> taskController.createTask(request, 1L))
+            assertThatThrownBy(() -> taskController.createTask(request))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("At least one userId is required");
         }
@@ -168,7 +168,7 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.createTask(any(Task.class), eq(List.of(1L)), eq(1L), any()))
+            when(taskService.createTask(any(Task.class), eq(List.of(1L)), any()))
                     .thenAnswer(inv -> {
                         Task t = inv.getArgument(0);
                         assertThat(t.getPoints()).isEqualTo(0);
@@ -177,9 +177,9 @@ class TaskControllerTest {
                         return t;
                     });
 
-            taskController.createTask(request, 1L);
+            taskController.createTask(request);
 
-            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), eq(1L), any());
+            verify(taskService).createTask(any(Task.class), eq(List.of(1L)), any());
         }
     }
 
@@ -195,7 +195,7 @@ class TaskControllerTest {
             CreateTaskRequest request = new CreateTaskRequest();
             request.setUserIds(List.of(1L));
 
-            assertThatThrownBy(() -> taskController.updateTask(10L, request, 1L))
+            assertThatThrownBy(() -> taskController.updateTask(10L, request))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("Task payload with a name is required");
         }
@@ -210,7 +210,7 @@ class TaskControllerTest {
             request.setTask(payload);
             //userId null
 
-            assertThatThrownBy(() -> taskController.updateTask(10L, request, 1L))
+            assertThatThrownBy(() -> taskController.updateTask(10L, request))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("At least one userId is required");
         }
@@ -227,13 +227,13 @@ class TaskControllerTest {
             request.setTask(payload);
             request.setUserIds(List.of(1L));
 
-            when(taskService.updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L), any()))
+            when(taskService.updateTask(eq(10L), any(Task.class), eq(List.of(1L)), any()))
                     .thenReturn(savedTask);
 
-            TaskDto result = taskController.updateTask(10L, request, 1L);
+            TaskDto result = taskController.updateTask(10L, request);
 
             assertThat(result).isNotNull();
-            verify(taskService).updateTask(eq(10L), any(Task.class), eq(List.of(1L)), eq(1L), any());
+            verify(taskService).updateTask(eq(10L), any(Task.class), eq(List.of(1L)), any());
         }
     }
 

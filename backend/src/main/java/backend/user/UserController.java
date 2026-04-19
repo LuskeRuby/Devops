@@ -41,8 +41,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}/tasks")
-    public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id, @RequestParam(required = false) Long requesterId) {
-        List<Task> tasks = taskService.getTasksByUserId(id, requesterId);
+    public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id) {
+        List<Task> tasks = taskService.getTasksByUserId(id);
         List<TaskDto> taskDTOs = tasks.stream()
                 .map(TaskController::convertToDto)
                 .toList();
@@ -60,13 +60,11 @@ public class UserController {
     }
 
     @PostMapping("/{id}/validate-pin")
-    public ResponseEntity<Boolean> validatePin(@PathVariable Long id, @RequestBody PinValidationRequest request) {
-        boolean isValid = userService.validatePin(id, request.pin());
-        if (isValid) {
-            return ResponseEntity.ok(true);
-        } else {
-            return ResponseEntity.status(401).body(false);
-        }
+    public ResponseEntity<ProfileAuthResponseDto> validatePin(
+            @PathVariable Long id, 
+            @RequestBody PinValidationRequest request,
+            jakarta.servlet.http.HttpServletResponse response) {
+        return ResponseEntity.ok(userService.validatePin(id, request.pin(), response));
     }
 
     @PostMapping("/{id}/profile-image/{imageId}")
