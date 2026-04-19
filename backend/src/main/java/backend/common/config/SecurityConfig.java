@@ -34,12 +34,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/families/register").permitAll()
-                        .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/api/families/register", "/api/families/login", "/api/families/refresh")
-                        .permitAll()
-                        .requestMatchers("/websocket/**").permitAll() //Websockets secured with auth in websocketauthintercepter
-                        .requestMatchers("/api/images/**").permitAll()
+                        .requestMatchers("/api/families/register", "/api/families/login", "/api/families/refresh").permitAll()
+                        .requestMatchers("/websocket/**").permitAll()
+                        .requestMatchers("/api/images/**").permitAll() // Public access required for browser <img> tags
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

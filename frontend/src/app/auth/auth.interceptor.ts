@@ -17,8 +17,7 @@ export class AuthInterceptor implements HttpInterceptor {
     if (
       req.url.endsWith('/login') ||
       req.url.endsWith('/register') ||
-      req.url.endsWith('/refresh') ||
-      req.url.endsWith('/validate-pin')
+      req.url.endsWith('/refresh')
     ) {
       return next.handle(req);
     }
