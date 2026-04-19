@@ -27,15 +27,15 @@ public class JwtUtil {
     }
 
     /**
-     * Generates a signed JWT access token for the given email.
-     * The token expires after the duration configured in
-     * {@code app.jwt.access-token-expiration}.
+     * Generates a signed JWT access token for the given email with optional custom claims.
      *
-     * @param email the family email to embed as the token subject
+     * @param email  the family email (subject)
+     * @param claims custom claims (e.g., userId, role)
      * @return a signed JWT string
      */
-    public String generateAccessToken(String email) {
+    public String generateAccessToken(String email, java.util.Map<String, Object> claims) {
         return Jwts.builder()
+                .claims(claims)
                 .subject(email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
@@ -43,20 +43,23 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateAccessToken(String email) {
+        return generateAccessToken(email, java.util.Collections.emptyMap());
+    }
+
     /**
-     * Extracts the email (subject) from a JWT token.
-     *
-     * @param token the JWT string to parse
-     * @return the email embedded in the token
-     * @throws io.jsonwebtoken.JwtException if the token is invalid or expired
+     * Extracts all claims from a JWT token.
      */
-    public String extractEmail(String token) {
+    public io.jsonwebtoken.Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
+    }
+
+    public String extractEmail(String token) {
+        return extractAllClaims(token).getSubject();
     }
 
     /**
