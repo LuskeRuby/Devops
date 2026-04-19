@@ -3,11 +3,11 @@
 }
 
 /* Remove angular-calendar styling */
-::ng-deep .cal-event-title {
+:host ::ng-deep .cal-event-title {
   display: none !important;
 }
 
-::ng-deep .cal-event-container {
+:host ::ng-deep .cal-event-container {
   transition: z-index 0s;
 
   &:hover {
@@ -16,7 +16,11 @@
 }
 
 ::ng-deep .fun-dialog-container {
-  .mat-mdc-dialog-container .mdc-dialog__surface {
+  overflow: visible !important;
+
+  .mat-mdc-dialog-container,
+  .mdc-dialog__container,
+  .mdc-dialog__surface {
     border-radius: 40px !important;
     overflow: visible !important;
     background: transparent !important;
@@ -39,7 +43,6 @@
   cursor: pointer;
 
   pointer-events: auto;
-
 
   &:hover {
     z-index: 9999 !important;
@@ -77,7 +80,6 @@
       -webkit-line-clamp: unset !important;
       margin-bottom: 8px;
       font-size: 1.1rem;
-
     }
 
     .card-bottom {
@@ -168,7 +170,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .card-points {
@@ -377,7 +379,6 @@
     color: #1e1b4b;
     line-height: 1.1;
     letter-spacing: -0.5px;
-    word-wrap: break-word;
     overflow-wrap: anywhere;
   }
 
