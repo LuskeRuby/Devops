@@ -24,32 +24,27 @@ public class TaskService {
         this.imageRepository = imageRepository;
     }
 
-    public List<Task> getTasksForFamily(String familyEmail, Long requesterId) {
-        if (requesterId != null) {
-            User requester = userRepository.findById(requesterId)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
-            
-            if ("CHILD".equalsIgnoreCase(requester.getRole())) {
-                return taskRepository.findByUsers_Id(requesterId);
-            }
+    public List<Task> getTasksForFamily(String familyEmail) {
+        Long activeUserId = backend.common.security.SecurityUtils.getCurrentUserId();
+        String role = backend.common.security.SecurityUtils.getCurrentRole();
+
+        // If logged in as a specific user, and that user is a CHILD, only show their tasks
+        if (activeUserId != null && "CHILD".equalsIgnoreCase(role)) {
+            return taskRepository.findByUsers_Id(activeUserId);
         }
+        
+        // Otherwise (Parent or Family login), show all family tasks
         return taskRepository.findDistinctByUsers_Family_Email(familyEmail);
     }
 
-    private void validateParentRole(Long requesterId) {
-        if (requesterId == null) {
-            throw new IllegalArgumentException("Requester ID is required for this operation");
-        }
-        User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
-        
-        if (!"PARENT".equalsIgnoreCase(requester.getRole())) {
+    private void validateParentRole() {
+        if (!backend.common.security.SecurityUtils.isParent()) {
             throw new RuntimeException("Access denied: Only parents can perform this operation");
         }
     }
 
-    public Task createTask(Task task, List<Long> userIds, Long requesterId, Long imageId) {
-        validateParentRole(requesterId);
+    public Task createTask(Task task, List<Long> userIds, Long imageId) {
+        validateParentRole();
         if (task == null) {
             throw new IllegalArgumentException("Task is required");
         }
@@ -74,11 +69,12 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public List<Task> getTasksForUser(Long userId, Long requesterId) {
-        if (requesterId != null) {
-            User requester = userRepository.findById(requesterId)
-                    .orElseThrow(() -> new RuntimeException("Requester not found: " + requesterId));
-            if (!requester.getRole().equalsIgnoreCase("PARENT") && !userId.equals(requesterId)) {
+    public List<Task> getTasksForUser(Long userId) {
+        Long activeUserId = backend.common.security.SecurityUtils.getCurrentUserId();
+        String role = backend.common.security.SecurityUtils.getCurrentRole();
+
+        if (activeUserId != null) {
+            if (!"PARENT".equalsIgnoreCase(role) && !userId.equals(activeUserId)) {
                 throw new RuntimeException("Access denied: Children can only view their own tasks");
             }
         }
@@ -86,18 +82,18 @@ public class TaskService {
     }
 
     @Transactional
-    public Task markAsCompleted(Long taskId, Long requesterId) {
+    public Task markAsCompleted(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        if (requesterId != null) {
-            User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
-             
+        Long activeUserId = backend.common.security.SecurityUtils.getCurrentUserId();
+        String role = backend.common.security.SecurityUtils.getCurrentRole();
+
+        if (activeUserId != null) {
             boolean isAssigned = task.getUsers() != null && 
-                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
+                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(activeUserId));
             
-            boolean isParent = "PARENT".equalsIgnoreCase(requester.getRole());
+            boolean isParent = "PARENT".equalsIgnoreCase(role);
 
             if (!isAssigned && !isParent) {
                 throw new RuntimeException("Access denied: You must be assigned to this task or be a parent to complete it");
@@ -120,18 +116,18 @@ public class TaskService {
     }
 
     @Transactional
-    public Task unmarkAsCompleted(Long taskId, Long requesterId) {
+    public Task unmarkAsCompleted(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        if (requesterId != null) {
-            User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + requesterId));
-             
-            boolean isAssigned = task.getUsers() != null && 
-                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(requesterId));
+        Long activeUserId = backend.common.security.SecurityUtils.getCurrentUserId();
+        String role = backend.common.security.SecurityUtils.getCurrentRole();
 
-            boolean isParent = "PARENT".equalsIgnoreCase(requester.getRole());
+        if (activeUserId != null) {
+            boolean isAssigned = task.getUsers() != null && 
+                                 task.getUsers().stream().anyMatch(u -> u.getId().equals(activeUserId));
+
+            boolean isParent = "PARENT".equalsIgnoreCase(role);
 
             if (!isAssigned && !isParent) {
                 throw new RuntimeException("Access denied: You must be assigned to this task or be a parent to uncomplete it");
@@ -158,8 +154,8 @@ public class TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 
-    public void deleteTask(Long id, Long requesterId) {
-        validateParentRole(requesterId);
+    public void deleteTask(Long id) {
+        validateParentRole();
         taskRepository.deleteById(id);
     }
 
@@ -167,8 +163,8 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public Task updateTask(Long taskId, Task updatedTask, List<Long> userIds, Long requesterId, Long imageId) {
-        validateParentRole(requesterId);
+    public Task updateTask(Long taskId, Task updatedTask, List<Long> userIds, Long imageId) {
+        validateParentRole();
         if (updatedTask == null) {
             throw new IllegalArgumentException("Task payload is required");
         }
@@ -204,7 +200,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<Task> getTasksByUserId(Long userId, Long requesterId) {
-        return getTasksForUser(userId, requesterId);
+    public List<Task> getTasksByUserId(Long userId) {
+        return getTasksForUser(userId);
     }
 }
