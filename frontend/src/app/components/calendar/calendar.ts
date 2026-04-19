@@ -109,9 +109,7 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    const request$ = this.isParent
-      ? this.calendarEventService.loadFamilyEvents(familyEmail, userId)
-      : this.calendarEventService.loadUserEvents(userId!);
+    const request$ = this.calendarEventService.loadFamilyEvents(familyEmail);
 
     request$.subscribe({
       next: (events) => {
@@ -205,7 +203,7 @@ export class CalendarComponent implements OnInit {
       color: '#4285f4',
     };
 
-    this.calendarEventService.updateEvent(taskId, payload, this.currentUser?.id).subscribe({
+    this.calendarEventService.updateEvent(taskId, payload).subscribe({
       next: () => this.loadEvents(),
       error: () => {
         this.loadError = 'Failed to move event';
@@ -275,7 +273,7 @@ export class CalendarComponent implements OnInit {
     let request$: Observable<TaskDTO | void>;
 
     if (result.mode === 'delete') {
-      request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
+      request$ = this.calendarEventService.deleteEvent(targetId);
     } else {
       const payload = {
         title: result.title,
@@ -291,8 +289,8 @@ export class CalendarComponent implements OnInit {
 
       request$ =
         result.mode === 'update'
-          ? this.calendarEventService.updateEvent(targetId, payload, this.currentUser?.id)
-          : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+          ? this.calendarEventService.updateEvent(targetId, payload)
+          : this.calendarEventService.createEvent(payload);
     }
 
     request$.subscribe({
@@ -338,8 +336,8 @@ export class CalendarComponent implements OnInit {
     );
 
     const action$ = !originalState
-      ? this.calendarEventService.completeEvent(taskId, this.currentUser?.id)
-      : this.calendarEventService.uncompleteEvent(taskId, this.currentUser?.id);
+      ? this.calendarEventService.completeEvent(taskId)
+      : this.calendarEventService.uncompleteEvent(taskId);
 
     action$.subscribe({
       next: () => {

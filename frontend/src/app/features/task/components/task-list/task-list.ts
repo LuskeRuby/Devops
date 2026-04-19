@@ -44,8 +44,8 @@ export class TaskListComponent implements OnInit {
     );
 
     const action$ = !originalChecked
-      ? this.calendarEventService.completeEvent(clickedTask.id, userId)
-      : this.calendarEventService.uncompleteEvent(clickedTask.id, userId);
+      ? this.calendarEventService.completeEvent(clickedTask.id)
+      : this.calendarEventService.uncompleteEvent(clickedTask.id);
 
     action$.subscribe({
       next: () => {

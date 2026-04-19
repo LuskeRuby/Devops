@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { User, UserService } from '../../services/user.service';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-member-pin-page',
@@ -16,6 +17,7 @@ export class MemberPinPageComponent implements OnInit {
   private router = inject(Router);
   private userService = inject(UserService);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   user: User | null = null;
   pin: string[] = ['', '', '', ''];
@@ -71,8 +73,10 @@ export class MemberPinPageComponent implements OnInit {
     const userId = this.user?.id || 0;
 
     this.userService.validatePin(userId, pinString).subscribe({
-      next: (isValid: boolean) => {
-        if (isValid && this.user) {
+      next: (res) => {
+        if (res.accessToken && this.user) {
+          // Update the token so backend recognizes the profile-specific role
+          this.authService.setAccessTokenFromRefresh(res.accessToken);
           this.userService.setCurrentUser(this.user);
           this.router.navigate(['/dashboard']);
         }
