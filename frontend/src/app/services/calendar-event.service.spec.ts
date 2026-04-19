@@ -45,27 +45,19 @@ describe('CalendarEventService', () => {
 
   // ---------------- loadFamilyEvents ----------------
 
-  it('should GET /api/tasks/family/{email} with requesterId', () => {
-    service.loadFamilyEvents('fam@test.com', 1).subscribe();
-
-    const req = http.expectOne('/api/tasks/family/fam@test.com?requesterId=1');
-    expect(req.request.method).toBe('GET');
-    req.flush([mockTaskDTO]);
-  });
-
-  it('should GET /api/tasks/family/{email} without requesterId', () => {
+  it('should GET /api/tasks/family/{email}', () => {
     service.loadFamilyEvents('fam@test.com').subscribe();
 
     const req = http.expectOne('/api/tasks/family/fam@test.com');
     expect(req.request.method).toBe('GET');
-    req.flush([]);
+    req.flush([mockTaskDTO]);
   });
 
   it('should map TaskDTOs to CalendarEvents', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('fam@test.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('fam@test.com').subscribe((events) => (result = events));
 
-    http.expectOne('/api/tasks/family/fam@test.com?requesterId=1').flush([mockTaskDTO]);
+    http.expectOne('/api/tasks/family/fam@test.com').flush([mockTaskDTO]);
 
     expect(result.length).toBe(1);
     expect(result[0].id).toBe(1);
@@ -74,15 +66,7 @@ describe('CalendarEventService', () => {
 
   // ---------------- loadUserEvents ----------------
 
-  it('should GET /api/users/{id}/tasks with requesterId', () => {
-    service.loadUserEvents(2, 1).subscribe();
-
-    const req = http.expectOne('/api/users/2/tasks?requesterId=1');
-    expect(req.request.method).toBe('GET');
-    req.flush([]);
-  });
-
-  it('should GET /api/users/{id}/tasks without requesterId', () => {
+  it('should GET /api/users/{id}/tasks', () => {
     service.loadUserEvents(2).subscribe();
 
     const req = http.expectOne('/api/users/2/tasks');
@@ -92,9 +76,9 @@ describe('CalendarEventService', () => {
 
   it('should map user events with correct meta', () => {
     let result: any[] = [];
-    service.loadUserEvents(2, 1).subscribe((events) => (result = events));
+    service.loadUserEvents(2).subscribe((events) => (result = events));
 
-    http.expectOne('/api/users/2/tasks?requesterId=1').flush([mockTaskDTO]);
+    http.expectOne('/api/users/2/tasks').flush([mockTaskDTO]);
 
     expect(result[0].meta.taskId).toBe(1);
     expect(result[0].meta.points).toBe(10);
@@ -102,82 +86,52 @@ describe('CalendarEventService', () => {
 
   // ---------------- createEvent ----------------
 
-  it('should POST to /api/tasks with requesterId', () => {
-    service.createEvent(mockPayload, 1).subscribe();
+  it('should POST to /api/tasks', () => {
+    service.createEvent(mockPayload).subscribe();
 
-    const req = http.expectOne('/api/tasks?requesterId=1');
+    const req = http.expectOne('/api/tasks');
     expect(req.request.method).toBe('POST');
     expect(req.request.body.task.name).toBe('Meeting');
     expect(req.request.body.userIds).toEqual([1, 2]);
     req.flush(mockTaskDTO);
   });
 
-  it('should POST to /api/tasks without requesterId', () => {
-    service.createEvent(mockPayload).subscribe();
+  it('should include separateTasks in POST body', () => {
+    service.createEvent({ ...mockPayload, isSeparateTasks: true }).subscribe();
 
     const req = http.expectOne('/api/tasks');
-    expect(req.request.method).toBe('POST');
-    req.flush(mockTaskDTO);
-  });
-
-  it('should include separateTasks in POST body', () => {
-    service.createEvent({ ...mockPayload, isSeparateTasks: true }, 1).subscribe();
-
-    const req = http.expectOne('/api/tasks?requesterId=1');
     expect(req.request.body.separateTasks).toBe(true);
     req.flush(mockTaskDTO);
   });
 
   // ---------------- updateEvent ----------------
 
-  it('should PUT to /api/tasks/{id} with requesterId', () => {
-    service.updateEvent(5, mockPayload, 1).subscribe();
+  it('should PUT to /api/tasks/{id}', () => {
+    service.updateEvent(5, mockPayload).subscribe();
 
-    const req = http.expectOne('/api/tasks/5?requesterId=1');
+    const req = http.expectOne('/api/tasks/5');
     expect(req.request.method).toBe('PUT');
     expect(req.request.body.task.name).toBe('Meeting');
     req.flush(mockTaskDTO);
   });
 
-  it('should PUT to /api/tasks/{id} without requesterId', () => {
-    service.updateEvent(5, mockPayload).subscribe();
-
-    const req = http.expectOne('/api/tasks/5');
-    expect(req.request.method).toBe('PUT');
-    req.flush(mockTaskDTO);
-  });
-
   // ---------------- completeEvent ----------------
 
-  it('should PUT to /api/tasks/{id}/complete with requesterId', () => {
-    service.completeEvent(3, 1).subscribe();
-
-    const req = http.expectOne('/api/tasks/3/complete?requesterId=1');
-    expect(req.request.method).toBe('PUT');
-    req.flush(mockTaskDTO);
-  });
-
-  it('should PUT to /api/tasks/{id}/complete without requesterId', () => {
+  it('should PUT to /api/tasks/{id}/complete', () => {
     service.completeEvent(3).subscribe();
 
     const req = http.expectOne('/api/tasks/3/complete');
+    expect(req.request.method).toBe('PUT');
     req.flush(mockTaskDTO);
   });
 
   // ---------------- uncompleteEvent ----------------
 
-  it('should PUT to /api/tasks/{id}/uncomplete with requesterId', () => {
-    service.uncompleteEvent(3, 1).subscribe();
-
-    const req = http.expectOne('/api/tasks/3/uncomplete?requesterId=1');
-    expect(req.request.method).toBe('PUT');
-    req.flush(mockTaskDTO);
-  });
-
-  it('should PUT to /api/tasks/{id}/uncomplete without requesterId', () => {
+  it('should PUT to /api/tasks/{id}/uncomplete', () => {
     service.uncompleteEvent(3).subscribe();
 
     const req = http.expectOne('/api/tasks/3/uncomplete');
+    expect(req.request.method).toBe('PUT');
     req.flush(mockTaskDTO);
   });
 
@@ -195,10 +149,10 @@ describe('CalendarEventService', () => {
 
   it('should default start to current date when timestamp is missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([{ ...mockTaskDTO, timestamp: undefined }]);
 
     expect(result[0].start).toBeInstanceOf(Date);
@@ -206,10 +160,10 @@ describe('CalendarEventService', () => {
 
   it('should default end to start + 1 hour when repeatUntil is missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([{ ...mockTaskDTO, repeatUntil: undefined }]);
 
     const event = result[0];
@@ -218,10 +172,10 @@ describe('CalendarEventService', () => {
 
   it('should set draggable=false for checked tasks', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([{ ...mockTaskDTO, checked: true }]);
 
     expect(result[0].draggable).toBe(false);
@@ -231,10 +185,10 @@ describe('CalendarEventService', () => {
 
   it('should set draggable=true for unchecked tasks', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([{ ...mockTaskDTO, checked: false }]);
 
     expect(result[0].draggable).toBe(true);
@@ -243,10 +197,10 @@ describe('CalendarEventService', () => {
 
   it('should map meta fields correctly', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([
         { ...mockTaskDTO, assignedUserIds: [1, 2], assignedUserNames: ['A', 'B'], points: 20 },
       ]);
@@ -258,10 +212,10 @@ describe('CalendarEventService', () => {
 
   it('should default assignedUserIds and assignedUserNames to empty arrays when missing', () => {
     let result: any[] = [];
-    service.loadFamilyEvents('f@f.com', 1).subscribe((events) => (result = events));
+    service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
     http
-      .expectOne('/api/tasks/family/f@f.com?requesterId=1')
+      .expectOne('/api/tasks/family/f@f.com')
       .flush([{ ...mockTaskDTO, assignedUserIds: undefined, assignedUserNames: undefined }]);
 
     expect(result[0].meta.assignedUserIds).toEqual([]);

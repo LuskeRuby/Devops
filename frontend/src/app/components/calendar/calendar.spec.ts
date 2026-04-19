@@ -93,7 +93,7 @@ describe('CalendarComponent', () => {
 
     component.loadEvents();
 
-    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('test@family.com', 1);
+    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('test@family.com');
   });
 
   it('should set error if no family email', () => {
@@ -191,7 +191,7 @@ describe('CalendarComponent', () => {
 
     component.toggleFromCalendar(event);
 
-    expect(calendarEventService.completeEvent).toHaveBeenCalledWith(1, 1);
+    expect(calendarEventService.completeEvent).toHaveBeenCalledWith(1);
   });
 
   it('should update event time and call service', () => {
@@ -237,7 +237,7 @@ describe('CalendarComponent', () => {
 
     component.loadEvents();
 
-    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('fallback@test.com', 1);
+    expect(calendarEventService.loadFamilyEvents).toHaveBeenCalledWith('fallback@test.com');
   });
 
   it('should return null family email if none exists', () => {
