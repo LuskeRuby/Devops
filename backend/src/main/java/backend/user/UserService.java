@@ -1,19 +1,28 @@
 package backend.user;
 
 import backend.image.Image;
-import backend.image.ImageRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
 public class UserService {
 
-    private final ImageRepository imageRepository;
+    private final backend.image.ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final backend.common.security.JwtUtil jwtUtil;
+    private final backend.family.FamilyService familyService;
+    private final backend.common.security.refreshtoken.RefreshTokenService refreshTokenService;
 
-    public UserService(ImageRepository imageRepository, UserRepository userRepository) {
+    public UserService(backend.image.ImageRepository imageRepository,
+            UserRepository userRepository,
+            backend.common.security.JwtUtil jwtUtil,
+            backend.family.FamilyService familyService,
+            backend.common.security.refreshtoken.RefreshTokenService refreshTokenService) {
         this.imageRepository = imageRepository;
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.familyService = familyService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     private UserResponseDto toDto(User user) {
@@ -24,8 +33,7 @@ public class UserService {
                 user.getRole(),
                 user.getTotalPoints(),
                 user.getFamily() != null ? user.getFamily().getEmail() : null,
-                user.getImage() != null ? user.getImage().getId() : null
-        );
+                user.getImage() != null ? user.getImage().getId() : null);
     }
 
     public List<UserResponseDto> getAllUsers() {
@@ -52,19 +60,19 @@ public class UserService {
 
     public UserResponseDto editUser(Long id, EditUserRequest updatedUserData) {
         User existingUser = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-        
-            if(updatedUserData.pincode() != null && !updatedUserData.pincode().isEmpty()) {
-                existingUser.setPincode(updatedUserData.pincode());
-            }
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
 
-            if(updatedUserData.name() != null) {
-                existingUser.setName(updatedUserData.name());
-            }
+        if (updatedUserData.pincode() != null && !updatedUserData.pincode().isEmpty()) {
+            existingUser.setPincode(updatedUserData.pincode());
+        }
 
-            if(updatedUserData.role() != null) {
-                existingUser.setRole(updatedUserData.role());
-            }
+        if (updatedUserData.name() != null) {
+            existingUser.setName(updatedUserData.name());
+        }
+
+        if (updatedUserData.role() != null) {
+            existingUser.setRole(updatedUserData.role());
+        }
 
         return toDto(userRepository.save(existingUser));
     }
@@ -87,10 +95,22 @@ public class UserService {
         return userRepository.findByFamilyEmail(familyEmail).stream().map(this::toDto).toList();
     }
 
-    public boolean validatePin(Long id, String pin) {
+    public ProfileAuthResponseDto validatePin(Long id, String pin, jakarta.servlet.http.HttpServletResponse response) {
         User user = getUserEntityById(id);
-        if (user.getPincode() == null) return false;
-        return user.getPincode().equals(pin);
+        if (user.getPincode() == null || !user.getPincode().equals(pin)) {
+            throw new backend.common.exception.InvalidCredentialsException();
+        }
+
+        java.util.Map<String, Object> claims = new java.util.HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole());
+
+        backend.common.security.refreshtoken.RefreshToken refreshToken = refreshTokenService
+                .createRefreshToken(user.getFamily(), user.getId(), user.getRole());
+        familyService.setRefreshTokenCookie(response, refreshToken.getToken());
+
+        String token = jwtUtil.generateAccessToken(user.getFamily().getEmail(), claims);
+        return new ProfileAuthResponseDto(token, user.getId(), user.getRole());
     }
 
     public void deleteUser(Long id) {

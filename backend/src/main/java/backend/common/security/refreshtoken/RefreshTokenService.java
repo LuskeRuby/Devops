@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,18 +15,25 @@ public class RefreshTokenService {
 
     /**
      * Creates a new refresh token for the given family.
-        * Multiple refresh tokens can exist for the same family so each device
-        * can maintain an independent login session.
+     * Multiple refresh tokens can exist for the same family so each device
+     * can maintain an independent login session.
      *
      * @param family the authenticated family to create a refresh token for
      * @return the newly created and persisted {@link RefreshToken}
      */
     @Transactional
     public RefreshToken createRefreshToken(Family family) {
+        return createRefreshToken(family, null, null);
+    }
+
+    @Transactional
+    public RefreshToken createRefreshToken(Family family, Long userId, String role) {
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setToken(java.util.UUID.randomUUID().toString());
         refreshToken.setFamily(family);
-        refreshToken.setExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS));
+        refreshToken.setUserId(userId);
+        refreshToken.setRole(role);
+        refreshToken.setExpiresAt(java.time.Instant.now().plus(1, java.time.temporal.ChronoUnit.DAYS));
 
         return refreshTokenRepository.save(refreshToken);
     }
@@ -55,7 +60,10 @@ public class RefreshTokenService {
         }
 
         Family family = existing.getFamily();
+        Long userId = existing.getUserId();
+        String role = existing.getRole();
+
         refreshTokenRepository.delete(existing);
-        return createRefreshToken(family);
+        return createRefreshToken(family, userId, role);
     }
 }
