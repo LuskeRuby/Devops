@@ -154,7 +154,7 @@ class UserServiceTest {
         void assignsDefaultImage_whenNoImageSet() {
             Image defaultImage = new Image();
             defaultImage.setId(1L);
-            when(imageRepository.findAll()).thenReturn(List.of(defaultImage));
+            when(imageRepository.findByName("default-avatar.png")).thenReturn(Optional.of(defaultImage));  // ← fix
             when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
             userService.createUser(testUser);
