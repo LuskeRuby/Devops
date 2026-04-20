@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  signal,
+  inject,
+  ViewEncapsulation,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { form, FormField, required, email, minLength } from '@angular/forms/signals';
@@ -14,6 +20,7 @@ interface LoginData {
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, FormField, ErrorBannerComponent],

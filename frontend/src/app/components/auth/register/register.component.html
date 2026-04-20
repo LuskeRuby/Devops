@@ -1,25 +1,28 @@
 <div class="auth-wrapper">
   <aside class="auth-aside">
-    <div class="aside-inner">
+    <div class="aside-top">
       <div class="brand">
         <svg
-          width="28"
-          height="28"
+          width="20"
+          height="20"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
-        <span>Family App</span>
+        Family Planner
       </div>
+    </div>
+
+    <div class="aside-bottom">
       <div class="aside-text">
-        <h1>A calm place to keep track of the day.</h1>
-        <p>Built for families, shaped around routine.</p>
+        <h1>Hold styr på familiens rutiner</h1>
+        <p>Med Opgaver, kalender og chat samlet i en app</p>
       </div>
     </div>
   </aside>
@@ -27,28 +30,27 @@
   <main class="auth-main">
     <div class="auth-card">
       <header class="card-header">
-        <h2>Create account</h2>
-        <p>Already have one? <a routerLink="/login">Sign in</a></p>
+        <h2>Opret konto</h2>
+        <p>Har du allerede en? <a routerLink="/login">Log ind</a></p>
       </header>
 
-      <div class="error-slot">
-        <app-error-banner
-          [style.visibility]="error() ? 'visible' : 'hidden'"
-          [message]="error() ?? ' '"
-        />
-      </div>
+      @if (error()) {
+        <div class="error-slot">
+          <app-error-banner [message]="error() ?? ' '" />
+        </div>
+      }
 
       <form novalidate>
         <div
           class="field"
           [class.field--error]="registerForm.email().touched() && registerForm.email().invalid()"
         >
-          <label for="email">Email</label>
+          <label for="email">E-mail</label>
           <input
             id="email"
             type="email"
             [formField]="registerForm.email"
-            placeholder="you@example.com"
+            placeholder="dig@eksempel.dk"
             autocomplete="email"
           />
           @if (registerForm.email().touched() && registerForm.email().invalid()) {
@@ -62,20 +64,20 @@
             registerForm.password().touched() && registerForm.password().invalid()
           "
         >
-          <label for="password">Password</label>
+          <label for="password">Adgangskode</label>
           <div class="password-wrap">
             <input
               id="password"
               [type]="showPassword() ? 'text' : 'password'"
               [formField]="registerForm.password"
-              placeholder="Min. 8 characters"
+              placeholder="Min. 8 tegn"
               autocomplete="new-password"
             />
             <button
               type="button"
               class="toggle-password"
               (click)="togglePasswordVisibility()"
-              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.aria-label]="showPassword() ? 'Skjul adgangskode' : 'Vis adgangskode'"
             >
               @if (!showPassword()) {
                 <svg
@@ -116,7 +118,7 @@
           }
         </div>
 
-        <button type="button" class="btn-submit" (click)="submit()">Create account</button>
+        <button type="button" class="btn-submit" (click)="submit()">Opret konto</button>
       </form>
     </div>
   </main>
