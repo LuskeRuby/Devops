@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
+import { LucideAngularModule, LucideIconData } from 'lucide-angular';
 
 @Component({
   selector: 'app-task-image-selector',
   standalone: true,
-  imports: [MatDialogModule],
-  template: './task-image-selector.html',
+  imports: [MatDialogModule, LucideAngularModule],
+  templateUrl: './task-image-selector.html',
   styleUrl: './task-image-selector.scss',
 })
 export class TaskImageSelectorComponent implements OnInit {
@@ -16,6 +17,7 @@ export class TaskImageSelectorComponent implements OnInit {
   imageIds = signal<number[]>([]);
   loading = signal<boolean>(true);
   selectedId = signal<number | null>(null);
+  CloseIcon: string | LucideIconData | undefined;
 
   ngOnInit(): void {
     this.userService.getImagesByType('TASK').subscribe({
