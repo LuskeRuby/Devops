@@ -68,8 +68,6 @@ export class CalendarEventDialogComponent implements OnInit {
   imageId: number | null = null;
   isReadOnly = false;
 
-  constructor() {}
-
   ngOnInit(): void {
     this.initFromData();
     this.cd.detectChanges();

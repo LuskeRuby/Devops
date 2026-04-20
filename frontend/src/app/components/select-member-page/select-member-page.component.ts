@@ -44,7 +44,7 @@ export class SelectMemberPageComponent implements OnInit {
           this.router.navigate(['/create-member-page']);
         }
       },
-      error: (error: any) => {
+      error: (error: Error) => {
         console.error('CRITICAL: Failed to load family members from backend:', error);
       },
     });

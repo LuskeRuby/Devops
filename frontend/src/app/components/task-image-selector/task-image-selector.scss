@@ -54,13 +54,19 @@
       padding: 0.5rem;
 
       .image-item {
+        /* Reset button defaults */
+        background: #f8f9fa;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        
+        /* Your design */
         aspect-ratio: 1;
         border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
         border: 3px solid transparent;
         overflow: hidden;
-        background-color: #f8f9fa;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -69,6 +75,7 @@
           width: 80%;
           height: 80%;
           object-fit: contain;
+          pointer-events: none; // Ensures the button gets the click, not the image
         }
 
         &:hover {
@@ -82,6 +89,7 @@
           transform: scale(0.95);
         }
 
+        /* Accessibility focus state */
         &:focus-visible {
           outline: none;
           box-shadow:

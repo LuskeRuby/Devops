@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 
@@ -17,10 +17,9 @@ export interface TaskDescriptionData {
   styleUrls: ['./task-description-dialog.scss']
 })
 export class TaskDescriptionDialogComponent {
-  constructor(
-    public dialogRef: MatDialogRef<TaskDescriptionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: TaskDescriptionData
-  ) {}
+  
+  public dialogRef = inject(MatDialogRef<TaskDescriptionDialogComponent>);
+  public data = inject<TaskDescriptionData>(MAT_DIALOG_DATA);
 
   close(): void {
     this.dialogRef.close();

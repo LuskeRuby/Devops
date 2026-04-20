@@ -1,5 +1,5 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -100,7 +100,6 @@ export class CalendarComponent implements OnInit {
 
   loadEvents(): void {
     const familyEmail = this.getFamilyEmail();
-    const userId = this.currentUser?.id;
 
     if (!familyEmail) {
       this.events.set([]);

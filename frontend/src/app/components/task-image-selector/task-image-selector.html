@@ -1,7 +1,7 @@
 <div class="dialog-container">
   <div class="dialog-header">
     <h2>Vælg et billede</h2>
-    <button class="close-btn" (click)="selectImage(null)">
+    <button class="close-btn" type="button" (click)="selectImage(null)">
       <lucide-icon [name]="CloseIcon"></lucide-icon>
     </button>
   </div>
@@ -14,13 +14,15 @@
     } @else {
       <div class="image-grid">
         @for (id of imageIds(); track id) {
-          <div 
+          <button 
+            type="button"
             class="image-item" 
             [class.selected]="id === selectedId()"
             (click)="selectImage(id)"
+            aria-label="Vælg billede"
           >
             <img [src]="getImageUrl(id)" alt="Task Image" />
-          </div>
+          </button>
         } @empty {
           <div class="loader">
             <p>Ingen billeder fundet</p>
