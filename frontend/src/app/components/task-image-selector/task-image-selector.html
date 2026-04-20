@@ -14,9 +14,9 @@
     } @else {
       <div class="image-grid">
         @for (id of imageIds(); track id) {
-          <button 
+          <button
             type="button"
-            class="image-item" 
+            class="image-item"
             [class.selected]="id === selectedId()"
             (click)="selectImage(id)"
             aria-label="Vælg billede"

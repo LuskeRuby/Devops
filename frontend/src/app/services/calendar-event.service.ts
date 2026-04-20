@@ -34,9 +34,7 @@ export class CalendarEventService {
   }
 
   /** Load tasks assigned to a single user (fallback if no familyEmail) */
-  loadUserEvents(
-    userId: number,
-  ): Observable<CalendarEvent<CalendarTaskMeta>[]> {
+  loadUserEvents(userId: number): Observable<CalendarEvent<CalendarTaskMeta>[]> {
     const url = `${this.usersUrl}/${userId}/tasks`;
     return this.http
       .get<TaskDTO[]>(url)
@@ -64,10 +62,7 @@ export class CalendarEventService {
   }
 
   /** Update an existing calendar event (persisted TaskService) */
-  updateEvent(
-    taskId: number,
-    payload: CalendarQuickCreatePayload,
-  ): Observable<TaskDTO> {
+  updateEvent(taskId: number, payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
     const body = {
       task: {
         name: payload.title,
@@ -141,7 +136,7 @@ export class CalendarEventService {
       taskId: task.id,
       name: task.name,
       checked: task.checked,
-      description: task.description
+      description: task.description,
     });
 
     return event;

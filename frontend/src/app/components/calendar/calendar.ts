@@ -1,5 +1,14 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import {
+  Component,
+  LOCALE_ID,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -113,14 +122,16 @@ export class CalendarComponent implements OnInit {
     request$.subscribe({
       next: (events) => {
         console.log(`Successfully synced ${events.length} calendar events.`);
-        this.events.set(events.map((event) => ({
-          ...event,
-          draggable: this.isParent && !event.meta?.checked,
-          resizable: {
-            beforeStart: this.isParent && !event.meta?.checked,
-            afterEnd: this.isParent && !event.meta?.checked,
-          },
-        })));
+        this.events.set(
+          events.map((event) => ({
+            ...event,
+            draggable: this.isParent && !event.meta?.checked,
+            resizable: {
+              beforeStart: this.isParent && !event.meta?.checked,
+              afterEnd: this.isParent && !event.meta?.checked,
+            },
+          })),
+        );
         this.loadError = null;
         this.refresh.next();
       },
@@ -163,7 +174,6 @@ export class CalendarComponent implements OnInit {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
 
-
     if (event.meta?.checked) {
       return;
     }
@@ -184,10 +194,8 @@ export class CalendarComponent implements OnInit {
     if (!taskId) return;
 
     // optimistic UI update
-    this.events.update(current =>
-      current.map((e) =>
-        e.id === event.id ? { ...e, start: newStart, end: newEnd ?? e.end } : e
-      )
+    this.events.update((current) =>
+      current.map((e) => (e.id === event.id ? { ...e, start: newStart, end: newEnd ?? e.end } : e)),
     );
     this.refresh.next();
 
@@ -260,8 +268,8 @@ export class CalendarComponent implements OnInit {
         title: event.title,
         description: event.meta?.description ?? '',
         points: event.meta?.points ?? 0,
-        assignedUserNames: event.meta?.assignedUserNames ?? []
-      }
+        assignedUserNames: event.meta?.assignedUserNames ?? [],
+      },
     });
   }
 
@@ -326,12 +334,15 @@ export class CalendarComponent implements OnInit {
     // Optimistic UI update natively mutating the signal state
     const originalState = !!event.meta?.checked;
 
-    this.events.update(current =>
-      current.map(e =>
+    this.events.update((current) =>
+      current.map((e) =>
         e.id === taskId
-          ? { ...e, meta: e.meta ? { ...e.meta, checked: !originalState } : undefined } as CalendarEvent<CalendarTaskMeta>
-          : e
-      )
+          ? ({
+              ...e,
+              meta: e.meta ? { ...e.meta, checked: !originalState } : undefined,
+            } as CalendarEvent<CalendarTaskMeta>)
+          : e,
+      ),
     );
 
     const action$ = !originalState
@@ -369,7 +380,7 @@ export class CalendarComponent implements OnInit {
   getUserInitials(names: string[]): string[] {
     if (!names || names.length === 0) return [];
 
-    return names.map(name => {
+    return names.map((name) => {
       const parts = name.trim().split(/\s+/);
       if (parts.length >= 2) {
         // Multi-word: First letter of first two parts

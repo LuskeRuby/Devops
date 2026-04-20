@@ -24,7 +24,7 @@
         </div>
 
         <!-- TEXT CONTENT SECTION -->
-        <div class="card-info" style="margin-left: 24px;">
+        <div class="card-info" style="margin-left: 24px">
           <div class="card-top">
             <div class="card-title">{{ calEvent.title }}</div>
             @if (calEvent.meta?.points > 0) {
@@ -37,14 +37,14 @@
               {{ calEvent.start | date: 'HH:mm' }} -
               {{ calEvent.end || calEvent.start | date: 'HH:mm' }}
             </div>
-            
+
             @if (calEvent.meta?.assignedUserNames?.length) {
-               <div class="card-divider">|</div>
-               <div class="card-assignees">
-                 @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
-                   <div class="initial-circle">{{ init }}</div>
-                 }
-               </div>
+              <div class="card-divider">|</div>
+              <div class="card-assignees">
+                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                  <div class="initial-circle">{{ init }}</div>
+                }
+              </div>
             }
           </div>
         </div>
@@ -98,49 +98,69 @@
     <!-- KIDS DASHBOARD VIEW -->
     <div class="kids-dashboard">
       @if (currentDayEvents.length === 0) {
-         <div class="kids-empty-state">
-           <h3>Wuhu! Ingen opgaver lige nu. 🎉</h3>
-           <p>Tid til at slappe af og lege!</p>
-         </div>
+        <div class="kids-empty-state">
+          <h3>Wuhu! Ingen opgaver lige nu. 🎉</h3>
+          <p>Tid til at slappe af og lege!</p>
+        </div>
       } @else {
-         <div class="kids-task-list">
-           @for (calEvent of currentDayEvents; track calEvent.id) {
-             <div class="kid-task-card" [class.done]="calEvent.meta?.checked">
-                
-                @if (calEvent.meta?.imageId) {
-                  <div class="kid-task-image-wrapper">
-                    <img [src]="getImageUrl(calEvent.meta?.imageId)" [alt]="calEvent.title" class="kid-task-image" />
-                  </div>
-                }
-
-                <div class="kid-task-content" (click)="!calEvent.meta?.checked && toggleFromCalendar(calEvent)" tabindex="0" role="button">
-                  <h3 class="kid-task-title">{{ calEvent.title }}</h3>
-                  <div class="kid-task-info-row">
-                    <div class="kid-task-time">⏰ {{ calEvent.start | date:'shortTime' }} - {{ calEvent.end || calEvent.start | date:'shortTime' }}</div>
-                    <button class="kid-info-btn" (click)="openTaskDescription(calEvent); $event.stopPropagation()" aria-label="Læs beskrivelse">
-                      <span>Læs mere</span> 📖
-                    </button>
-                  </div>
-                  
-                  @if ((calEvent.meta?.points ?? 0) > 0) {
-                    <div class="kid-task-points">💎 +{{ calEvent.meta?.points }} Point</div>
-                  }
+        <div class="kids-task-list">
+          @for (calEvent of currentDayEvents; track calEvent.id) {
+            <div class="kid-task-card" [class.done]="calEvent.meta?.checked">
+              @if (calEvent.meta?.imageId) {
+                <div class="kid-task-image-wrapper">
+                  <img
+                    [src]="getImageUrl(calEvent.meta?.imageId)"
+                    [alt]="calEvent.title"
+                    class="kid-task-image"
+                  />
                 </div>
+              }
 
-                <div class="kid-task-action">
-                  <button class="kid-action-btn" [class.btn-done]="calEvent.meta?.checked" (click)="toggleFromCalendar(calEvent); $event.stopPropagation()" aria-label="Toggle task status">
-                    @if (calEvent.meta?.checked) {
-                      <span class="emoji">⭐</span> 
-                      <span class="text">Udført!</span>
-                    } @else {
-                      <span class="emoji">🚀</span> 
-                      <span class="text">Gør det nu!</span>
-                    }
+              <div
+                class="kid-task-content"
+                (click)="!calEvent.meta?.checked && toggleFromCalendar(calEvent)"
+                tabindex="0"
+                role="button"
+              >
+                <h3 class="kid-task-title">{{ calEvent.title }}</h3>
+                <div class="kid-task-info-row">
+                  <div class="kid-task-time">
+                    ⏰ {{ calEvent.start | date: 'shortTime' }} -
+                    {{ calEvent.end || calEvent.start | date: 'shortTime' }}
+                  </div>
+                  <button
+                    class="kid-info-btn"
+                    (click)="openTaskDescription(calEvent); $event.stopPropagation()"
+                    aria-label="Læs beskrivelse"
+                  >
+                    <span>Læs mere</span> 📖
                   </button>
                 </div>
-             </div>
-           }
-         </div>
+
+                @if ((calEvent.meta?.points ?? 0) > 0) {
+                  <div class="kid-task-points">💎 +{{ calEvent.meta?.points }} Point</div>
+                }
+              </div>
+
+              <div class="kid-task-action">
+                <button
+                  class="kid-action-btn"
+                  [class.btn-done]="calEvent.meta?.checked"
+                  (click)="toggleFromCalendar(calEvent); $event.stopPropagation()"
+                  aria-label="Toggle task status"
+                >
+                  @if (calEvent.meta?.checked) {
+                    <span class="emoji">⭐</span>
+                    <span class="text">Udført!</span>
+                  } @else {
+                    <span class="emoji">🚀</span>
+                    <span class="text">Gør det nu!</span>
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   }

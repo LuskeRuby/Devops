@@ -151,9 +151,7 @@ describe('CalendarEventService', () => {
     let result: any[] = [];
     service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
-    http
-      .expectOne('/api/tasks/family/f@f.com')
-      .flush([{ ...mockTaskDTO, timestamp: undefined }]);
+    http.expectOne('/api/tasks/family/f@f.com').flush([{ ...mockTaskDTO, timestamp: undefined }]);
 
     expect(result[0].start).toBeInstanceOf(Date);
   });
@@ -162,9 +160,7 @@ describe('CalendarEventService', () => {
     let result: any[] = [];
     service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
-    http
-      .expectOne('/api/tasks/family/f@f.com')
-      .flush([{ ...mockTaskDTO, repeatUntil: undefined }]);
+    http.expectOne('/api/tasks/family/f@f.com').flush([{ ...mockTaskDTO, repeatUntil: undefined }]);
 
     const event = result[0];
     expect(event.end.getTime() - event.start.getTime()).toBe(60 * 60 * 1000);
@@ -174,9 +170,7 @@ describe('CalendarEventService', () => {
     let result: any[] = [];
     service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
-    http
-      .expectOne('/api/tasks/family/f@f.com')
-      .flush([{ ...mockTaskDTO, checked: true }]);
+    http.expectOne('/api/tasks/family/f@f.com').flush([{ ...mockTaskDTO, checked: true }]);
 
     expect(result[0].draggable).toBe(false);
     expect(result[0].resizable.beforeStart).toBe(false);
@@ -187,9 +181,7 @@ describe('CalendarEventService', () => {
     let result: any[] = [];
     service.loadFamilyEvents('f@f.com').subscribe((events) => (result = events));
 
-    http
-      .expectOne('/api/tasks/family/f@f.com')
-      .flush([{ ...mockTaskDTO, checked: false }]);
+    http.expectOne('/api/tasks/family/f@f.com').flush([{ ...mockTaskDTO, checked: false }]);
 
     expect(result[0].draggable).toBe(true);
     expect(result[0].resizable.beforeStart).toBe(true);

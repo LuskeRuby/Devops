@@ -36,7 +36,8 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   background: #e9f2ff;
   /* Restored the preferred soft blue */
-  background-image: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.4) 0px, transparent 50%),
+  background-image:
+    radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.4) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(255, 255, 255, 0.2) 0px, transparent 50%);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
@@ -48,7 +49,9 @@
     z-index: 9999 !important;
     transform: scale(1.03);
 
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 10px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      0 10px 10px rgba(0, 0, 0, 0.05);
     background: #e0edff !important;
     overflow: visible !important;
     height: auto !important;
@@ -216,7 +219,6 @@
   }
 }
 
-
 .view-week .event-card-v2 {
   border-radius: 8px;
 
@@ -268,7 +270,6 @@
   }
 }
 
-
 .kids-dashboard {
   padding: 1rem 0.5rem;
   min-height: 100%;
@@ -305,7 +306,9 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
   border-radius: 30px;
   padding: 1.75rem 2rem;
-  box-shadow: 0 10px 30px rgba(79, 119, 255, 0.08), 0 4px 8px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 10px 30px rgba(79, 119, 255, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.02);
   border: 3px solid rgba(139, 172, 255, 0.15);
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: visible;
@@ -458,7 +461,9 @@
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     min-width: 150px;
-    box-shadow: 0 6px 15px rgba(255, 193, 7, 0.3), inset 0 -4px 0 rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0 6px 15px rgba(255, 193, 7, 0.3),
+      inset 0 -4px 0 rgba(0, 0, 0, 0.05);
 
     @media (hover: hover) {
       &:hover {

@@ -14,10 +14,9 @@ export interface TaskDescriptionData {
   standalone: true,
   imports: [CommonModule, MatDialogModule],
   templateUrl: './task-description-dialog.html',
-  styleUrls: ['./task-description-dialog.scss']
+  styleUrls: ['./task-description-dialog.scss'],
 })
 export class TaskDescriptionDialogComponent {
-  
   public dialogRef = inject(MatDialogRef<TaskDescriptionDialogComponent>);
   public data = inject<TaskDescriptionData>(MAT_DIALOG_DATA);
 

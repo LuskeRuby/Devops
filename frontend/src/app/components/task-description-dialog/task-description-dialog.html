@@ -6,9 +6,11 @@
 
   <div class="dialog-content">
     <div class="scroll-box">
-      <p class="description-text">{{ data.description || 'Ingen yderligere information... men du klarer den fantastisk! 🚀' }}</p>
+      <p class="description-text">
+        {{ data.description || 'Ingen yderligere information... men du klarer den fantastisk! 🚀' }}
+      </p>
     </div>
-    
+
     @if (data.points > 0) {
       <div class="bonus-badge">
         <span class="emoji">💎</span>

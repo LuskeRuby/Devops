@@ -9,7 +9,7 @@
       class="message-wrapper"
       [ngClass]="{
         mine: message.userId === selectedUserId,
-        other: message.userId !== selectedUserId
+        other: message.userId !== selectedUserId,
       }"
     >
       @if (message.userId !== selectedUserId) {
@@ -27,7 +27,11 @@
 </div>
 
 <div class="chat-input">
-  <input [(ngModel)]="messageText" placeholder="Skriv en hyggelig besked her... 😊" (keyup.enter)="send()" />
+  <input
+    [(ngModel)]="messageText"
+    placeholder="Skriv en hyggelig besked her... 😊"
+    (keyup.enter)="send()"
+  />
   <button (click)="send()" [disabled]="!isConnected || !messageText.trim()">
     <span>Send</span>
     <span class="icon">✈️</span>
