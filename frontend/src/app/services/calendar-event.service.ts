@@ -14,6 +14,7 @@ export interface CalendarQuickCreatePayload {
   userIds: number[];
   isSeparateTasks?: boolean;
   points: number;
+  imageId?: number;
   color: string;
 }
 
@@ -25,30 +26,23 @@ export class CalendarEventService {
   private usersUrl = '/api/users';
 
   /** Load all tasks for a family (shared family calendar view) */
-  loadFamilyEvents(familyEmail: string, requesterId?: number) {
-    const url = requesterId
-      ? `${this.tasksUrl}/family/${familyEmail}?requesterId=${requesterId}`
-      : `${this.tasksUrl}/family/${familyEmail}`;
+  loadFamilyEvents(familyEmail: string) {
+    const url = `${this.tasksUrl}/family/${familyEmail}`;
     return this.http
       .get<TaskDTO[]>(url)
       .pipe(map((tasks) => tasks.map((task) => this.toCalendarEvent(task))));
   }
 
   /** Load tasks assigned to a single user (fallback if no familyEmail) */
-  loadUserEvents(
-    userId: number,
-    requesterId?: number,
-  ): Observable<CalendarEvent<CalendarTaskMeta>[]> {
-    const url = requesterId
-      ? `${this.usersUrl}/${userId}/tasks?requesterId=${requesterId}`
-      : `${this.usersUrl}/${userId}/tasks`;
+  loadUserEvents(userId: number): Observable<CalendarEvent<CalendarTaskMeta>[]> {
+    const url = `${this.usersUrl}/${userId}/tasks`;
     return this.http
       .get<TaskDTO[]>(url)
       .pipe(map((tasks) => tasks.map((t) => this.toCalendarEvent(t))));
   }
 
   /** Create a new calendar event (persisted as a TaskService) */
-  createEvent(payload: CalendarQuickCreatePayload, requesterId?: number): Observable<TaskDTO> {
+  createEvent(payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
     const body = {
       task: {
         name: payload.title,
@@ -56,6 +50,7 @@ export class CalendarEventService {
         timestamp: this.toLocalDateTime(payload.start),
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
+        imageId: payload.imageId,
         checked: false,
         repeatEvery: null,
       },
@@ -63,16 +58,11 @@ export class CalendarEventService {
       separateTasks: payload.isSeparateTasks,
     };
 
-    const url = requesterId ? `${this.tasksUrl}?requesterId=${requesterId}` : this.tasksUrl;
-    return this.http.post<TaskDTO>(url, body);
+    return this.http.post<TaskDTO>(this.tasksUrl, body);
   }
 
   /** Update an existing calendar event (persisted TaskService) */
-  updateEvent(
-    taskId: number,
-    payload: CalendarQuickCreatePayload,
-    requesterId?: number,
-  ): Observable<TaskDTO> {
+  updateEvent(taskId: number, payload: CalendarQuickCreatePayload): Observable<TaskDTO> {
     const body = {
       task: {
         name: payload.title,
@@ -80,37 +70,30 @@ export class CalendarEventService {
         timestamp: this.toLocalDateTime(payload.start),
         repeatUntil: this.toLocalDateTime(payload.end),
         points: payload.points,
+        imageId: payload.imageId,
         checked: undefined,
         repeatEvery: null,
       },
       userIds: payload.userIds,
     };
 
-    const url = requesterId
-      ? `${this.tasksUrl}/${taskId}?requesterId=${requesterId}`
-      : `${this.tasksUrl}/${taskId}`;
+    const url = `${this.tasksUrl}/${taskId}`;
     return this.http.put<TaskDTO>(url, body);
   }
 
-  completeEvent(id: number, requesterId?: number): Observable<TaskDTO> {
-    const url = requesterId
-      ? `${this.tasksUrl}/${id}/complete?requesterId=${requesterId}`
-      : `${this.tasksUrl}/${id}/complete`;
+  completeEvent(id: number): Observable<TaskDTO> {
+    const url = `${this.tasksUrl}/${id}/complete`;
     return this.http.put<TaskDTO>(url, {});
   }
 
-  uncompleteEvent(id: number, requesterId?: number): Observable<TaskDTO> {
-    const url = requesterId
-      ? `${this.tasksUrl}/${id}/uncomplete?requesterId=${requesterId}`
-      : `${this.tasksUrl}/${id}/uncomplete`;
+  uncompleteEvent(id: number): Observable<TaskDTO> {
+    const url = `${this.tasksUrl}/${id}/uncomplete`;
     return this.http.put<TaskDTO>(url, {});
   }
 
   /** Delete a calendar event by its task ID */
-  deleteEvent(id: number, requesterId?: number): Observable<void> {
-    const url = requesterId
-      ? `${this.tasksUrl}/${id}?requesterId=${requesterId}`
-      : `${this.tasksUrl}/${id}`;
+  deleteEvent(id: number): Observable<void> {
+    const url = `${this.tasksUrl}/${id}`;
     return this.http.delete<void>(url, {});
   }
 
@@ -127,7 +110,7 @@ export class CalendarEventService {
       secondary: '#dbeafe ', // gray for done
     };
 
-    return {
+    const event = {
       id: task.id,
       title: task.name,
       start,
@@ -144,9 +127,19 @@ export class CalendarEventService {
         assignedUserIds: task.assignedUserIds ?? [],
         assignedUserNames: task.assignedUserNames ?? [],
         points: task.points ?? 0,
+        imageId: task.imageId,
       },
       color,
     };
+
+    console.log('[CalendarEventService] Mapped task to Event:', {
+      taskId: task.id,
+      name: task.name,
+      checked: task.checked,
+      description: task.description,
+    });
+
+    return event;
   }
 
   private toLocalDateTime(date: Date): string {

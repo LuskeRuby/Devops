@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { CalendarEventDialogComponent } from './calendar-event-dialog';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { UserService } from '../../services/user.service';
+import { vi } from 'vitest';
 
 describe('CalendarEventDialogComponent', () => {
   let component: CalendarEventDialogComponent;
@@ -24,17 +26,23 @@ describe('CalendarEventDialogComponent', () => {
       close: vi.fn(),
     };
 
+    const userServiceMock = {
+      getImageUrl: vi.fn().mockReturnValue('mock-url'),
+    };
+
     await TestBed.configureTestingModule({
       imports: [CalendarEventDialogComponent],
       providers: [
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: { ...mockData } },
+        { provide: UserService, useValue: userServiceMock },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CalendarEventDialogComponent);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   // ---------------- INIT ----------------

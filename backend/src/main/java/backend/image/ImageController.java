@@ -25,6 +25,16 @@ public class ImageController {
         return ResponseEntity.ok(imageRepository.save(image).getId());
     }
 
+    @GetMapping("/default")
+    @Transactional(readOnly = true)
+    public ResponseEntity<byte[]> getDefaultImage() {
+        Image image = imageRepository.findByName("default-avatar.png")
+                .orElseThrow(() -> new RuntimeException("Default avatar not found"));
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(image.getImage());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> get(@PathVariable Long id) {
         Image image = imageRepository.findById(id)
@@ -39,6 +49,16 @@ public class ImageController {
     @Transactional(readOnly = true)
     public ResponseEntity<List<Long>> getAvatarsByCategory(@PathVariable String category) {
         List<Long> ids = imageRepository.findByCategory(category)
+                .stream()
+                .map(Image::getId)
+                .toList();
+        return ResponseEntity.ok(ids);
+    }
+
+    @GetMapping("/type/{type}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Long>> getImagesByType(@PathVariable String type) {
+        List<Long> ids = imageRepository.findByType(type)
                 .stream()
                 .map(Image::getId)
                 .toList();

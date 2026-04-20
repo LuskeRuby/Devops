@@ -151,11 +151,11 @@ describe('UserService', () => {
     });
 
     it('returns default avatar when imageId is undefined', () => {
-      expect(service.getImageUrl(undefined)).toBe('assets/default-avatar.png');
+      expect(service.getImageUrl(undefined)).toBe('/api/images/default');
     });
 
     it('returns default avatar when imageId is 0', () => {
-      expect(service.getImageUrl(0)).toBe('assets/default-avatar.png');
+      expect(service.getImageUrl(0)).toBe('/api/images/default');
     });
   });
 

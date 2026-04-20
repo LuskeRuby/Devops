@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
-    
+
     private final TaskService taskService;
 
     public TaskController(TaskService taskService) {
@@ -26,7 +25,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public TaskDto createTask(@RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto createTask(@RequestBody CreateTaskRequest request) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -48,7 +47,7 @@ public class TaskController {
                 task.setTimestamp(payload.getTimestamp());
                 task.setRepeatEvery(payload.getRepeatEvery());
                 task.setRepeatUntil(payload.getRepeatUntil());
-                lastTask = taskService.createTask(task, List.of(userId), requesterId);
+                lastTask = taskService.createTask(task, List.of(userId), payload.getImageId());
             }
             return convertToDto(lastTask);
         }
@@ -62,26 +61,26 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return convertToDto(taskService.createTask(task, request.getUserIds(), requesterId));
+        return convertToDto(taskService.createTask(task, request.getUserIds(), payload.getImageId()));
     }
 
     @GetMapping("/user/{userId}")
-    public List<Task> getTasksForUser(@PathVariable Long userId, @RequestParam(required = false) Long requesterId) {
-        return taskService.getTasksForUser(userId, requesterId);
+    public List<Task> getTasksForUser(@PathVariable Long userId) {
+        return taskService.getTasksForUser(userId);
     }
 
     @PutMapping("/{taskId}/complete")
-    public TaskDto completeTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
-        return convertToDto(taskService.markAsCompleted(taskId, requesterId));
+    public TaskDto completeTask(@PathVariable Long taskId) {
+        return convertToDto(taskService.markAsCompleted(taskId));
     }
 
     @PutMapping("/{taskId}/uncomplete")
-    public TaskDto uncompleteTask(@PathVariable Long taskId, @RequestParam(required = false) Long requesterId) {
-        return convertToDto(taskService.unmarkAsCompleted(taskId, requesterId));
+    public TaskDto uncompleteTask(@PathVariable Long taskId) {
+        return convertToDto(taskService.unmarkAsCompleted(taskId));
     }
 
     @PutMapping("/{taskId}")
-    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request, @RequestParam(required = false) Long requesterId) {
+    public TaskDto updateTask(@PathVariable Long taskId, @RequestBody CreateTaskRequest request) {
         CreateTaskRequest.TaskPayload payload = request.resolveTaskPayload();
 
         if (payload == null || payload.getName() == null || payload.getName().isBlank()) {
@@ -101,20 +100,42 @@ public class TaskController {
         task.setRepeatEvery(payload.getRepeatEvery());
         task.setRepeatUntil(payload.getRepeatUntil());
 
-        return convertToDto(taskService.updateTask(taskId, task, request.getUserIds(), requesterId));
+        if (Boolean.TRUE.equals(request.getSeparateTasks()) && request.getUserIds().size() > 1) {
+
+            Long firstUserId = request.getUserIds().get(0);
+            Task updatedFirst = taskService.updateTask(taskId, task, List.of(firstUserId),
+                    payload.getImageId());
+
+            for (int i = 1; i < request.getUserIds().size(); i++) {
+                Long nextUserId = request.getUserIds().get(i);
+                Task newTask = new Task();
+                newTask.setName(task.getName());
+                newTask.setDescription(task.getDescription());
+                newTask.setPoints(task.getPoints());
+                newTask.setChecked(false);
+                newTask.setTimestamp(task.getTimestamp());
+                newTask.setRepeatEvery(task.getRepeatEvery());
+                newTask.setRepeatUntil(task.getRepeatUntil());
+                taskService.createTask(newTask, List.of(nextUserId), payload.getImageId());
+            }
+            return convertToDto(updatedFirst);
+        }
+
+        return convertToDto(
+                taskService.updateTask(taskId, task, request.getUserIds(), payload.getImageId()));
     }
 
     @GetMapping("/family/{familyEmail}")
-    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail, @RequestParam(required = false) Long requesterId) {
-        return taskService.getTasksForFamily(familyEmail, requesterId).stream()
+    public List<TaskDto> getTasksForFamily(@PathVariable String familyEmail) {
+        return taskService.getTasksForFamily(familyEmail).stream()
                 .map(TaskController::convertToDto)
                 .toList();
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTask(@PathVariable Long id, @RequestParam(required = false) Long requesterId) {
-        taskService.deleteTask(id, requesterId);
+    public void deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
     }
 
     @GetMapping("/{id}")
@@ -137,7 +158,7 @@ public class TaskController {
         dto.setTimestamp(task.getTimestamp());
         dto.setRepeatEvery(task.getRepeatEvery());
         dto.setRepeatUntil(task.getRepeatUntil());
-        
+
         if (task.getImage() != null) {
             dto.setImageId(task.getImage().getId());
         }
@@ -146,5 +167,5 @@ public class TaskController {
             dto.setAssignedUserNames(task.getUsers().stream().map(user -> user.getName()).toList());
         }
         return dto;
-    }   
+    }
 }

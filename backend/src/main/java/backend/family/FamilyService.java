@@ -95,7 +95,16 @@ public class FamilyService {
      */
     public FamilyAuthResponseDto refresh(String refreshToken, HttpServletResponse response) {
         RefreshToken rotated = refreshTokenService.rotateRefreshToken(refreshToken);
-        String accessToken = jwtUtil.generateAccessToken(rotated.getFamily().getEmail());
+        
+        java.util.Map<String, Object> claims = new java.util.HashMap<>();
+        if (rotated.getUserId() != null) {
+            claims.put("userId", rotated.getUserId());
+        }
+        if (rotated.getRole() != null) {
+            claims.put("role", rotated.getRole());
+        }
+
+        String accessToken = jwtUtil.generateAccessToken(rotated.getFamily().getEmail(), claims);
         setRefreshTokenCookie(response, rotated.getToken());
         return new FamilyAuthResponseDto(accessToken, rotated.getFamily().getEmail());
     }
@@ -110,7 +119,7 @@ public class FamilyService {
      * @param response the HTTP response to attach the cookie to
      * @param token    the raw refresh token string to store in the cookie
      */
-    private void setRefreshTokenCookie(HttpServletResponse response, String token) {
+    public void setRefreshTokenCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(refreshTokenCookieSecure)

@@ -170,7 +170,7 @@ class FamilyServiceTest {
             rotatedToken.setFamily(testFamily);
 
             when(refreshTokenService.rotateRefreshToken("old-refresh-token")).thenReturn(rotatedToken);
-            when(jwtUtil.generateAccessToken("test@family.com")).thenReturn("new-jwt-token");
+            when(jwtUtil.generateAccessToken(eq("test@family.com"), any())).thenReturn("new-jwt-token");
 
             FamilyAuthResponseDto result = familyService.refresh("old-refresh-token", httpResponse);
 
@@ -186,7 +186,7 @@ class FamilyServiceTest {
             rotatedToken.setFamily(testFamily);
 
             when(refreshTokenService.rotateRefreshToken("old-token")).thenReturn(rotatedToken);
-            when(jwtUtil.generateAccessToken("test@family.com")).thenReturn("jwt");
+            when(jwtUtil.generateAccessToken(eq("test@family.com"), any())).thenReturn("jwt");
 
             familyService.refresh("old-token", httpResponse);
 

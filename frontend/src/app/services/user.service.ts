@@ -18,6 +18,12 @@ export interface User {
   familyEmail?: string;
 }
 
+export interface ProfileAuthResponse {
+  accessToken: string;
+  userId: number;
+  role: string;
+}
+
 const STORAGE_KEY = 'currentUser';
 
 @Injectable({ providedIn: 'root' })
@@ -66,12 +72,12 @@ export class UserService {
     return this.http.get<TaskDTO[]>(`${this.apiUrl}/${id}/tasks`);
   }
 
-  validatePin(id: number, pin: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.apiUrl}/${id}/validate-pin`, { pin });
+  validatePin(id: number, pin: string): Observable<ProfileAuthResponse> {
+    return this.http.post<ProfileAuthResponse>(`${this.apiUrl}/${id}/validate-pin`, { pin });
   }
 
   getImageUrl(imageId: number | undefined): string {
-    if (!imageId) return 'assets/default-avatar.png';
+    if (!imageId) return '/api/images/default';
     return `/api/images/${imageId}`;
   }
 
@@ -87,5 +93,9 @@ export class UserService {
 
   getAvatarsByCategory(category: string): Observable<number[]> {
     return this.http.get<number[]>(`/api/images/avatars/${category}`);
+  }
+
+  getImagesByType(type: string): Observable<number[]> {
+    return this.http.get<number[]>(`/api/images/type/${type}`);
   }
 }

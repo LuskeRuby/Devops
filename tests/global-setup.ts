@@ -24,12 +24,16 @@ async function globalSetup() {
   if (!loginRes.ok()) {
     throw new Error(`Failed to login as test family: ${loginRes.status()} ${await loginRes.text()}`);
   }
+  const { accessToken } = await loginRes.json();
 
   // Only create the test user if the family has no members yet
-  const usersRes = await api.get('/api/users/family/e2e@playwright.test');
+  const usersRes = await api.get('/api/users/family/e2e@playwright.test', {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
   const users = usersRes.ok() ? await usersRes.json() : [];
   if (users.length === 0) {
-    await api.post('/api/users', {
+    const createRes = await api.post('/api/users', {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
       data: {
         name: 'E2E Parent',
         role: 'PARENT',
@@ -37,6 +41,9 @@ async function globalSetup() {
         family: { email: 'e2e@playwright.test' },
       },
     });
+    if (!createRes.ok()) {
+       throw new Error(`Failed to create test user: ${createRes.status()} ${await createRes.text()}`);
+    }
   }
 
   await api.dispose();

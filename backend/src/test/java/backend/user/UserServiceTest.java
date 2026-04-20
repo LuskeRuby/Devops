@@ -28,6 +28,15 @@ class UserServiceTest {
     @Mock
     private ImageRepository imageRepository;
 
+    @Mock
+    private backend.common.security.JwtUtil jwtUtil;
+
+    @Mock
+    private backend.family.FamilyService familyService;
+
+    @Mock
+    private backend.common.security.refreshtoken.RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private UserService userService;
 
@@ -42,6 +51,10 @@ class UserServiceTest {
         testUser.setRole("PARENT");
         testUser.setTotalPoints(10);
         testUser.setPincode("1234");
+
+        backend.family.Family family = new backend.family.Family();
+        family.setEmail("a@a.com");
+        testUser.setFamily(family);
     }
 
     @Nested
@@ -77,28 +90,41 @@ class UserServiceTest {
     class ValidatePin {
 
         @Test
-        @DisplayName("return true when pin match")
-        void returnsTrue_whenPinMatches() {
+        @DisplayName("return profile response when pin match")
+        void returnsProfile_whenPinMatches() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+            when(jwtUtil.generateAccessToken(eq("a@a.com"), any())).thenReturn("mock-token");
+            when(refreshTokenService.createRefreshToken(any(), any(), any()))
+                    .thenReturn(new backend.common.security.refreshtoken.RefreshToken());
 
-            assertThat(userService.validatePin(1L, "1234")).isTrue();
+            jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
+            ProfileAuthResponseDto result = userService.validatePin(1L, "1234", response);
+
+            assertThat(result.accessToken()).isEqualTo("mock-token");
+            assertThat(result.userId()).isEqualTo(1L);
+            assertThat(result.role()).isEqualTo("PARENT");
+            verify(familyService).setRefreshTokenCookie(eq(response), any());
         }
 
         @Test
-        @DisplayName("return false when pin does not match")
-        void returnsFalse_whenPinDoesNotMatch() {
+        @DisplayName("throws error when pin does not match")
+        void throws_whenPinDoesNotMatch() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-            assertThat(userService.validatePin(1L, "0000")).isFalse();
+            jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
+            assertThatThrownBy(() -> userService.validatePin(1L, "0000", response))
+                    .isInstanceOf(backend.common.exception.InvalidCredentialsException.class);
         }
 
         @Test
-        @DisplayName("returns false when user has no pin")
-        void returnsFalse_whenNoPinSet() {
+        @DisplayName("throws error when user has no pin")
+        void throws_whenNoPinSet() {
             testUser.setPincode(null);
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-            assertThat(userService.validatePin(1L, "1234")).isFalse();
+            jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
+            assertThatThrownBy(() -> userService.validatePin(1L, "1234", response))
+                    .isInstanceOf(backend.common.exception.InvalidCredentialsException.class);
         }
     }
 
@@ -128,7 +154,7 @@ class UserServiceTest {
         void assignsDefaultImage_whenNoImageSet() {
             Image defaultImage = new Image();
             defaultImage.setId(1L);
-            when(imageRepository.findAll()).thenReturn(List.of(defaultImage));
+            when(imageRepository.findByName("default-avatar.png")).thenReturn(Optional.of(defaultImage));  // ← fix
             when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
             userService.createUser(testUser);

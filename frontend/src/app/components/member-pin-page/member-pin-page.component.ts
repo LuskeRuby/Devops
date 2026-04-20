@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { User, UserService } from '../../services/user.service';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-member-pin-page',
@@ -16,13 +17,11 @@ export class MemberPinPageComponent implements OnInit {
   private router = inject(Router);
   private userService = inject(UserService);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   user: User | null = null;
   pin: string[] = ['', '', '', ''];
   errorMessage = '';
-  showImagePicker = false;
-  availableImageIds: number[] = [];
-  selectedImageId: number | undefined;
 
   @ViewChildren('pinInput') pinInputs!: QueryList<ElementRef>;
 
@@ -39,34 +38,10 @@ export class MemberPinPageComponent implements OnInit {
       this.router.navigate(['/select-member']);
       return;
     }
-    this.http.get<number[]>('/api/images?type=AVATAR').subscribe({
-      next: (ids) => (this.availableImageIds = ids),
-      error: (err) => console.error('Failed to load images', err),
-    });
-    this.selectedImageId = this.user?.imageId;
   }
 
   getImageUrl(imageId: number | undefined): string {
     return this.userService.getImageUrl(imageId);
-  }
-
-  openImagePicker(): void {
-    this.showImagePicker = true;
-  }
-
-  closeImagePicker(): void {
-    this.showImagePicker = false;
-  }
-
-  selectImage(imageId: number): void {
-    if (!this.user) return;
-    this.selectedImageId = imageId;
-    this.userService.setProfileImage(this.user.id, imageId).subscribe({
-      next: (updatedUser) => {
-        this.user = { ...updatedUser };
-      },
-      error: (err) => console.error('Failed to set image', err),
-    });
   }
 
   trackByFn(index: number): number {
@@ -98,8 +73,10 @@ export class MemberPinPageComponent implements OnInit {
     const userId = this.user?.id || 0;
 
     this.userService.validatePin(userId, pinString).subscribe({
-      next: (isValid: boolean) => {
-        if (isValid && this.user) {
+      next: (res) => {
+        if (res.accessToken && this.user) {
+          // Update the token so backend recognizes the profile-specific role
+          this.authService.setAccessTokenFromRefresh(res.accessToken);
           this.userService.setCurrentUser(this.user);
           this.router.navigate(['/dashboard']);
         }

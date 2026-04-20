@@ -2,17 +2,18 @@
 <ng-template #eventTemplate let-weekEvent="weekEvent">
   @if (weekEvent.tempEvent || weekEvent.event; as calEvent) {
     <div
-      class="event-card custom-event"
+      class="event-card-v2"
       (click)="onEventTemplateClick(calEvent, $event)"
       (keydown.enter)="onEventTemplateClick(calEvent, $event)"
       [class.is-done]="calEvent.meta?.checked"
-      [style.backgroundColor]="calEvent.color?.secondary || '#eef3ff'"
-      [style.borderLeft]="'4px solid ' + (calEvent.color?.primary || '#999999')"
       tabindex="0"
       role="button"
     >
-      <div class="event-content">
-        <div class="event-top-row">
+      <!-- LEFT ACCENT BAR -->
+      <div class="card-accent" [style.backgroundColor]="calEvent.color?.primary || '#4285f4'"></div>
+
+      <div class="card-body">
+        <div class="checkbox-container">
           <input
             type="checkbox"
             [checked]="calEvent.meta?.checked"
@@ -20,23 +21,32 @@
             (click)="handleCheckboxClick(calEvent, $event)"
             aria-label="Toggle task status"
           />
-          <div class="event-title">
-            {{ calEvent.title }}
+        </div>
+
+        <!-- TEXT CONTENT SECTION -->
+        <div class="card-info" style="margin-left: 24px">
+          <div class="card-top">
+            <div class="card-title">{{ calEvent.title }}</div>
+            @if (calEvent.meta?.points > 0) {
+              <div class="card-points">{{ calEvent.meta?.points }} pts</div>
+            }
           </div>
-          @if (calEvent.meta?.points > 0) {
-            <div class="points-badge">{{ calEvent.meta?.points }}p</div>
-          }
-        </div>
-        <div class="event-time">
-          {{ calEvent.start | date: 'shortTime' }} -
-          {{ calEvent.end || calEvent.start | date: 'shortTime' }}
-        </div>
-        <div
-          class="event-assignee"
-          [title]="calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt'"
-        >
-          <i class="ph ph-user"></i>
-          {{ calEvent.meta?.assignedUserNames?.join(', ') || 'Ikke tildelt' }}
+
+          <div class="card-bottom">
+            <div class="card-time">
+              {{ calEvent.start | date: 'HH:mm' }} -
+              {{ calEvent.end || calEvent.start | date: 'HH:mm' }}
+            </div>
+
+            @if (calEvent.meta?.assignedUserNames?.length) {
+              <div class="card-divider">|</div>
+              <div class="card-assignees">
+                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                  <div class="initial-circle">{{ init }}</div>
+                }
+              </div>
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -44,35 +54,114 @@
 </ng-template>
 
 <!-- CALENDAR CONTAINER -->
-<div class="calendar-scroll">
-  <!-- WEEK VIEW -->
-  @if (!isDayView) {
-    <mwl-calendar-week-view
-      [viewDate]="viewDate"
-      [events]="events"
-      [refresh]="refresh"
-      [locale]="locale"
-      [weekStartsOn]="weekStartsOn"
-      [eventTemplate]="eventTemplate"
-      (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
-      (eventTimesChanged)="onEventTimesChanged($event)"
-      (hourSegmentClicked)="onHourSegmentClicked($event)"
-    >
-    </mwl-calendar-week-view>
-  }
+<div class="calendar-scroll" [class.view-week]="!isDayView">
+  @if (isParent) {
+    <!-- WEEK VIEW -->
+    @if (!isDayView) {
+      <mwl-calendar-week-view
+        [viewDate]="viewDate"
+        [events]="events()"
+        [refresh]="refresh"
+        [locale]="locale"
+        [weekStartsOn]="weekStartsOn"
+        [eventTemplate]="eventTemplate"
+        [hourSegments]="4"
+        [hourSegmentHeight]="55"
+        [dayStartHour]="5"
+        [dayEndHour]="23"
+        (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+        (eventTimesChanged)="onEventTimesChanged($event)"
+        (hourSegmentClicked)="onHourSegmentClicked($event)"
+      >
+      </mwl-calendar-week-view>
+    }
 
-  <!-- DAY VIEW -->
-  @if (isDayView) {
-    <mwl-calendar-day-view
-      [viewDate]="viewDate"
-      [events]="events"
-      [refresh]="refresh"
-      [locale]="locale"
-      [eventTemplate]="eventTemplate"
-      (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
-      (eventTimesChanged)="onEventTimesChanged($event)"
-      (hourSegmentClicked)="onHourSegmentClicked($event)"
-    >
-    </mwl-calendar-day-view>
+    <!-- DAY VIEW -->
+    @if (isDayView) {
+      <mwl-calendar-day-view
+        [viewDate]="viewDate"
+        [events]="events()"
+        [refresh]="refresh"
+        [locale]="locale"
+        [eventTemplate]="eventTemplate"
+        [hourSegments]="4"
+        [hourSegmentHeight]="55"
+        [dayStartHour]="5"
+        [dayEndHour]="23"
+        (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
+        (eventTimesChanged)="onEventTimesChanged($event)"
+        (hourSegmentClicked)="onHourSegmentClicked($event)"
+      >
+      </mwl-calendar-day-view>
+    }
+  } @else {
+    <!-- KIDS DASHBOARD VIEW -->
+    <div class="kids-dashboard">
+      @if (currentDayEvents.length === 0) {
+        <div class="kids-empty-state">
+          <h3>Wuhu! Ingen opgaver lige nu. 🎉</h3>
+          <p>Tid til at slappe af og lege!</p>
+        </div>
+      } @else {
+        <div class="kids-task-list">
+          @for (calEvent of currentDayEvents; track calEvent.id) {
+            <div class="kid-task-card" [class.done]="calEvent.meta?.checked">
+              @if (calEvent.meta?.imageId) {
+                <div class="kid-task-image-wrapper">
+                  <img
+                    [src]="getImageUrl(calEvent.meta?.imageId)"
+                    [alt]="calEvent.title"
+                    class="kid-task-image"
+                  />
+                </div>
+              }
+
+              <div
+                class="kid-task-content"
+                (click)="!calEvent.meta?.checked && toggleFromCalendar(calEvent)"
+                tabindex="0"
+                role="button"
+              >
+                <h3 class="kid-task-title">{{ calEvent.title }}</h3>
+                <div class="kid-task-info-row">
+                  <div class="kid-task-time">
+                    ⏰ {{ calEvent.start | date: 'shortTime' }} -
+                    {{ calEvent.end || calEvent.start | date: 'shortTime' }}
+                  </div>
+                  <button
+                    class="kid-info-btn"
+                    (click)="openTaskDescription(calEvent); $event.stopPropagation()"
+                    aria-label="Læs beskrivelse"
+                  >
+                    <span>Læs mere</span> 📖
+                  </button>
+                </div>
+
+                @if ((calEvent.meta?.points ?? 0) > 0) {
+                  <div class="kid-task-points">💎 +{{ calEvent.meta?.points }} Point</div>
+                }
+              </div>
+
+              <div class="kid-task-action">
+                <button
+                  class="kid-action-btn"
+                  [class.btn-done]="calEvent.meta?.checked"
+                  (click)="toggleFromCalendar(calEvent); $event.stopPropagation()"
+                  aria-label="Toggle task status"
+                >
+                  @if (calEvent.meta?.checked) {
+                    <span class="emoji">⭐</span>
+                    <span class="text">Udført!</span>
+                  } @else {
+                    <span class="emoji">🚀</span>
+                    <span class="text">Gør det nu!</span>
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
   }
 </div>

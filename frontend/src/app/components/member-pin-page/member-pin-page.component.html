@@ -2,17 +2,9 @@
   <div class="pin-content">
     <h1 class="member-name">{{ user?.name || 'Member' }}</h1>
 
-    <div
-      class="picture-placeholder"
-      (click)="openImagePicker()"
-      (keydown.enter)="openImagePicker()"
-      tabindex="0"
-      role="button"
-    >
+    <div class="picture-placeholder">
       @if (user?.imageId) {
         <img [src]="getImageUrl(user?.imageId)" alt="Avatar" class="avatar-img" />
-      } @else {
-        <span>Vælg et billede</span>
       }
     </div>
 
@@ -38,39 +30,3 @@
     </div>
   </div>
 </div>
-
-@if (showImagePicker) {
-  <div
-    class="modal-overlay"
-    role="button"
-    tabindex="0"
-    (click)="closeImagePicker()"
-    (keydown.enter)="closeImagePicker()"
-    aria-label="Luk vælger"
-  >
-    <div
-      class="modal"
-      role="dialog"
-      aria-modal="true"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()"
-    >
-      <h2>Vælg avatar</h2>
-      <div class="image-grid">
-        @for (id of availableImageIds; track id) {
-          <img
-            [src]="getImageUrl(id)"
-            (click)="selectImage(id)"
-            (keydown.enter)="selectImage(id)"
-            tabindex="0"
-            role="button"
-            alt="Avatar option"
-            class="avatar-option"
-            [class.selected]="id === selectedImageId"
-          />
-        }
-      </div>
-      <button type="button" (click)="closeImagePicker()">Luk</button>
-    </div>
-  </div>
-}

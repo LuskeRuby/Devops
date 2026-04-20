@@ -28,4 +28,7 @@ public class RefreshToken {
 
     @Column(nullable = false)
     private Instant expiresAt;
+
+    private Long userId;
+    private String role;
 }

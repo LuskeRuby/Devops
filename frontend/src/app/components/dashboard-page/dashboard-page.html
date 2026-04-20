@@ -30,7 +30,7 @@
         }
       </div>
 
-      <div class="calendar-section">
+      <div [class.calendar-section]="isParent" [class.kids-wrapper-section]="!isParent">
         <app-calendar
           [viewDate]="viewDate"
           [isDayView]="isDayView"

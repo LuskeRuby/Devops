@@ -21,6 +21,8 @@ public class CreateTaskRequest {
     private LocalDateTime end;
     @JsonAlias("separateTasks")
     private Boolean separateTasks;
+    @JsonAlias("imageId")
+    private Long imageId;
 
     public TaskPayload getTask() {
         return task;
@@ -54,6 +56,10 @@ public class CreateTaskRequest {
         return end;
     }
 
+    public Long getImageId() {
+        return imageId;
+    }
+
     public void setTask(TaskPayload task) {
         this.task = task;
     }
@@ -78,6 +84,10 @@ public class CreateTaskRequest {
         this.end = end;
     }
 
+    public void setImageId(Long imageId) {
+        this.imageId = imageId;
+    }
+
     public TaskPayload resolveTaskPayload() {
         if (task != null) {
             return task;
@@ -94,6 +104,7 @@ public class CreateTaskRequest {
         payload.setRepeatUntil(end);
         payload.setPoints(0);
         payload.setChecked(false);
+        payload.setImageId(imageId);
         return payload;
     }
 
@@ -105,6 +116,7 @@ public class CreateTaskRequest {
         private LocalDateTime timestamp;
         private String repeatEvery;
         private LocalDateTime repeatUntil;
+        private Long imageId;
 
         public String getName() {
             return name;
@@ -134,6 +146,10 @@ public class CreateTaskRequest {
             return repeatUntil;
         }
 
+        public Long getImageId() {
+            return imageId;
+        }
+
         public void setName(String name) {
             this.name = name;
         }
@@ -160,6 +176,10 @@ public class CreateTaskRequest {
 
         public void setRepeatUntil(LocalDateTime repeatUntil) {
             this.repeatUntil = repeatUntil;
+        }
+
+        public void setImageId(Long imageId) {
+            this.imageId = imageId;
         }
     }
 }

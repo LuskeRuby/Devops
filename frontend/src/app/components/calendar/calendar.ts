@@ -1,5 +1,14 @@
 import localeDa from '@angular/common/locales/da';
-import { Component, LOCALE_ID, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
+import {
+  Component,
+  LOCALE_ID,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { CalendarEventTimesChangedEvent } from 'angular-calendar';
@@ -14,7 +23,7 @@ import {
 
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { CommonModule, registerLocaleData } from '@angular/common';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
@@ -25,6 +34,7 @@ import { CalendarEventService } from '../../services/calendar-event.service';
 import { CalendarTaskMeta } from '../../features/task/models/CalendarTaskMeta';
 import { User, UserService } from '../../services/user.service';
 import { PointsStore } from '../../services/points-store.service';
+import { TaskDescriptionDialogComponent } from '../task-description-dialog/task-description-dialog';
 
 registerLocaleData(localeDa);
 
@@ -67,7 +77,7 @@ export class CalendarComponent implements OnInit {
   locale = 'da';
   weekStartsOn = 1;
 
-  events: CalendarEvent<CalendarTaskMeta>[] = [];
+  events = signal<CalendarEvent<CalendarTaskMeta>[]>([]);
   familyUsers: User[] = [];
   loadError: string | null = null;
   refresh = new Subject<void>();
@@ -77,7 +87,14 @@ export class CalendarComponent implements OnInit {
     return this.currentUser?.role?.toUpperCase() === 'PARENT';
   }
 
+  get currentDayEvents(): CalendarEvent<CalendarTaskMeta>[] {
+    return this.events()
+      .filter((e) => isSameDay(e.start, this.viewDate))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
   ngOnInit(): void {
+    console.log('--- Dashboard Initialization ---');
     this.currentUser = this.userService.currentUser();
     this.loadFamilyUsers();
     this.loadEvents();
@@ -92,36 +109,35 @@ export class CalendarComponent implements OnInit {
 
   loadEvents(): void {
     const familyEmail = this.getFamilyEmail();
-    const userId = this.currentUser?.id;
 
     if (!familyEmail) {
-      this.events = [];
+      this.events.set([]);
       this.loadError = 'Missing family';
       this.refresh.next();
       return;
     }
 
-    const request$ = this.isParent
-      ? this.calendarEventService.loadFamilyEvents(familyEmail, userId)
-      : this.calendarEventService.loadUserEvents(userId!);
+    const request$ = this.calendarEventService.loadFamilyEvents(familyEmail);
 
     request$.subscribe({
       next: (events) => {
-        console.log('Loaded events:', events);
-        this.events = events.map((event) => ({
-          ...event,
-          draggable: this.isParent && !event.meta?.checked,
-          resizable: {
-            beforeStart: this.isParent && !event.meta?.checked,
-            afterEnd: this.isParent && !event.meta?.checked,
-          },
-        }));
+        console.log(`Successfully synced ${events.length} calendar events.`);
+        this.events.set(
+          events.map((event) => ({
+            ...event,
+            draggable: this.isParent && !event.meta?.checked,
+            resizable: {
+              beforeStart: this.isParent && !event.meta?.checked,
+              afterEnd: this.isParent && !event.meta?.checked,
+            },
+          })),
+        );
         this.loadError = null;
         this.refresh.next();
       },
       error: () => {
         console.error('Error loading events:');
-        this.events = [];
+        this.events.set([]);
         this.loadError = 'Failed to load events';
         this.refresh.next();
       },
@@ -157,6 +173,11 @@ export class CalendarComponent implements OnInit {
   onEventTemplateClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: Event): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
+
+    if (event.meta?.checked) {
+      return;
+    }
+
     if (this.isParent) {
       this.openEditDialog(event);
     }
@@ -173,8 +194,8 @@ export class CalendarComponent implements OnInit {
     if (!taskId) return;
 
     // optimistic UI update
-    this.events = this.events.map((e) =>
-      e.id === event.id ? { ...e, start: newStart, end: newEnd ?? e.end } : e,
+    this.events.update((current) =>
+      current.map((e) => (e.id === event.id ? { ...e, start: newStart, end: newEnd ?? e.end } : e)),
     );
     this.refresh.next();
 
@@ -185,10 +206,11 @@ export class CalendarComponent implements OnInit {
       end: newEnd ?? event.end ?? new Date(newStart.getTime() + 60 * 60 * 1000),
       userIds: event.meta?.assignedUserIds ?? [],
       points: event.meta?.points ?? 0,
+      imageId: event.meta?.imageId,
       color: '#4285f4',
     };
 
-    this.calendarEventService.updateEvent(taskId, payload, this.currentUser?.id).subscribe({
+    this.calendarEventService.updateEvent(taskId, payload).subscribe({
       next: () => this.loadEvents(),
       error: () => {
         this.loadError = 'Failed to move event';
@@ -229,11 +251,26 @@ export class CalendarComponent implements OnInit {
         users: this.familyUsers,
         selectedUserIds: event.meta?.assignedUserIds ?? [],
         points: event.meta?.points ?? 0,
+        imageId: event.meta?.imageId,
         isReadOnly: !this.isParent,
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => this.handleDialog(result, event.id as number));
+  }
+
+  openTaskDescription(event: CalendarEvent<CalendarTaskMeta>): void {
+    this.dialog.open(TaskDescriptionDialogComponent, {
+      width: '400px',
+      maxWidth: '90vw',
+      panelClass: 'fun-dialog-container',
+      data: {
+        title: event.title,
+        description: event.meta?.description ?? '',
+        points: event.meta?.points ?? 0,
+        assignedUserNames: event.meta?.assignedUserNames ?? [],
+      },
+    });
   }
 
   handleDialog(result?: CalendarEventDialogResult, eventId?: number): void {
@@ -243,7 +280,7 @@ export class CalendarComponent implements OnInit {
     let request$: Observable<TaskDTO | void>;
 
     if (result.mode === 'delete') {
-      request$ = this.calendarEventService.deleteEvent(targetId, this.currentUser?.id);
+      request$ = this.calendarEventService.deleteEvent(targetId);
     } else {
       const payload = {
         title: result.title,
@@ -253,13 +290,14 @@ export class CalendarComponent implements OnInit {
         userIds: result.userIds,
         isSeparateTasks: result.isSeparateTasks,
         points: result.points,
+        imageId: result.imageId,
         color: '#4285f4',
       };
 
       request$ =
         result.mode === 'update'
-          ? this.calendarEventService.updateEvent(targetId, payload, this.currentUser?.id)
-          : this.calendarEventService.createEvent(payload, this.currentUser?.id);
+          ? this.calendarEventService.updateEvent(targetId, payload)
+          : this.calendarEventService.createEvent(payload);
     }
 
     request$.subscribe({
@@ -271,12 +309,6 @@ export class CalendarComponent implements OnInit {
   handleCheckboxClick(event: CalendarEvent<CalendarTaskMeta>, mouseEvent: MouseEvent): void {
     mouseEvent.stopPropagation();
 
-    if (this.isParent && !this.canToggleTask(event)) {
-      // Parents clicking a child's task checkbox should get the edit dialog
-      this.openEditDialog(event);
-      return;
-    }
-
     if (this.canToggleTask(event)) {
       this.toggleFromCalendar(event);
     }
@@ -284,6 +316,8 @@ export class CalendarComponent implements OnInit {
 
   canToggleTask(event: CalendarEvent<CalendarTaskMeta>): boolean {
     if (!this.currentUser || !event.meta) return false;
+
+    if (this.isParent) return true;
 
     const userId = this.currentUser.id;
     const isAssigned = event.meta.assignedUserIds?.includes(userId);
@@ -297,9 +331,23 @@ export class CalendarComponent implements OnInit {
     const taskId = event.id as number;
     if (!taskId) return;
 
-    const action$ = event.meta?.checked
-      ? this.calendarEventService.uncompleteEvent(taskId, this.currentUser?.id)
-      : this.calendarEventService.completeEvent(taskId, this.currentUser?.id);
+    // Optimistic UI update natively mutating the signal state
+    const originalState = !!event.meta?.checked;
+
+    this.events.update((current) =>
+      current.map((e) =>
+        e.id === taskId
+          ? ({
+              ...e,
+              meta: e.meta ? { ...e.meta, checked: !originalState } : undefined,
+            } as CalendarEvent<CalendarTaskMeta>)
+          : e,
+      ),
+    );
+
+    const action$ = !originalState
+      ? this.calendarEventService.completeEvent(taskId)
+      : this.calendarEventService.uncompleteEvent(taskId);
 
     action$.subscribe({
       next: () => {
@@ -322,5 +370,26 @@ export class CalendarComponent implements OnInit {
   private getFamilyEmail(): string | null {
     const user = this.userService.currentUser();
     return user?.familyEmail ?? user?.family?.email ?? null;
+  }
+
+  getImageUrl(id?: number | null): string | null {
+    if (!id) return null;
+    return this.userService.getImageUrl(id);
+  }
+
+  getUserInitials(names: string[]): string[] {
+    if (!names || names.length === 0) return [];
+
+    return names.map((name) => {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        // Multi-word: First letter of first two parts
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      } else if (parts.length === 1 && parts[0].length > 0) {
+        // Single word: First two letters
+        return parts[0].substring(0, 2).toUpperCase();
+      }
+      return '??';
+    });
   }
 }

@@ -30,7 +30,8 @@ public class ImageSeeder implements ApplicationRunner {
             { "boy", "boys" }, 
             { "girl", "girls" }, 
             { "man", "gents" }, 
-            { "women", "women" } 
+            { "women", "women" },
+            { "default", "default" } 
         };
         
         for (String[] mapping : categoryMapping) {
@@ -47,10 +48,6 @@ public class ImageSeeder implements ApplicationRunner {
             seedImage(resource, "TASK", null);
         }
 
-        Resource[] seedResources = resolver.getResources("classpath*:static/seed-images/avatar*.png");
-        for (Resource resource : seedResources) {
-            seedImage(resource, "AVATAR", "legacy");
-        }
 
         if (imageRepository.count() > 0) {
             Image defaultImage = imageRepository.findAll().get(0);

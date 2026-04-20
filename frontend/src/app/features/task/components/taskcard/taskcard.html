@@ -1,9 +1,9 @@
 <div class="task-card" [class.completed]="task.checked">
-  <!--
-  <div class="task-image">
-    <img [src]="" [alt]="task.title" />
-  </div>-->
-
+  @if (task.imageId) {
+    <div class="task-image">
+      <img [src]="getImageUrl(task.imageId)" [alt]="task.name" />
+    </div>
+  }
   <div class="task-details">
     <h3 class="title">{{ task.name }}</h3>
 

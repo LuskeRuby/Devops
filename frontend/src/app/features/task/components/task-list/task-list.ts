@@ -1,7 +1,9 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { UserService } from '../../../../services/user.service';
 import { TaskDTO } from '../../models/TaskDto';
 import { TaskcardComponent } from '../taskcard/taskcard';
+import { CalendarEventService } from '../../../../services/calendar-event.service';
+import { PointsStore } from '../../../../services/points-store.service';
 
 @Component({
   selector: 'app-task-list',
@@ -12,22 +14,53 @@ import { TaskcardComponent } from '../taskcard/taskcard';
 })
 export class TaskListComponent implements OnInit {
   private userService = inject(UserService);
+  private calendarEventService = inject(CalendarEventService);
+  private pointsStore = inject(PointsStore);
 
   tasks = signal<TaskDTO[]>([]);
 
-  userId = 1;
+  currentUser = computed(() => this.userService.currentUser());
 
   ngOnInit(): void {
-    this.userService.getTasksByUserId(this.userId).subscribe({
+    const user = this.currentUser();
+    if (user) {
+      this.loadTasks(user.id);
+    }
+  }
+
+  loadTasks(userId: number): void {
+    this.userService.getTasksByUserId(userId).subscribe({
       next: (data) => this.tasks.set(data),
       error: (err) => console.error('Error fetching tasks', err),
     });
   }
 
   handleTaskToggle(clickedTask: TaskDTO) {
-    clickedTask.checked = !clickedTask.checked;
+    const originalChecked = clickedTask.checked;
+    const userId = this.currentUser()?.id;
+
     this.tasks.update((tasks) =>
-      tasks.map((task) => (task.id === clickedTask.id ? clickedTask : task)),
+      tasks.map((t) => (t.id === clickedTask.id ? { ...t, checked: !originalChecked } : t)),
     );
+
+    const action$ = !originalChecked
+      ? this.calendarEventService.completeEvent(clickedTask.id)
+      : this.calendarEventService.uncompleteEvent(clickedTask.id);
+
+    action$.subscribe({
+      next: () => {
+        if (userId) {
+          this.loadTasks(userId);
+          this.pointsStore.loadUser(userId);
+        }
+      },
+      error: (err) => {
+        console.error('Task update failed:', err);
+
+        this.tasks.update((tasks) =>
+          tasks.map((t) => (t.id === clickedTask.id ? { ...t, checked: originalChecked } : t)),
+        );
+      },
+    });
   }
 }
