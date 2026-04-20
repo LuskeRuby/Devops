@@ -77,7 +77,7 @@ export class UserService {
   }
 
   getImageUrl(imageId: number | undefined): string {
-    if (!imageId) return 'assets/default-avatar.png';
+    if (!imageId) return '/api/images/default';
     return `/api/images/${imageId}`;
   }
 

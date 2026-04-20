@@ -30,7 +30,8 @@ public class ImageSeeder implements ApplicationRunner {
             { "boy", "boys" }, 
             { "girl", "girls" }, 
             { "man", "gents" }, 
-            { "women", "women" } 
+            { "women", "women" },
+            { "default", "default" } 
         };
         
         for (String[] mapping : categoryMapping) {

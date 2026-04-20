@@ -53,7 +53,7 @@ public class UserService {
 
     public UserResponseDto createUser(User user) {
         if (user.getImage() == null) {
-            imageRepository.findAll().stream().findFirst().ifPresent(user::setImage);
+            imageRepository.findByName("default-avatar.png").ifPresent(user::setImage);
         }
         return toDto(userRepository.save(user));
     }
