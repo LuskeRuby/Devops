@@ -13,35 +13,45 @@
       <div class="card-accent" [style.backgroundColor]="calEvent.color?.primary || '#4285f4'"></div>
 
       <div class="card-body">
-        <div class="checkbox-container">
-          <input
-            type="checkbox"
-            [checked]="calEvent.meta?.checked"
-            [disabled]="!canToggleTask(calEvent)"
-            (click)="handleCheckboxClick(calEvent, $event)"
-            aria-label="Toggle task status"
-          />
+
+        <!-- TOP BAR: checkbox · title · assignees -->
+        <div class="card-header">
+          <div class="checkbox-container">
+            <input
+              type="checkbox"
+              [checked]="calEvent.meta?.checked"
+              [disabled]="!canToggleTask(calEvent)"
+              (click)="handleCheckboxClick(calEvent, $event)"
+              aria-label="Toggle task status"
+            />
+          </div>
+          <div class="card-title">{{ calEvent.title }}</div>
+          @if (calEvent.meta?.assignedUserNames?.length) {
+            <div class="card-assignees">
+              @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                <div class="initial-circle">{{ init }}</div>
+              }
+            </div>
+          }
+          @if (calEvent.meta?.points > 0) {
+            <div class="card-points">{{ calEvent.meta?.points }} pts</div>
+          }
         </div>
 
-        <!-- TEXT CONTENT SECTION -->
-        <div class="card-info" style="margin-left: 24px">
-          <div class="card-top">
-            <div class="card-title">{{ calEvent.title }}</div>
-            @if (calEvent.meta?.points > 0) {
-              <div class="card-points">{{ calEvent.meta?.points }} pts</div>
-            }
-          </div>
-
-          <div class="card-bottom">
-            @if (calEvent.meta?.assignedUserNames?.length) {
-              <div class="card-assignees">
-                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
-                  <div class="initial-circle">{{ init }}</div>
-                }
-              </div>
-            }
-          </div>
+        <!-- IMAGE SECTION: bg image + dark overlay + white description caption -->
+        <div
+          class="card-image-section"
+          [class.has-image]="calEvent.meta?.imageId"
+          [style.backgroundImage]="calEvent.meta?.imageId ? 'url(' + getImageUrl(calEvent.meta.imageId) + ')' : null"
+        >
+          @if (calEvent.meta?.imageId) {
+            <div class="card-shade"></div>
+          }
+          @if (calEvent.meta?.description) {
+            <div class="card-description">{{ calEvent.meta.description }}</div>
+          }
         </div>
+
       </div>
     </div>
   }

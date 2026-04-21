@@ -72,39 +72,24 @@
       z-index: -1;
     }
 
-    .card-body {
-      overflow: visible !important;
-      max-width: none !important;
-    }
-
     .card-title {
       white-space: normal !important;
-      display: block !important;
-      margin-bottom: 8px;
-      font-size: 1.1rem;
     }
 
-    .card-bottom {
-      flex-wrap: wrap !important;
-      gap: 12px;
-      padding-bottom: 4px;
-    }
-
-    .card-points {
-      position: relative !important;
-
-      top: auto !important;
-      right: auto !important;
+    .card-description {
+      white-space: normal !important;
     }
   }
 
   &.is-done {
-    opacity: 1;
     filter: grayscale(0.5);
-    background: #e2e8f0;
 
     .card-accent {
       filter: grayscale(1) brightness(1.2);
+    }
+
+    .card-header {
+      background: #e2e8f0;
     }
 
     .card-title {
@@ -119,71 +104,106 @@
     flex-shrink: 0;
   }
 
+  // Vertical stack: header on top, image section below
   .card-body {
     display: flex;
+    flex-direction: column;
     flex: 1;
-    padding: 8px 10px;
-    gap: 10px;
-    align-items: flex-start;
-    justify-content: flex-start;
-    position: relative;
-    max-width: 100%;
     overflow: hidden;
   }
 
-  .checkbox-container {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 5;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 4px;
-    padding: 2px;
+  // ── TOP BAR ──────────────────────────────────────
+  .card-header {
     display: flex;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    background: #e9f2ff;
+    flex-shrink: 0;
+  }
+
+  .checkbox-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
 
     input {
       width: 14px;
       height: 14px;
+      cursor: pointer;
     }
   }
 
-  .card-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-    margin-left: 20px;
-  }
-
-  .card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
   .card-title {
-    font-size: 0.95rem;
+    flex: 1;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #1e293b;
     line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    overflow-wrap: anywhere;
+  }
+
+  .card-assignees {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
   }
 
   .card-points {
+    flex-shrink: 0;
     background: #dbeafe;
     color: #2563eb;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 800;
     padding: 2px 6px;
     border-radius: 6px;
-    margin-left: 4px;
     white-space: nowrap;
+  }
+
+  // ── IMAGE SECTION ─────────────────────────────────
+  .card-image-section {
+    flex: 1;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #e9f2ff; // matches card header — shown when no image
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  // Dark shade over the image
+  .card-shade {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  // Description overlaid on the section
+  .card-description {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    z-index: 1;
+    color: #475569; // dark for no-image (theme colour bg)
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // White text + shadow when sitting over an actual image
+  .card-image-section.has-image .card-description {
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
   }
 
   .card-bottom {
@@ -198,11 +218,6 @@
 
   .card-divider {
     color: #cbd5e1;
-  }
-
-  .card-assignees {
-    display: flex;
-    gap: 3px;
   }
 
   .initial-circle {
@@ -222,51 +237,29 @@
 .view-week .event-card-v2 {
   border-radius: 8px;
 
-  .card-body {
-    padding: 3px 5px;
+  .card-header {
+    padding: 3px 6px;
     gap: 4px;
   }
 
-  .card-image-wrapper {
-    width: 38px;
-    height: 38px;
-    border-radius: 6px;
-
-    .checkbox-container {
-      top: 1px;
-      right: 1px;
-
-      input {
-        width: 12px;
-        height: 12px;
-      }
-    }
-  }
-
   .card-title {
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.8rem;
   }
 
   .card-points {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     padding: 1px 4px;
-    border-radius: 4px;
-    position: absolute;
-    top: 2px;
-    right: 2px;
   }
 
-  .card-bottom {
+  .card-description {
     font-size: 0.68rem;
-    gap: 3px;
-    margin-top: 1px;
+    padding: 3px 6px;
   }
 
   .initial-circle {
-    width: 16px;
-    height: 16px;
-    font-size: 0.55rem;
+    width: 15px;
+    height: 15px;
+    font-size: 0.52rem;
   }
 }
 
