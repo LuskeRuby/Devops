@@ -33,13 +33,7 @@
           </div>
 
           <div class="card-bottom">
-            <div class="card-time">
-              {{ calEvent.start | date: 'HH:mm' }} -
-              {{ calEvent.end || calEvent.start | date: 'HH:mm' }}
-            </div>
-
             @if (calEvent.meta?.assignedUserNames?.length) {
-              <div class="card-divider">|</div>
               <div class="card-assignees">
                 @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
                   <div class="initial-circle">{{ init }}</div>
