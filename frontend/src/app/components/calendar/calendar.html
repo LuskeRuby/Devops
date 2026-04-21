@@ -60,7 +60,7 @@
     @if (!isDayView) {
       <mwl-calendar-week-view
         [viewDate]="viewDate"
-        [events]="events()"
+        [events]="displayedEvents()"
         [refresh]="refresh"
         [locale]="locale"
         [weekStartsOn]="weekStartsOn"
@@ -80,7 +80,7 @@
     @if (isDayView) {
       <mwl-calendar-day-view
         [viewDate]="viewDate"
-        [events]="events()"
+        [events]="displayedEvents()"
         [refresh]="refresh"
         [locale]="locale"
         [eventTemplate]="eventTemplate"

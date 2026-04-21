@@ -8,6 +8,7 @@ import {
   EventEmitter,
   inject,
   signal,
+  computed,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
@@ -74,6 +75,15 @@ export class CalendarComponent implements OnInit {
   @Input() isDayView = false;
   @Output() viewChange = new EventEmitter<boolean>();
 
+  // Receives selected user IDs from the parent dashboard filter.
+  // null means "show all"; an array means show only events matching those users.
+  private _filteredUserIds = signal<number[] | null>(null);
+
+  @Input() set filteredUserIds(ids: number[] | null) {
+    this._filteredUserIds.set(ids);
+    this.refresh.next();
+  }
+
   locale = 'da';
   weekStartsOn = 1;
 
@@ -83,12 +93,22 @@ export class CalendarComponent implements OnInit {
   refresh = new Subject<void>();
   currentUser: User | null = null;
 
+  // Derived signal: the subset of events that match the active user filter
+  displayedEvents = computed<CalendarEvent<CalendarTaskMeta>[]>(() => {
+    const ids = this._filteredUserIds();
+    if (ids === null) return this.events();
+    const idSet = new Set(ids);
+    return this.events().filter((e) =>
+      e.meta?.assignedUserIds?.some((uid: number) => idSet.has(uid)),
+    );
+  });
+
   get isParent(): boolean {
     return this.currentUser?.role?.toUpperCase() === 'PARENT';
   }
 
   get currentDayEvents(): CalendarEvent<CalendarTaskMeta>[] {
-    return this.events()
+    return this.displayedEvents()
       .filter((e) => isSameDay(e.start, this.viewDate))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }

@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, LOCALE_ID, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, LOCALE_ID, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { UserService } from '../../services/user.service';
+import { UserService, User } from '../../services/user.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,6 +18,9 @@ export class DashboardPage implements OnInit {
   viewDate: Date = new Date();
   isDayView = false;
 
+  familyMembers = signal<User[]>([]);
+  selectedUserIds = signal<Set<number>>(new Set());
+
   private readonly STORAGE_KEY = 'calendar_view_preference';
 
   ngOnInit(): void {
@@ -26,6 +29,65 @@ export class DashboardPage implements OnInit {
     const savedView = localStorage.getItem(this.STORAGE_KEY);
 
     this.isDayView = savedView ? savedView === 'day' : role === 'CHILD';
+
+    if (this.isParent) {
+      this.loadFamilyMembers();
+    }
+  }
+
+  loadFamilyMembers(): void {
+    const user = this.userService.currentUser();
+    const familyEmail = user?.familyEmail ?? user?.family?.email;
+    if (!familyEmail) return;
+
+    this.userService.getUsersByFamilyEmail(familyEmail).subscribe({
+      next: (members) => {
+        this.familyMembers.set(members);
+        this.selectedUserIds.set(new Set(members.map((m) => m.id)));
+      },
+    });
+  }
+
+  get isAllSelected(): boolean {
+    return this.selectedUserIds().size === this.familyMembers().length;
+  }
+
+  selectAll(): void {
+    this.selectedUserIds.set(new Set(this.familyMembers().map((m) => m.id)));
+  }
+
+  isUserSelected(userId: number): boolean {
+    return this.selectedUserIds().has(userId);
+  }
+
+  toggleUser(userId: number): void {
+    const current = new Set(this.selectedUserIds());
+    if (current.has(userId)) {
+      // Keep at least one selected
+      if (current.size > 1) {
+        current.delete(userId);
+        this.selectedUserIds.set(current);
+      }
+    } else {
+      current.add(userId);
+      this.selectedUserIds.set(current);
+    }
+  }
+
+  get filteredUserIdsArray(): number[] | null {
+    // null signals "show everyone" to the calendar
+    if (this.isAllSelected) return null;
+    return Array.from(this.selectedUserIds());
+  }
+
+  getMemberImageUrl(member: User): string | null {
+    return member.imageId ? this.userService.getImageUrl(member.imageId) : null;
+  }
+
+  getMemberInitials(name: string): string {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
   }
 
   previous() {

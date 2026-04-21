@@ -30,10 +30,41 @@
         }
       </div>
 
+      @if (isParent && familyMembers().length > 0) {
+        <div class="member-filter">
+          <button
+            class="filter-chip"
+            [class.active]="isAllSelected"
+            (click)="selectAll()"
+          >
+            Alle
+          </button>
+          @for (member of familyMembers(); track member.id) {
+            <button
+              class="filter-chip"
+              [class.active]="isUserSelected(member.id)"
+              (click)="toggleUser(member.id)"
+            >
+              @if (getMemberImageUrl(member)) {
+                <img
+                  [src]="getMemberImageUrl(member)"
+                  [alt]="member.name"
+                  class="filter-avatar"
+                />
+              } @else {
+                <span class="filter-initials">{{ getMemberInitials(member.name) }}</span>
+              }
+              <span class="filter-name">{{ member.name }}</span>
+            </button>
+          }
+        </div>
+      }
+
       <div [class.calendar-section]="isParent" [class.kids-wrapper-section]="!isParent">
         <app-calendar
           [viewDate]="viewDate"
           [isDayView]="isDayView"
+          [filteredUserIds]="filteredUserIdsArray"
           (viewChange)="onViewChanged($event)"
         >
         </app-calendar>
