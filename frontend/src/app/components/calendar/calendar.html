@@ -28,33 +28,19 @@
 
           <div class="card-title-group">
             <div class="card-title">{{ calEvent.title }}</div>
-            @if (calEvent.meta?.assignedUserNames?.length) {
-              <div class="card-assignees">
-                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
-                  <div class="initial-circle">{{ init }}</div>
-                }
-              </div>
-            }
+            <div class="card-meta-row">
+              @if (calEvent.meta?.assignedUserNames?.length) {
+                <div class="card-assignees">
+                  @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                    <div class="initial-circle">{{ init }}</div>
+                  }
+                </div>
+              }
+              @if (calEvent.meta?.points > 0) {
+                <div class="card-points">{{ calEvent.meta?.points }} pts</div>
+              }
+            </div>
           </div>
-
-          @if (calEvent.meta?.imageId) {
-            <img
-              class="card-thumb"
-              [src]="getImageUrl(calEvent.meta.imageId)"
-              [alt]="calEvent.title"
-            />
-          }
-
-          @if (calEvent.meta?.points > 0) {
-            <div class="card-points">{{ calEvent.meta?.points }} pts</div>
-          }
-        </div>
-
-        <!-- CONTENT SECTION: theme colour + description -->
-        <div class="card-image-section">
-          @if (calEvent.meta?.description) {
-            <div class="card-description">{{ calEvent.meta.description }}</div>
-          }
         </div>
 
       </div>

@@ -9,6 +9,8 @@
 
 :host ::ng-deep .cal-event-container {
   transition: z-index 0s;
+  // Always tall enough to show title + assignee row (≈ 52px)
+  min-height: 52px !important;
 
   &:hover {
     z-index: 1000 !important;
@@ -104,12 +106,12 @@
     flex-shrink: 0;
   }
 
-  // Vertical stack: header on top, image section below
+  // Vertical stack: header on top, content below
   .card-body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: hidden;
+    overflow: visible;
   }
 
   // ── TOP BAR ──────────────────────────────────────
@@ -117,9 +119,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 8px;
+    padding: 4px 8px;
     background: #e9f2ff;
+    // Never clip — always show the full single row
     flex-shrink: 0;
+    overflow: visible;
+    min-height: 0;
   }
 
   .checkbox-container {
@@ -134,7 +139,6 @@
     }
   }
 
-  // Title + assignees stacked vertically
   .card-title-group {
     flex: 1;
     min-width: 0;
@@ -151,6 +155,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  // Row beneath the title: assignees on the left, points pinned right
+  .card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
   }
 
   .card-assignees {
