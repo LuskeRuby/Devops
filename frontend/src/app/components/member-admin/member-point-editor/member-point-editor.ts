@@ -31,7 +31,6 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
       if (deltaToSend !== 0) {
         this.accumulatedDelta = 0;
         this.userService.addPoints(this.member().id, deltaToSend).subscribe({
-          next: () => {},
           error: (err: unknown) => {
             console.error('Failed to update points', err);
             // Revert exactly the amount on error
