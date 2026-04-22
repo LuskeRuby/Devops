@@ -39,7 +39,7 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
         });
       }
     });
-    if(this.member().id === this.userService.currentUser()?.id) {
+    if (this.member().id === this.userService.currentUser()?.id) {
       this.pointStore.loadUser(this.member().id);
     }
   }
@@ -54,7 +54,7 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
 
   adjustPoints(rewardDelta: number) {
     const currentPoints = this.member().totalPoints || 0;
-    
+
     const pointDelta = rewardDelta * this.pointStore.targetPoints();
 
     // Prevent the number of rewards from falling below 0
@@ -69,9 +69,9 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
 
     this.pointsSubject.next(pointDelta);
 
-    if(this.member().id === this.userService.currentUser()?.id) {
+    if (this.member().id === this.userService.currentUser()?.id) {
       const newTotal = this.member().totalPoints;
-      if(newTotal !== undefined) {
+      if (newTotal !== undefined) {
         this.pointStore.setTotalPoints(newTotal);
       }
     }

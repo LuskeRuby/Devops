@@ -12,9 +12,9 @@
     } @else {
       <div class="image-grid">
         @for (id of imageIds(); track id) {
-          <div 
-            class="image-item" 
-            [class.selected]="id === selectedId()" 
+          <div
+            class="image-item"
+            [class.selected]="id === selectedId()"
             (click)="selectImage(id)"
             (keydown.enter)="selectImage(id)"
             (keydown.space)="selectImage(id); $event.preventDefault()"

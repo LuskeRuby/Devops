@@ -13,7 +13,7 @@ export class PointsStore {
 
   safeTarget = computed(() => Math.max(this.targetPoints() ?? 0, 1));
   currentLevelPoints = computed(() => this.totalPoints() % this.safeTarget());
-  progress = computed(() => (this.currentLevelPoints() / this.targetPoints()) * 100);  
+  progress = computed(() => (this.currentLevelPoints() / this.targetPoints()) * 100);
   totalRewards = computed(() => Math.floor(this.totalPoints() / this.safeTarget()));
 
   setTotalPoints(value: number) {
@@ -32,7 +32,7 @@ export class PointsStore {
     this.userService.getUser(userId).subscribe({
       next: (user) => {
         this.setTotalPoints(user.totalPoints ?? 0);
-        this.setTargetPoints(user.targetPoints ?? 1);        
+        this.setTargetPoints(user.targetPoints ?? 1);
       },
       error: (err) => {
         console.warn('PointsStore.loadUser failed', err);
