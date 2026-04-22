@@ -15,6 +15,7 @@ describe('MemberService', () => {
     email: 'anders@test.com',
     role: 'PARENT',
     totalPoints: 50,
+    targetPoints: 100,
     family: { email: 'test@family.com' },
     familyEmail: 'test@family.com',
   };
@@ -27,6 +28,7 @@ describe('MemberService', () => {
       email: 'maja@test.com',
       role: 'CHILD',
       totalPoints: 30,
+      targetPoints: 100,
       family: { email: 'test@family.com' },
     },
   ];
@@ -70,6 +72,7 @@ describe('MemberService', () => {
         email: 'svend@test.com',
         role: 'CHILD',
         totalPoints: 0,
+        targetPoints: 100,
         family: { email: 'test@family.com' },
       };
 

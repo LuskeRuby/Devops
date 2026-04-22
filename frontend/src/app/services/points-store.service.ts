@@ -9,11 +9,11 @@ export class PointsStore {
 
   // Base signals
   totalPoints = signal(0);
-  targetPoints = signal(100);
+  targetPoints = signal(1);
 
   safeTarget = computed(() => Math.max(this.targetPoints() ?? 0, 1));
   currentLevelPoints = computed(() => this.totalPoints() % this.safeTarget());
-  progress = computed(() => (this.currentLevelPoints() / this.safeTarget()) * 100);
+  progress = computed(() => (this.currentLevelPoints() / this.targetPoints()) * 100);
   totalRewards = computed(() => Math.floor(this.totalPoints() / this.safeTarget()));
 
   setTotalPoints(value: number) {
@@ -32,11 +32,7 @@ export class PointsStore {
     this.userService.getUser(userId).subscribe({
       next: (user) => {
         this.setTotalPoints(user.totalPoints ?? 0);
-
-        const current = this.userService.currentUser();
-        if (current && current.id === userId) {
-          this.userService.setCurrentUser({ ...current, ...user });
-        }
+        this.setTargetPoints(user.targetPoints ?? 1);
       },
       error: (err) => {
         console.warn('PointsStore.loadUser failed', err);
