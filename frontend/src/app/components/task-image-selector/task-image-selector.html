@@ -12,7 +12,16 @@
     } @else {
       <div class="image-grid">
         @for (id of imageIds(); track id) {
-          <div class="image-item" [class.selected]="id === selectedId()" (click)="selectImage(id)">
+          <div
+            class="image-item"
+            [class.selected]="id === selectedId()"
+            (click)="selectImage(id)"
+            (keydown.enter)="selectImage(id)"
+            (keydown.space)="selectImage(id); $event.preventDefault()"
+            tabindex="0"
+            role="button"
+            aria-label="Vælg billede"
+          >
             <img [src]="getImageUrl(id)" alt="Task Image" />
           </div>
         } @empty {

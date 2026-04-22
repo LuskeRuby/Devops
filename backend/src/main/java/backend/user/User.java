@@ -29,6 +29,7 @@ public class User {
     private String role;
     private String pincode;
     private int totalPoints; // Reward points storage
+    private int targetPoints;
 
     @ManyToOne
     @JoinColumn(name = "family_email", referencedColumnName = "email")

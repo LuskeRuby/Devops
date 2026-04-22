@@ -18,7 +18,7 @@
           <div class="rewards-row">
             <span class="reward-text">Belønninger <span class="gift-icon">🎁</span></span>
             <div class="reward-box">
-              <span>{{ calculateRewards(user.totalPoints || 0) }}</span>
+              <span>{{ calculateRewards(user.totalPoints || 0, user.targetPoints || 1) }}</span>
             </div>
           </div>
         </div>

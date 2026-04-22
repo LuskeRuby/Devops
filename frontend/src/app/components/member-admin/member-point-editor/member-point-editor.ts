@@ -4,6 +4,7 @@ import { User, UserService } from '../../../services/user.service';
 
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { PointsStore } from '../../../services/points-store.service';
 
 @Component({
   selector: 'app-member-point-editor',
@@ -15,6 +16,7 @@ import { debounceTime } from 'rxjs/operators';
 export class MemberPointEditorComponent implements OnInit, OnDestroy {
   member = input.required<User>();
   userService = inject(UserService);
+  pointStore = inject(PointsStore);
 
   readonly PlusIcon = Plus;
   readonly MinusIcon = Minus;
@@ -29,8 +31,6 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
       if (deltaToSend !== 0) {
         this.accumulatedDelta = 0;
         this.userService.addPoints(this.member().id, deltaToSend).subscribe({
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          next: () => {},
           error: (err: unknown) => {
             console.error('Failed to update points', err);
             // Revert exactly the amount on error
@@ -39,6 +39,9 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
         });
       }
     });
+    if (this.member().id === this.userService.currentUser()?.id) {
+      this.pointStore.loadUser(this.member().id);
+    }
   }
 
   ngOnDestroy() {
@@ -46,23 +49,31 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
   }
 
   get totalRewards(): number {
-    return Math.floor((this.member().totalPoints || 0) / 100);
+    return Math.floor((this.member().totalPoints || 0) / this.pointStore.targetPoints());
   }
 
   adjustPoints(rewardDelta: number) {
     const currentPoints = this.member().totalPoints || 0;
-    const pointDelta = rewardDelta * 100;
+
+    const pointDelta = rewardDelta * this.pointStore.targetPoints();
 
     // Prevent the number of rewards from falling below 0
     if (this.totalRewards + rewardDelta < 0) {
       return;
     }
 
-    // Optimistically update the UI instantly
     this.member().totalPoints = currentPoints + pointDelta;
 
     // Accumulate the delta and push to the debouncer
     this.accumulatedDelta += pointDelta;
+
     this.pointsSubject.next(pointDelta);
+
+    if (this.member().id === this.userService.currentUser()?.id) {
+      const newTotal = this.member().totalPoints;
+      if (newTotal !== undefined) {
+        this.pointStore.setTotalPoints(newTotal);
+      }
+    }
   }
 }

@@ -58,6 +58,6 @@ describe('SelectMemberPageComponent', () => {
   });
 
   it('should calculate rewards correctly', () => {
-    expect(component.calculateRewards(250)).toBe(2);
+    expect(component.calculateRewards(250, 100)).toBe(2);
   });
 });
