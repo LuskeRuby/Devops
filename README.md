@@ -1,6 +1,6 @@
 ## 🛠️ Backend: Spring Boot (Package by Feature)
 
-This Spring Boot backend is organized using a **Package by Feature** (or Domain-Driven) architecture. Instead of grouping files by their technical layer (e.g., putting all controllers together in one giant folder), we group everything related to a specific business capability into a single, cohesive package.
+This Spring Boot backend is organized using a **Package by Feature** (or Domain-Driven) architecture. Instead of grouping files by their technical layer (e.g., putting all controllers together in one giant folder), we group everything related to a specific business capability into a single, cohesive package. 
 
 ```text
 backend/src/main/java/backend/
