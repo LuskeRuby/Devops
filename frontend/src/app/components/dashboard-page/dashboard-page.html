@@ -32,11 +32,7 @@
 
       @if (isParent && familyMembers().length > 0) {
         <div class="member-filter">
-          <button
-            class="filter-chip"
-            [class.active]="isAllSelected"
-            (click)="selectAll()"
-          >
+          <button class="filter-chip" [class.active]="isAllSelected" (click)="selectAll()">
             Alle
           </button>
           @for (member of familyMembers(); track member.id) {
@@ -46,11 +42,7 @@
               (click)="toggleUser(member.id)"
             >
               @if (getMemberImageUrl(member)) {
-                <img
-                  [src]="getMemberImageUrl(member)"
-                  [alt]="member.name"
-                  class="filter-avatar"
-                />
+                <img [src]="getMemberImageUrl(member)" [alt]="member.name" class="filter-avatar" />
               } @else {
                 <span class="filter-initials">{{ getMemberInitials(member.name) }}</span>
               }
