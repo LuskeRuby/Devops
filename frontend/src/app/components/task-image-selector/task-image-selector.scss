@@ -1,6 +1,9 @@
 .dialog-container {
   padding: 1rem;
   background-color: var(--mdc-dialog-container-color, white);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   .dialog-header {
     display: flex;
@@ -34,7 +37,9 @@
   }
 
   .dialog-content {
-    min-height: 200px;
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1;
     display: flex;
     flex-direction: column;
 

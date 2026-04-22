@@ -149,7 +149,8 @@ export class CalendarEventDialogComponent implements OnInit {
 
   openImageSelector(): void {
     const dialogRef = this.dialog.open(TaskImageSelectorComponent, {
-      width: '400px',
+      width: '460px',
+      height: '80vh',
     });
 
     dialogRef.afterClosed().subscribe((selectedId: number | undefined) => {
