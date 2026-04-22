@@ -14,7 +14,7 @@
 
       <div class="card-body">
 
-        <!-- TOP BAR: checkbox · title · assignees -->
+        <!-- TOP BAR: checkbox · title+users · image · points -->
         <div class="card-header">
           <div class="checkbox-container">
             <input
@@ -25,28 +25,33 @@
               aria-label="Toggle task status"
             />
           </div>
-          <div class="card-title">{{ calEvent.title }}</div>
-          @if (calEvent.meta?.assignedUserNames?.length) {
-            <div class="card-assignees">
-              @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
-                <div class="initial-circle">{{ init }}</div>
-              }
-            </div>
+
+          <div class="card-title-group">
+            <div class="card-title">{{ calEvent.title }}</div>
+            @if (calEvent.meta?.assignedUserNames?.length) {
+              <div class="card-assignees">
+                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                  <div class="initial-circle">{{ init }}</div>
+                }
+              </div>
+            }
+          </div>
+
+          @if (calEvent.meta?.imageId) {
+            <img
+              class="card-thumb"
+              [src]="getImageUrl(calEvent.meta.imageId)"
+              [alt]="calEvent.title"
+            />
           }
+
           @if (calEvent.meta?.points > 0) {
             <div class="card-points">{{ calEvent.meta?.points }} pts</div>
           }
         </div>
 
-        <!-- IMAGE SECTION: bg image + dark overlay + white description caption -->
-        <div
-          class="card-image-section"
-          [class.has-image]="calEvent.meta?.imageId"
-          [style.backgroundImage]="calEvent.meta?.imageId ? 'url(' + getImageUrl(calEvent.meta.imageId) + ')' : null"
-        >
-          @if (calEvent.meta?.imageId) {
-            <div class="card-shade"></div>
-          }
+        <!-- CONTENT SECTION: theme colour + description -->
+        <div class="card-image-section">
           @if (calEvent.meta?.description) {
             <div class="card-description">{{ calEvent.meta.description }}</div>
           }
@@ -69,10 +74,10 @@
         [locale]="locale"
         [weekStartsOn]="weekStartsOn"
         [eventTemplate]="eventTemplate"
-        [hourSegments]="4"
-        [hourSegmentHeight]="55"
-        [dayStartHour]="5"
-        [dayEndHour]="23"
+        [hourSegments]="2"
+        [hourSegmentHeight]="24"
+        [dayStartHour]="6"
+        [dayEndHour]="22"
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
@@ -88,10 +93,10 @@
         [refresh]="refresh"
         [locale]="locale"
         [eventTemplate]="eventTemplate"
-        [hourSegments]="4"
-        [hourSegmentHeight]="55"
-        [dayStartHour]="5"
-        [dayEndHour]="23"
+        [hourSegments]="2"
+        [hourSegmentHeight]="24"
+        [dayStartHour]="6"
+        [dayEndHour]="22"
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
