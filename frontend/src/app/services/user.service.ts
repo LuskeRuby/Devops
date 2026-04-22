@@ -10,6 +10,7 @@ export interface User {
   email: string;
   role?: string;
   totalPoints?: number;
+  targetPoints: number;
   imageId?: number;
   pincode?: string;
   family: {

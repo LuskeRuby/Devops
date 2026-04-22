@@ -12,14 +12,12 @@ import { PointsStore } from '../../services/points-store.service';
 })
 export class TotalPointsDisplayComponent {
   totalPoints = input<number>(0);
-  targetPoints = input<number>(100);
+  targetPoints = input<number>(1);
   userId = input<number | null>(null);
 
   private readonly pointsStore = inject(PointsStore);
 
   constructor() {
-    effect(() => this.pointsStore.setTotalPoints(this.totalPoints()));
-    effect(() => this.pointsStore.setTargetPoints(this.targetPoints()));
     effect(() => {
       const id = this.userId();
       if (id) {

@@ -4,6 +4,7 @@ import { User, UserService } from '../../../services/user.service';
 
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { PointsStore } from '../../../services/points-store.service';
 
 @Component({
   selector: 'app-member-point-editor',
@@ -15,6 +16,7 @@ import { debounceTime } from 'rxjs/operators';
 export class MemberPointEditorComponent implements OnInit, OnDestroy {
   member = input.required<User>();
   userService = inject(UserService);
+  pointStore = inject(PointsStore);
 
   readonly PlusIcon = Plus;
   readonly MinusIcon = Minus;
@@ -29,7 +31,6 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
       if (deltaToSend !== 0) {
         this.accumulatedDelta = 0;
         this.userService.addPoints(this.member().id, deltaToSend).subscribe({
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
           next: () => {},
           error: (err: unknown) => {
             console.error('Failed to update points', err);
@@ -46,7 +47,7 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
   }
 
   get totalRewards(): number {
-    return Math.floor((this.member().totalPoints || 0) / 100);
+    return Math.floor((this.member().totalPoints || 0) / this.pointStore.targetPoints());
   }
 
   adjustPoints(rewardDelta: number) {

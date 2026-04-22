@@ -54,8 +54,7 @@ export class SelectMemberPageComponent implements OnInit {
     this.router.navigate(['/member-pin'], { state: { user } });
   }
 
-  calculateRewards(totalPoints: number): number {
-    const targetPoints = 100;
+  calculateRewards(totalPoints: number, targetPoints: number): number {
     return Math.floor(totalPoints / targetPoints);
   }
 

@@ -32,6 +32,7 @@ public class UserService {
                 user.getEmail(),
                 user.getRole(),
                 user.getTotalPoints(),
+                user.getTargetPoints(),
                 user.getFamily() != null ? user.getFamily().getEmail() : null,
                 user.getImage() != null ? user.getImage().getId() : null);
     }
@@ -55,6 +56,9 @@ public class UserService {
         if (user.getImage() == null) {
             imageRepository.findByName("default-avatar.png").ifPresent(user::setImage);
         }
+        
+        user.setTargetPoints(200); // Hardcoded for now...
+
         return toDto(userRepository.save(user));
     }
 
