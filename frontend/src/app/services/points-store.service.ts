@@ -32,12 +32,7 @@ export class PointsStore {
     this.userService.getUser(userId).subscribe({
       next: (user) => {
         this.setTotalPoints(user.totalPoints ?? 0);
-        this.setTargetPoints(user.targetPoints ?? 1);
-
-        const current = this.userService.currentUser();
-        if (current && current.id === userId) {
-          this.userService.setCurrentUser({ ...current, ...user });
-        }
+        this.setTargetPoints(user.targetPoints ?? 1);        
       },
       error: (err) => {
         console.warn('PointsStore.loadUser failed', err);

@@ -40,6 +40,9 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
         });
       }
     });
+    if(this.member().id === this.userService.currentUser()?.id) {
+      this.pointStore.loadUser(this.member().id);
+    }
   }
 
   ngOnDestroy() {
@@ -52,18 +55,26 @@ export class MemberPointEditorComponent implements OnInit, OnDestroy {
 
   adjustPoints(rewardDelta: number) {
     const currentPoints = this.member().totalPoints || 0;
-    const pointDelta = rewardDelta * 100;
+    
+    const pointDelta = rewardDelta * this.pointStore.targetPoints();
 
     // Prevent the number of rewards from falling below 0
     if (this.totalRewards + rewardDelta < 0) {
       return;
     }
 
-    // Optimistically update the UI instantly
     this.member().totalPoints = currentPoints + pointDelta;
 
     // Accumulate the delta and push to the debouncer
     this.accumulatedDelta += pointDelta;
+
     this.pointsSubject.next(pointDelta);
+
+    if(this.member().id === this.userService.currentUser()?.id) {
+      const newTotal = this.member().totalPoints;
+      if(newTotal !== undefined) {
+        this.pointStore.setTotalPoints(newTotal);
+      }
+    }
   }
 }
