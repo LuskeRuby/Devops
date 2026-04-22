@@ -13,7 +13,6 @@
       <div class="card-accent" [style.backgroundColor]="calEvent.color?.primary || '#4285f4'"></div>
 
       <div class="card-body">
-
         <!-- TOP BAR: checkbox · title+users · image · points -->
         <div class="card-header">
           <div class="checkbox-container">
@@ -42,7 +41,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   }
@@ -67,8 +65,7 @@
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
-      >
-      </mwl-calendar-week-view>
+      ></mwl-calendar-week-view>
     }
 
     <!-- DAY VIEW -->
@@ -86,8 +83,7 @@
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
-      >
-      </mwl-calendar-day-view>
+      ></mwl-calendar-day-view>
     }
   } @else {
     <!-- KIDS DASHBOARD VIEW -->
