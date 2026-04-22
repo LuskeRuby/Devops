@@ -16,6 +16,7 @@ describe('UserService', () => {
     email: 'anders@test.com',
     role: 'PARENT',
     totalPoints: 50,
+    targetPoints: 100,
     imageId: 1,
     family: { email: 'test@family.com' },
     familyEmail: 'test@family.com',
