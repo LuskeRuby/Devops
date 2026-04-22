@@ -13,39 +13,32 @@
       <div class="card-accent" [style.backgroundColor]="calEvent.color?.primary || '#4285f4'"></div>
 
       <div class="card-body">
-        <div class="checkbox-container">
-          <input
-            type="checkbox"
-            [checked]="calEvent.meta?.checked"
-            [disabled]="!canToggleTask(calEvent)"
-            (click)="handleCheckboxClick(calEvent, $event)"
-            aria-label="Toggle task status"
-          />
-        </div>
-
-        <!-- TEXT CONTENT SECTION -->
-        <div class="card-info" style="margin-left: 24px">
-          <div class="card-top">
-            <div class="card-title">{{ calEvent.title }}</div>
-            @if (calEvent.meta?.points > 0) {
-              <div class="card-points">{{ calEvent.meta?.points }} pts</div>
-            }
+        <!-- TOP BAR: checkbox · title+users · image · points -->
+        <div class="card-header">
+          <div class="checkbox-container">
+            <input
+              type="checkbox"
+              [checked]="calEvent.meta?.checked"
+              [disabled]="!canToggleTask(calEvent)"
+              (click)="handleCheckboxClick(calEvent, $event)"
+              aria-label="Toggle task status"
+            />
           </div>
 
-          <div class="card-bottom">
-            <div class="card-time">
-              {{ calEvent.start | date: 'HH:mm' }} -
-              {{ calEvent.end || calEvent.start | date: 'HH:mm' }}
+          <div class="card-title-group">
+            <div class="card-title">{{ calEvent.title }}</div>
+            <div class="card-meta-row">
+              @if (calEvent.meta?.assignedUserNames?.length) {
+                <div class="card-assignees">
+                  @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
+                    <div class="initial-circle">{{ init }}</div>
+                  }
+                </div>
+              }
+              @if (calEvent.meta?.points > 0) {
+                <div class="card-points">{{ calEvent.meta?.points }} pts</div>
+              }
             </div>
-
-            @if (calEvent.meta?.assignedUserNames?.length) {
-              <div class="card-divider">|</div>
-              <div class="card-assignees">
-                @for (init of getUserInitials(calEvent.meta.assignedUserNames); track $index) {
-                  <div class="initial-circle">{{ init }}</div>
-                }
-              </div>
-            }
           </div>
         </div>
       </div>
@@ -60,39 +53,37 @@
     @if (!isDayView) {
       <mwl-calendar-week-view
         [viewDate]="viewDate"
-        [events]="events()"
+        [events]="displayedEvents()"
         [refresh]="refresh"
         [locale]="locale"
         [weekStartsOn]="weekStartsOn"
         [eventTemplate]="eventTemplate"
-        [hourSegments]="4"
-        [hourSegmentHeight]="55"
-        [dayStartHour]="5"
-        [dayEndHour]="23"
+        [hourSegments]="2"
+        [hourSegmentHeight]="24"
+        [dayStartHour]="6"
+        [dayEndHour]="22"
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
-      >
-      </mwl-calendar-week-view>
+      ></mwl-calendar-week-view>
     }
 
     <!-- DAY VIEW -->
     @if (isDayView) {
       <mwl-calendar-day-view
         [viewDate]="viewDate"
-        [events]="events()"
+        [events]="displayedEvents()"
         [refresh]="refresh"
         [locale]="locale"
         [eventTemplate]="eventTemplate"
-        [hourSegments]="4"
-        [hourSegmentHeight]="55"
-        [dayStartHour]="5"
-        [dayEndHour]="23"
+        [hourSegments]="2"
+        [hourSegmentHeight]="24"
+        [dayStartHour]="6"
+        [dayEndHour]="22"
         (eventClicked)="onEventTemplateClick($event.event, $event.sourceEvent)"
         (eventTimesChanged)="onEventTimesChanged($event)"
         (hourSegmentClicked)="onHourSegmentClicked($event)"
-      >
-      </mwl-calendar-day-view>
+      ></mwl-calendar-day-view>
     }
   } @else {
     <!-- KIDS DASHBOARD VIEW -->

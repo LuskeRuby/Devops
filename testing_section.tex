@@ -1,0 +1,123 @@
+\section{Testing and Evaluation (Martin \& Rasmus)}
+\subsection{Automated Testing}
+As mentioned in Section~\ref{sec:cicd}, all automated tests were run as part of the CI/CD pipeline on every push and pull request to main. Our testing strategy was structured around the \textit{test pyramid} (Figure~\ref{fig:testpyramid}), where the majority of tests are fast, isolated unit tests, a smaller set of integration tests verify that components work together correctly, and a few end-to-end tests cover full user flows through the running application. We chose this approach because it keeps feedback fast during development while still catching bugs at every layer of the system.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{figures/testing_pyramid.jpeg}
+    \caption{The test pyramid, illustrating the distribution of unit, integration, and end-to-end tests \cite{testrigor_pyramid}.}
+    \label{fig:testpyramid}
+\end{figure}
+\noindent
+In terms of white-box versus black-box testing: our unit tests are white-box, meaning we wrote them with full knowledge of the internal implementation, mocking out dependencies to test individual classes in isolation. Our integration and end-to-end tests are black-box, in the sense that they treat the system from the outside and verify behaviour without caring about how it is implemented internally.
+
+\subsubsection{Unit Tests}
+
+Our unit tests were written with \textbf{JUnit~5} on the backend and \textbf{Vitest} on the frontend.
+\newline
+\newline
+\noindent
+On the backend, every service class has a corresponding test class. We used \textbf{Mockito} to replace real dependencies with mocks, so each test could focus on the logic of a single class without touching the database or the network. We organised tests using JUnit~5's \textit{@Nested} and \textit{@DisplayName} annotations, grouping related test cases by method and giving each test a descriptive name in plain language. This made it easy to see at a glance what was covered and what was not, and made test output much more readable in CI, as seen in Figure~\ref{fig:unittests}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/unit_test_intellijey.png}
+    \caption{IntelliJ test results for \textit{TaskServiceTest}, showing the \textit{@Nested} group structure and \textit{@DisplayName} labels.}
+    \label{fig:unittests}
+\end{figure}
+\noindent
+The service tests covered a fairly wide range of cases. \textit{TaskServiceTest} tested role-based access (only parents can create, update or delete tasks), that negative point values are clamped to zero, that marking a task as complete is idempotent and does not re-award points, and that unmarking a task correctly deducts points without going below zero. The code snippet below shows the \textit{markAsCompleted} test group as an example of this structure. \textit{FamilyServiceTest} covered registration including duplicate email rejection and password hashing, login including JWT generation and refresh-token cookie injection, and token rotation. \textit{UserServiceTest} covered PIN validation, adding points, and profile image assignment. \textit{MessageServiceTest} checked that timestamps are set at save time rather than taken from the incoming DTO, and that users without a profile image do not cause errors. We also tested the security layer directly in \textit{FamilyDetailsServiceTest}, verifying that \textit{loadUserByUsername} throws a \textit{UsernameNotFoundException} for unknown or blank emails.
+\begin{verbatim}
+@Nested
+@DisplayName("markAsCompleted")
+class MarkAsCompleted {
+    @Test
+    @DisplayName("sets checked=true and awards points to assigned users")
+    void setsCheckedAndAwardsPoints() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(testTask));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(child));
+        when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
+        Task result = taskService.markAsCompleted(10L, 2L);
+        assertThat(result.getChecked()).isTrue();
+        assertThat(child.getTotalPoints()).isEqualTo(20);
+        verify(userRepository).save(child);
+    }
+\end{verbatim}
+\noindent
+We also wrote unit tests for the controller layer in \textit{TaskControllerTest}. These focused on input validation, such as rejecting blank task names, missing user IDs, or null payloads, and on the DTO mapping logic in \textit{convertToDto}. Mocking the service layer meant these tests ran without a Spring context, so they were fast.
+\newline
+\newline
+\noindent
+On the frontend, every Angular service and most components have a \textit{.spec.ts} file. Tests used Angular's \textbf{TestBed} to set up an isolated environment, and HTTP requests were intercepted with \textit{HttpTestingController} so we could assert on what the service sent to the API without making real network calls. The \textit{AuthService} tests for example confirmed that a successful login stores the token and family email correctly, and that the router navigates away on logout.
+
+\subsubsection{Integration Tests}
+
+For integration tests we used \textbf{Testcontainers}, a library that starts a real Docker container as part of the test run. In our case it spun up a \textit{postgres:17-alpine} container so we could run our JPA queries against an actual PostgreSQL database rather than an in-memory substitute.
+\newline
+\newline
+\noindent
+The common alternative to Testcontainers in Spring Boot projects is \textbf{H2}, an in-memory database that can be swapped in during tests. We chose not to use H2 because it is a different database engine from the PostgreSQL we run in production, and it only partially emulates PostgreSQL's behaviour. This means certain queries, constraints, or type mappings that work fine in PostgreSQL may behave differently or not at all in H2, which can lead to tests that pass locally but fail against the real database. Since we already had Docker available as part of our CI setup and were running PostgreSQL everywhere else, it was the obvious implementation. Figure~\ref{fig:testcontainers} shows the container being started during a test run.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/testcontainers_startup.png}
+    \caption{Testcontainers spinning up a \textit{postgres:17-alpine} Docker container during the integration test run.}
+    \label{fig:testcontainers}
+\end{figure}
+\noindent
+We set this up in a shared \textit{TestcontainersConfiguration} class that started a single container and reused it across all integration tests, which saved a lot of time compared to starting a fresh container for each class. Spring Boot's \textit{@ServiceConnection} annotation then automatically configured the datasource from the running container, as shown in the code snippet below.
+\begin{verbatim}
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+    private static final PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:17-alpine")
+                    .withDatabaseName("testdb")
+                    .withUsername("test")
+                    .withPassword("test");
+    static {
+        postgres.start();
+    }
+    @Bean
+    @ServiceConnection
+    public PostgreSQLContainer<?> postgresContainer() {
+        return postgres;
+    }
+}
+\end{verbatim}
+\noindent
+Our repository tests used the \textit{@DataJpaTest} slice, which only loads the JPA layer. \textit{TaskRepositoryIT} tested our custom queries \textit{findByUsers\_Id} and \textit{findDistinctByUsers\_Family\_Email}, checking that tasks are correctly scoped to the right user or family, that a task shared between two users only appears once in the results, and that all task fields survive a full round-trip through the database. \textit{UserRepositoryIT} did the same for users, confirming that \textit{findByFamilyEmail} only returns users from the correct family, and that fields like PIN code and total points are persisted and retrieved correctly.
+\newline
+\newline
+\noindent
+The most involved integration test was \textit{ChatWebSocketIT}. This one extended \textit{AbstractIntegrationTest}, which boots a full Spring Boot application on a random port with Testcontainers providing the database. The test sets up a real STOMP over WebSocket connection using \textit{WebSocketStompClient}, authenticates with a JWT, subscribes to the family message topic, sends a chat message, and then checks that the response arrives on the topic with the correct content, username, user ID, image ID and timestamp. We also tested that connections without a token and connections with an invalid token are rejected. We used a \textit{BlockingQueue} with a timeout to wait for asynchronous responses, and captured any server-side STOMP exceptions so a meaningful error message would appear if something went wrong during the handshake. All three tests passing can be seen in Figure~\ref{fig:websockettests}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/websocket_tests.png}
+    \caption{IntelliJ test results for \textit{ChatWebSocketIT}, showing all three WebSocket integration tests passing.}
+    \label{fig:websockettests}
+\end{figure}
+
+\subsubsection{End-to-End Tests with Playwright}
+
+At the top of the pyramid we used \textbf{Playwright} for end-to-end testing. We chose Playwright because it supports multiple browsers and can emulate different devices, which was relevant for us since the app is used on both desktop by parents and on mobile by children. We configured two test projects in \textit{playwright.config.ts}: \textit{Desktop Chrome} for the parent view and \textit{iPhone~13} for the child view.
+\newline
+\newline
+\noindent
+Playwright's \textit{webServer} configuration automatically starts both the backend and the Angular dev server before any tests run, so we always test against a fully running stack. Authentication was handled in a \textit{global-setup.ts} file that injects a valid JWT directly into browser storage before the tests begin, so we did not have to automate the family login form in every single test.
+\newline
+\newline
+\noindent
+We wrote two happy-path tests. The first covers the full login flow: logging in as the family, selecting a member, entering the PIN, and landing on the dashboard. The second tests task creation: navigating to the task page, filling in the name, description and repeat interval, selecting an assigned user, and submitting the form. Since the task page does not show a task list directly, we verified success by asserting that the name field was cleared after submission, which happens when the component's API callback runs and resets the form.
+\newline
+\newline
+\noindent
+We also configured Playwright to retry each failing test once and record a trace on the first retry. This made it much easier to debug flaky tests, since the trace includes a full timeline of network requests and DOM snapshots. The Playwright HTML report is uploaded as a GitHub Actions artefact with a 30-day retention period so it is always available after a run.
+
+\subsubsection{Test Coverage}
+
+We measured backend test coverage with the \textbf{JaCoCo} Maven plugin, which instruments the code during the test phase and generates an HTML report. It runs automatically as part of \textit{mvn verify}, so we always had up-to-date coverage data in CI without any extra steps. We used the report to find untested branches and add cases where it made sense. The full coverage breakdown is shown in Figure~\ref{fig:jacoco}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/jacoco_coverage.png}
+    \caption{JaCoCo coverage report showing 75\% instruction coverage and 72\% branch coverage across the backend packages.}
+    \label{fig:jacoco}
+\end{figure}
+\noindent
+On the frontend we used \textbf{@vitest/coverage-v8} for coverage, which uses V8's built-in instrumentation. Our goal was not to hit a specific percentage but to make sure that the most critical logic, particularly around role checks, authentication, and input validation, was covered by tests that actually verified meaningful behaviour rather than just that the code runs without throwing.
