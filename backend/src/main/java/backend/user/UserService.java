@@ -57,7 +57,7 @@ public class UserService {
             imageRepository.findByName("default-avatar.png").ifPresent(user::setImage);
         }
         
-        user.setTargetPoints(200); // Hardcoded for now...
+        user.setTargetPoints(100); // Hardcoded for now...
 
         return toDto(userRepository.save(user));
     }
