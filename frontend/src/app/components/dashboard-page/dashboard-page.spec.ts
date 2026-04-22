@@ -24,6 +24,7 @@ describe('DashboardPage', () => {
 
     userService = {
       currentUser: vi.fn().mockReturnValue(mockParent),
+      getUsersByFamilyEmail: vi.fn().mockReturnValue({ subscribe: vi.fn() }),
     };
 
     await TestBed.configureTestingModule({
