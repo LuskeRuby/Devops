@@ -10,6 +10,10 @@ import backend.family.dto.FamilyLoginDto;
 import backend.family.dto.FamilyRequestDto;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -96,9 +100,9 @@ public class FamilyService {
     public FamilyAuthResponseDto refresh(String refreshToken, HttpServletResponse response) {
         RefreshToken rotated = refreshTokenService.rotateRefreshToken(refreshToken);
         
-        java.util.Map<String, Object> claims = new java.util.HashMap<>();
-        if (rotated.getUserId() != null) {
-            claims.put("userId", rotated.getUserId());
+        Map<String, Object> claims = new HashMap<>();
+        if (rotated.getUser() != null) {
+            claims.put("userId", rotated.getUser().getId());
         }
         if (rotated.getRole() != null) {
             claims.put("role", rotated.getRole());
