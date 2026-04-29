@@ -1,6 +1,7 @@
 package backend.common.security.refreshtoken;
 
 import backend.family.Family;
+import backend.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,6 +30,9 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     private String role;
 }

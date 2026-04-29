@@ -1,6 +1,8 @@
 package backend.common.security.refreshtoken;
 
 import backend.family.Family;
+import backend.user.User;
+import backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +14,7 @@ import java.time.Instant;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
 
     /**
      * Creates a new refresh token for the given family.
@@ -28,10 +31,12 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(Family family, Long userId, String role) {
+        User user = userId != null ? userRepository.findById(userId).orElse(null) : null;
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(java.util.UUID.randomUUID().toString());
         refreshToken.setFamily(family);
-        refreshToken.setUserId(userId);
+        refreshToken.setUser(user);
         refreshToken.setRole(role);
         refreshToken.setExpiresAt(java.time.Instant.now().plus(1, java.time.temporal.ChronoUnit.DAYS));
 
@@ -60,10 +65,10 @@ public class RefreshTokenService {
         }
 
         Family family = existing.getFamily();
-        Long userId = existing.getUserId();
+        User user = existing.getUser();
         String role = existing.getRole();
 
         refreshTokenRepository.delete(existing);
-        return createRefreshToken(family, userId, role);
+        return createRefreshToken(family, user.getId(), role);
     }
 }
