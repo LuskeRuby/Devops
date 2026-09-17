@@ -1,4 +1,4 @@
-name: Kids Planner CI/CD
+name: Family Planner CI/CD
 
 on:
   push:
@@ -79,6 +79,11 @@ jobs:
             
             export PROD_DB_USER="$PROD_DB_USER"
             export PROD_DB_PASSWORD="$PROD_DB_PASSWORD"
+            
+            # One-time cleanup (K2): the compose project used to be named after the folder
+            # (full-stack-app). It is now fixed as "family-planner" in docker-compose.yml, so stop
+            # the old stack to free ports 80/443. Remove this line after the first deploy.
+            docker compose -p full-stack-app -f docker-compose.yml -f docker-compose.prod.yml down
             
             docker compose -f docker-compose.yml -f docker-compose.prod.yml down
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build

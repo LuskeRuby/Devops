@@ -1,0 +1,19 @@
+# Line endings (backlog K2).
+# Store and check out text files with LF on every OS, so Linux tools, Docker
+# bind mounts and Prettier see the same files as Windows.
+* text=auto eol=lf
+
+# Windows scripts must keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files: never convert or diff as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.jar  binary
+*.woff binary
+*.woff2 binary

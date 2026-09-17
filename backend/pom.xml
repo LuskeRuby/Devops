@@ -9,23 +9,22 @@
 		<version>3.5.11</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example</groupId>
+	<groupId>io.github.luskeruby</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>backend</name>
-	<description>Demo project for Spring Boot</description>
-	<url />
+	<name>Family Planner backend</name>
+	<description>Spring Boot REST and WebSocket API for the Family Planner app (DTU 62582)</description>
+	<url>https://github.com/LuskeRuby/Devops</url>
 	<licenses>
-		<license />
+		<license>
+			<name>MIT</name>
+			<url>https://github.com/LuskeRuby/Devops/blob/main/LICENSE</url>
+		</license>
 	</licenses>
-	<developers>
-		<developer />
-	</developers>
 	<scm>
-		<connection />
-		<developerConnection />
-		<tag />
-		<url />
+		<connection>scm:git:https://github.com/LuskeRuby/Devops.git</connection>
+		<developerConnection>scm:git:git@github.com:LuskeRuby/Devops.git</developerConnection>
+		<url>https://github.com/LuskeRuby/Devops</url>
 	</scm>
 	<properties>
 		<java.version>25</java.version>

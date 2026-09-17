@@ -6,7 +6,7 @@ import { request } from '@playwright/test';
  * never depend on seed data with unknown passwords.
  */
 async function globalSetup() {
-  // Call the backend directly — ng serve has no /api proxy configured
+  // Call the backend directly, so setup does not depend on the ng serve proxy
   const api = await request.newContext({ baseURL: 'http://localhost:8080' });
 
   // Register the test family — ignore 409 if it already exists

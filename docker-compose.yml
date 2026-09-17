@@ -1,3 +1,6 @@
+# Fixed project name, so container/volume names don't depend on the checkout folder (K2).
+name: family-planner
+
 services:
   postgres:
     image: postgres:17
