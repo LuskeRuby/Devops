@@ -4,7 +4,27 @@ A family calendar and chore planner: parents plan tasks and award points, childr
 rewards, and the family can chat. Angular SPA/PWA, Spring Boot API, PostgreSQL.
 
 Built in the DTU full stack course and continued in **62582 Complex Systems and DevOps** (autumn 2026).
-The DevOps backlog (what is missing and why) is in [`docs/devops-backlog.md`](docs/devops-backlog.md).
+
+## Screenshots
+
+**Family login** — one account per household.
+
+<img src="docs/images/login.png" width="800" alt="Family login screen">
+
+**Member selection** — after signing in, the family picks who is using the app. Each member has an
+avatar and a reward balance.
+
+<img src="docs/images/member-select.png" width="800" alt="Member selection screen">
+
+**Parent view** — the weekly calendar with tasks, a filter per family member, task creation, family
+administration and the family chat.
+
+<img src="docs/images/parent-dashboard.png" width="800" alt="Parent dashboard">
+
+**Child view** — the same data reduced to what is due today: the task, the time, the points on offer,
+and one button.
+
+<img src="docs/images/child-dashboard.png" width="800" alt="Child dashboard">
 
 ## Architecture
 
@@ -183,7 +203,7 @@ Repository secrets used by the deploy job: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_
 `SSL_PRIVATE_KEY`, `PROD_DB_USER`, `PROD_DB_PASSWORD`.
 
 Known gaps in the pipeline and the deployment (the VM path still comes from the full stack course, no image
-registry, no health checks, and more) are tracked in [`docs/devops-backlog.md`](docs/devops-backlog.md).
+registry, no health checks, and more) are known and not yet addressed.
 
 ## Line endings
 
