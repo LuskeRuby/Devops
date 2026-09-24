@@ -1,0 +1,93 @@
+# Dependabot version updates (QA-1, #14).
+# Reference: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+#
+# Every entry runs weekly and groups minor + patch bumps into one PR per directory.
+# Major bumps arrive as separate PRs. If we're not ready for one, comment on the PR:
+#   @dependabot ignore this major version
+#
+# Dependabot waits 3 days after a release before proposing it (default cooldown),
+# which gives the registry time to pull hijacked releases. Security updates skip the wait.
+version: 2
+
+updates:
+  # Angular app + the root package.json (Playwright)
+  - package-ecosystem: "npm"
+    directories:
+      - "/frontend"
+      - "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Copenhagen"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Angular packages must move together (peer dependencies), so they get
+      # their own group for all update types. First matching group wins.
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+          - "@schematics/angular"
+          - "angular-eslint"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Spring Boot backend
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Copenhagen"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Base images in backend/Dockerfile and frontend/Dockerfile
+  - package-ecosystem: "docker"
+    directories:
+      - "/backend"
+      - "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Copenhagen"
+    commit-message:
+      prefix: "chore(deps)"
+    # A major image bump means a new Java or Node version, which also has to
+    # change in ci-cd.yml (setup-java / setup-node). Do those by hand.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Actions used in .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Copenhagen"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
