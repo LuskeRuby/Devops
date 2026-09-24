@@ -5,7 +5,7 @@ rewards, and the family can chat. Angular SPA/PWA, Spring Boot API, PostgreSQL.
 
 Built in the DTU full stack course and continued in **62582 Complex Systems and DevOps** (autumn 2026).
 
-## Screenshots
+## Screenshots a
 
 **Family login** — one account per household.
 
