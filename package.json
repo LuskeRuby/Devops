@@ -3,7 +3,7 @@
     "@angular-material-components/datetime-picker": "^16.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^25.6.0"
   },
   "scripts": {}
