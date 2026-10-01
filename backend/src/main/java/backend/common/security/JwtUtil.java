@@ -1,5 +1,6 @@
 package backend.common.security;
 
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class JwtUtil {
      * @return the {@link SecretKey} used to sign and verify JWTs
      */
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
     /**
