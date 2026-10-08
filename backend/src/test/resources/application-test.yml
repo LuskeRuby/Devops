@@ -1,7 +1,8 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      # Flyway builds the schema from db/migration; Hibernate validates the entities against it.
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
