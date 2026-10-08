@@ -1,7 +1,7 @@
 @echo off
 setlocal
 rem Seeds the dev database. Start the dev stack first (docker compose up) and
-rem wait until the backend is up: Hibernate creates the tables on startup.
+rem wait until the backend is up: Flyway creates the tables on startup.
 rem Override the defaults with POSTGRES_USER / POSTGRES_DB if you changed them.
 if not defined POSTGRES_USER set POSTGRES_USER=admin
 if not defined POSTGRES_DB set POSTGRES_DB=familyapp

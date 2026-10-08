@@ -102,13 +102,17 @@ Stop with `Ctrl+C`, or `docker compose down`. Add `-v` to also delete the databa
 
 ### Seed data (optional)
 
-Start the stack first and wait for the backend: Hibernate creates the tables on startup.
+Start the stack first and wait for the backend: Flyway creates the tables on startup.
 
 ```bash
 ./scripts/seed/seed.sh
 ```
 
-The schema uses `ddl-auto=create-drop`, so the data is gone after every backend restart; seed again.
+Flyway (`backend/src/main/resources/db/migration`) owns the schema, so data now survives backend restarts and
+`docker compose down`. Seeding twice fails on duplicate keys; `docker compose down -v` wipes the database.
+
+> **Upgrading an existing checkout:** if your dev database was created by the old `create-drop` setup,
+> Flyway refuses to start on it. Run `docker compose down -v` once, then `docker compose up`.
 The seeded families have no known passwords, so they are for looking at data, not for logging in.
 
 ## Run parts on the host (without the app containers)
