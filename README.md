@@ -123,19 +123,18 @@ docker compose up postgres
 ```
 
 Backend (needs JDK 25). `application.properties` points at the compose host name `postgres`, so override
-the URL and password:
 
 ```bash
 cd backend
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/familyapp \
-SPRING_DATASOURCE_PASSWORD=postgres \
+SPRING_DATASOURCE_PASSWORD=owner-dev-password \
 ./mvnw spring-boot:run
 ```
 
 ```powershell
 cd backend
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/familyapp"
-$env:SPRING_DATASOURCE_PASSWORD = "postgres"
+$env:SPRING_DATASOURCE_PASSWORD = "owner-dev-password"
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -174,6 +173,7 @@ End-to-end (Playwright). Start the dev stack first (`docker compose up`); Playwr
 ports 8080 and 4200 and registers its own test family through the API.
 
 ```bash
+cd e2e
 npm ci
 npx playwright install     # first time only: downloads the browsers
 npx playwright test

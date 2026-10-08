@@ -1,19 +1,11 @@
 # Fixed project name, so container/volume names don't depend on the checkout folder (K2).
 name: family-planner
 
-services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: familyapp
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d familyapp" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+# PostgreSQL is defined once, in infra/postgres, so it can later run on its own server.
+include:
+  - infra/postgres/docker-compose.yml
 
+services:
   backend:
     depends_on:
       postgres:
@@ -22,6 +14,3 @@ services:
   frontend:
     depends_on:
       - backend
-
-volumes:
-  postgres-data:
