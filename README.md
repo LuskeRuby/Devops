@@ -44,7 +44,7 @@ browser ──HTTPS──> nginx (frontend container)
 | Frontend | Angular 21 (standalone components), Angular Material, angular-calendar, STOMP client, service worker (production builds only) | `frontend/` |
 | Backend | Spring Boot 3.5, Java 25, Maven wrapper, Spring Security (stateless JWT + refresh-token cookie), Spring Data JPA, STOMP broker on `/topic` | `backend/` |
 | Database | PostgreSQL 17 | container `postgres` |
-| E2E tests | Playwright | `tests/`, `playwright.config.ts` |
+| E2E tests | Playwright | `e2e/` |
 | CI/CD | GitHub Actions | `.github/workflows/ci-cd.yml` |
 
 ### Code layout
@@ -83,17 +83,20 @@ is given too.
 ```bash
 git clone https://github.com/LuskeRuby/Devops.git
 cd Devops
+cp .env.example .env     # PowerShell: Copy-Item .env.example .env
 docker compose up
 ```
 
-Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) automatically. The project name
-is fixed to `family-planner`, whatever the folder is called.
+`.env` holds the database passwords (git-ignored). The values in `.env.example` are for development only.
+
+Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) automatically. PostgreSQL is defined in
+`infra/postgres/docker-compose.yml` and included from the root file.
 
 | Service | URL | Notes |
 |---|---|---|
 | frontend | http://localhost:4200 | `ng serve` with live reload; proxies `/api` and `/websocket` to the backend |
 | backend | http://localhost:8080 | `mvn spring-boot:run` on the mounted source |
-| postgres | localhost:5432 | database `familyapp`, user `admin`, password `postgres` (dev only) |
+| postgres | localhost:5432 | database `familyapp`; superuser `admin` (password from `.env`); the app uses the `app_owner` role and the `app` schema |
 
 The first start takes a few minutes (Maven and npm downloads). The app is ready when the backend logs
 `Started BackendApplication`. Create an account at http://localhost:4200/register to log in.
@@ -105,11 +108,7 @@ Stop with `Ctrl+C`, or `docker compose down`. Add `-v` to also delete the databa
 Start the stack first and wait for the backend: Hibernate creates the tables on startup.
 
 ```bash
-./seed.sh
-```
-
-```powershell
-.\seed.bat
+./scripts/seed/seed.sh
 ```
 
 The schema uses `ddl-auto=create-drop`, so the data is gone after every backend restart; seed again.

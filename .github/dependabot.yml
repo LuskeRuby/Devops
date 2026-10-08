@@ -10,11 +10,11 @@
 version: 2
 
 updates:
-  # Angular app + the root package.json (Playwright)
+  # Angular app + the Playwright e2e package.json
   - package-ecosystem: "npm"
     directories:
       - "/frontend"
-      - "/"
+      - "/e2e"
     schedule:
       interval: "weekly"
       day: "monday"
