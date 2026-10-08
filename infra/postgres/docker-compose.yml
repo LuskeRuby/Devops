@@ -1,25 +1,18 @@
 # The single definition of the PostgreSQL service.
 #
 # - Root docker-compose.yml pulls this in with `include:` (dev and single-server prod).
-# - On a dedicated database server (Server B) run it on its own:
-#     docker compose -f infra/postgres/docker-compose.yml --env-file infra/postgres/.env up -d
-#
-# Relative paths below resolve against this file's directory. Required variables are
-# documented in .env.example (root) and infra/postgres/.env.example.
+#   Credentials are NOT set here: docker-compose.override.yml (dev) and
+#   docker-compose.prod.yml (prod, from PROD_DB_* exported by the deploy) add
+#   POSTGRES_USER and POSTGRES_PASSWORD.
+# - On a dedicated database server (Server B) run it standalone with the credentials in the
+#   environment, and pick the pg_hba profile (see README.md):
+#     POSTGRES_USER=... POSTGRES_PASSWORD=... docker compose -f infra/postgres/docker-compose.yml up -d
 services:
   postgres:
     image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-familyapp}
-      # Superuser: administration, seeding and backups only.
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}
-      # Used by init/01-roles.sh to create the app_owner and app_rw roles.
-      DB_OWNER_PASSWORD: ${DB_OWNER_PASSWORD:?Set DB_OWNER_PASSWORD in .env (copy .env.example)}
-      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env (copy .env.example)}
-    # Loopback only by default. On a database server bind to its private/VPN address
-    # (POSTGRES_BIND) and let only the app server through the firewall.
+      POSTGRES_DB: familyapp
     ports:
       - "${POSTGRES_BIND:-127.0.0.1}:5432:5432"
     command:
@@ -31,7 +24,6 @@ services:
       - -c
       - log_min_duration_statement=500
       # TLS: enable together with a pg_hba "hostssl" setup once the database leaves
-      # this host (see infra/postgres/README.md).
       # - -c
       # - ssl=on
       # - -c
@@ -42,10 +34,8 @@ services:
       # - ssl_min_protocol_version=TLSv1.2
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Runs once, only when the data volume is empty.
-      - ./init:/docker-entrypoint-initdb.d:ro
-      # PG_HBA=dev (default) or prod: which pg_hba.<name>.conf to use.
-      - ./pg_hba.${PG_HBA:-dev}.conf:/etc/postgresql/pg_hba.conf:ro
+      # Dev rules by default; docker-compose.prod.yml mounts pg_hba.prod.conf instead.
+      - ./pg_hba.dev.conf:/etc/postgresql/pg_hba.conf:ro
     shm_size: 256mb
     stop_grace_period: 30s
     healthcheck:

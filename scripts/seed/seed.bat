@@ -8,6 +8,6 @@ if not defined POSTGRES_DB set POSTGRES_DB=familyapp
 rem Run from the repo root so docker compose finds docker-compose.yml.
 cd /d "%~dp0..\.."
 echo Seeding PostgreSQL database...
-docker compose exec -T -e PGOPTIONS="-c search_path=app" postgres psql -U %POSTGRES_USER% -d %POSTGRES_DB% < scripts\seed\seed.sql
+docker compose exec -T postgres psql -U %POSTGRES_USER% -d %POSTGRES_DB% < scripts\seed\seed.sql
 if errorlevel 1 exit /b 1
 echo Seeding complete!

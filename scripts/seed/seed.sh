@@ -6,5 +6,5 @@ set -euo pipefail
 # Run from the repo root so docker compose finds docker-compose.yml.
 cd "$(dirname "$0")/../.."
 echo "Seeding PostgreSQL database..."
-docker compose exec -T -e PGOPTIONS="-c search_path=app" postgres psql -U "${POSTGRES_USER:-admin}" -d "${POSTGRES_DB:-familyapp}" < scripts/seed/seed.sql
+docker compose exec -T postgres psql -U "${POSTGRES_USER:-admin}" -d "${POSTGRES_DB:-familyapp}" < scripts/seed/seed.sql
 echo "Seeding complete!"

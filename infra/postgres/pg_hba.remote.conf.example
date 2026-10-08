@@ -1,13 +1,13 @@
 # Template for when Postgres runs on its own server (Server B) and the backends run on
-# Server A. Not used yet: copy to pg_hba.remote.conf, replace the address, and start with
-# PG_HBA=remote. Requires TLS to be enabled in docker-compose.yml first.
-# TYPE    DATABASE  USER                 ADDRESS          METHOD
+# Server A. Not used yet: copy to pg_hba.remote.conf, replace the address, and mount it
+# instead of the dev rules. Requires TLS to be enabled in docker-compose.yml first.
+# TYPE    DATABASE  USER  ADDRESS          METHOD
 
-local     all       all                                   trust
+local     all       all                    trust
 
-# Only the app roles, only over TLS, only from the app server (replace with its IP/subnet;
-# list every backend VM address if they are not NATed behind the host).
-hostssl   all       app_owner,app_rw     10.0.0.10/32     scram-sha-256
+# Only over TLS, only from the app server (replace with its IP/subnet; list every backend
+# VM address if they are not NATed behind the host).
+hostssl   all       all   10.0.0.10/32     scram-sha-256
 
-host      all       all                  0.0.0.0/0        reject
-host      all       all                  ::/0             reject
+host      all       all   0.0.0.0/0        reject
+host      all       all   ::/0             reject

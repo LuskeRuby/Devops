@@ -83,11 +83,8 @@ is given too.
 ```bash
 git clone https://github.com/LuskeRuby/Devops.git
 cd Devops
-cp .env.example .env     # PowerShell: Copy-Item .env.example .env
 docker compose up
 ```
-
-`.env` holds the database passwords (git-ignored). The values in `.env.example` are for development only.
 
 Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) automatically. PostgreSQL is defined in
 `infra/postgres/docker-compose.yml` and included from the root file.
@@ -96,7 +93,7 @@ Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) autom
 |---|---|---|
 | frontend | http://localhost:4200 | `ng serve` with live reload; proxies `/api` and `/websocket` to the backend |
 | backend | http://localhost:8080 | `mvn spring-boot:run` on the mounted source |
-| postgres | localhost:5432 | database `familyapp`; superuser `admin` (password from `.env`); the app uses the `app_owner` role and the `app` schema |
+| postgres | localhost:5432 | database `familyapp`, user `admin`, password `postgres` (dev only) |
 
 The first start takes a few minutes (Maven and npm downloads). The app is ready when the backend logs
 `Started BackendApplication`. Create an account at http://localhost:4200/register to log in.
@@ -127,14 +124,14 @@ Backend (needs JDK 25). `application.properties` points at the compose host name
 ```bash
 cd backend
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/familyapp \
-SPRING_DATASOURCE_PASSWORD=owner-dev-password \
+SPRING_DATASOURCE_PASSWORD=postgres \
 ./mvnw spring-boot:run
 ```
 
 ```powershell
 cd backend
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/familyapp"
-$env:SPRING_DATASOURCE_PASSWORD = "owner-dev-password"
+$env:SPRING_DATASOURCE_PASSWORD = "postgres"
 .\mvnw.cmd spring-boot:run
 ```
 

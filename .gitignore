@@ -69,7 +69,7 @@ release.properties
 /e2e/playwright/.cache/
 /e2e/playwright/.auth/
 
-# Local environment (copy .env.example to .env)
+# Local environment files (never commit)
 .env
 
 # Database backups (infra/postgres/backup/backup.sh)
