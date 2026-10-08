@@ -24,13 +24,13 @@ export default defineConfig({
   // Start both servers before tests run
   webServer: [
     {
-      command: 'cd backend && mvn spring-boot:run -Dspring.profiles.active=test',
+      command: 'cd ../backend && mvn spring-boot:run -Dspring.profiles.active=test',
       url: 'http://localhost:8080/actuator/health',
       timeout: 120_000,
       reuseExistingServer: true,
     },
     {
-      command: 'cd frontend && ng serve',
+      command: 'cd ../frontend && ng serve',
       url: 'http://localhost:4200',
       timeout: 60_000,
       reuseExistingServer: true,
