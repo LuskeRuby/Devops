@@ -1,0 +1,40 @@
+name: Main to staging
+
+on: workflow_call
+
+env:
+  IMAGE: ghcr.io/luskeruby/devops   # ghcr needs lowercase
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: docker build -t $IMAGE-${{ matrix.app }}:${{ github.sha }} ./${{ matrix.app }}
+      - run: docker push $IMAGE-${{ matrix.app }}:${{ github.sha }}
+
+  e2e:
+    needs: image
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ github.sha }}   # compose should use $IMAGE-backend:$IMAGE_TAG etc.
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+      - name: Wait for backend and frontend
+        run: |
+          timeout 180 bash -c 'until curl -fs http://localhost:8080/actuator/health > /dev/null; do sleep 3; done'
+          timeout 60 bash -c 'until curl -fs http://localhost:4200 > /dev/null; do sleep 2; done'
+      - run: npm ci && npx playwright install --with-deps && npx playwright test
+
+  promote-to-staging:
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git push origin HEAD:staging

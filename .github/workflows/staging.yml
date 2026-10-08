@@ -1,0 +1,10 @@
+name: Staging
+
+on: workflow_call
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "load tests here (e.g. k6)"
