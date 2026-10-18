@@ -24,7 +24,7 @@ public class JwtUtil {
      * @return the {@link SecretKey} used to sign and verify JWTs
      */
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     /**

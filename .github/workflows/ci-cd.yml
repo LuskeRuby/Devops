@@ -60,11 +60,12 @@ jobs:
           SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
           PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: SSL_CERTIFICATE,SSL_PRIVATE_KEY,PROD_DB_USER,PROD_DB_PASSWORD
+          envs: SSL_CERTIFICATE,SSL_PRIVATE_KEY,PROD_DB_USER,PROD_DB_PASSWORD, APP_JWT_SECRET
           script: |
             cd ~/full-stack-app
             git fetch origin
@@ -79,6 +80,7 @@ jobs:
             
             export PROD_DB_USER="$PROD_DB_USER"
             export PROD_DB_PASSWORD="$PROD_DB_PASSWORD"
+            export APP_JWT_SECRET="$APP_JWT_SECRET"
             
             # One-time cleanup (K2): the compose project used to be named after the folder
             # (full-stack-app). It is now fixed as "family-planner" in docker-compose.yml, so stop
