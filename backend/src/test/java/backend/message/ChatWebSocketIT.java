@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.lang.NonNull;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -87,10 +87,7 @@ class ChatWebSocketIT extends AbstractIntegrationTest {
         userId = user.getId();
 
         stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-        converter.setObjectMapper(mapper);
+        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
         stompClient.setMessageConverter(converter);
 
         errors.clear();
