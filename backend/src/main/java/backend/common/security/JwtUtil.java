@@ -1,5 +1,6 @@
 package backend.common.security;
 
+import jakarta.annotation.PostConstruct;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -12,11 +13,26 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    /** HS256 needs a key of at least 256 bits. */
+    private static final int MIN_SECRET_BYTES = 32;
+
     @Value("${app.jwt.secret}")
     private String secret;
 
     @Value("${app.jwt.access-token-expiration}")
     private long accessTokenExpiration;
+
+    /**
+     * Stops the application at startup if the secret is missing or too short, instead of
+     * starting and then failing on the first login.
+     */
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.getBytes().length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "app.jwt.secret (APP_JWT_SECRET) must be at least " + MIN_SECRET_BYTES + " bytes long");
+        }
+    }
 
     /**
      * Builds the HMAC-SHA signing key from the configured secret.

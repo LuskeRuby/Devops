@@ -114,3 +114,18 @@ jobs:
 
       - name: Check that the site answers
         run: ssh "$SSH_USER@$SSH_HOST" "curl -fsk -o /dev/null --retry 10 --retry-delay 3 --retry-connrefused https://localhost/"
+
+      # The page above is served by nginx alone. An empty login request goes through nginx to the
+      # backend: any 4xx means the backend is up; 502/503 means it is down (e.g. it refused to start).
+      - name: Check that the backend answers
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" bash -s <<'EOF'
+          for i in $(seq 1 20); do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' https://localhost/api/families/login)
+            case "$code" in 4*) echo "backend answers ($code)"; exit 0 ;; esac
+            echo "backend not ready yet (HTTP $code)"; sleep 3
+          done
+          echo "::error::backend did not answer after the deploy"
+          cd ~/family-planner && docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env logs --tail 40 backend
+          exit 1
+          EOF
