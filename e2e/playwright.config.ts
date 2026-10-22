@@ -21,16 +21,17 @@ export default defineConfig({
       use: { ...devices['iPhone 13'] },
     },
   ],
-  // Start both servers before tests run
-  webServer: [
+  // Locally: start both servers before tests run. In CI the stack already runs as containers
+  // (docker-compose.ci.yml), so no web server is started.
+  webServer: process.env.CI ? undefined : [
     {
-      command: 'cd backend && mvn spring-boot:run -Dspring.profiles.active=test',
+      command: 'cd ../backend && mvn spring-boot:run -Dspring.profiles.active=test',
       url: 'http://localhost:8080/actuator/health',
       timeout: 120_000,
       reuseExistingServer: true,
     },
     {
-      command: 'cd frontend && ng serve',
+      command: 'cd ../frontend && ng serve',
       url: 'http://localhost:4200',
       timeout: 60_000,
       reuseExistingServer: true,

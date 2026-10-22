@@ -6,29 +6,27 @@ services:
       POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
     volumes:
       - postgres-prod-data:/var/lib/postgresql/data
+      # Same target as the base file, so this replaces the dev rules.
+      - ./infra/postgres/pg_hba.prod.conf:/etc/postgresql/pg_hba.conf:ro
 
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/luskeruby/devops-backend:${TAG:?set TAG to the release version}
     restart: always
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/familyapp
       SPRING_DATASOURCE_USERNAME: ${PROD_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${PROD_DB_PASSWORD}
       APP_JWT_SECRET: ${APP_JWT_SECRET}
-      APP_CORS_ALLOWED_ORIGINS: https://130.225.170.60
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://130.225.170.60}
 
   frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/luskeruby/devops-frontend:${TAG:?set TAG to the release version}
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./certs:/etc/nginx/ssl:ro
-    restart: always
 
 volumes:
   postgres-prod-data:
