@@ -28,7 +28,7 @@ and one button.
 
 ## Architecture
 
-Production (`docker-compose.prod.yml`, see [CI/CD and deployment](#cicd-and-deployment)). In development, `ng serve` takes the place of nginx.
+Production (`docker-compose.yml` + `docker-compose.prod.yml`, see [CI/CD and deployment](#cicd-and-deployment)). In development, `ng serve` takes the place of nginx.
 
 ```text
 browser ──HTTPS──> nginx (frontend container)
@@ -86,8 +86,8 @@ cd Devops
 docker compose up
 ```
 
-Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) automatically. The project name
-is fixed to `family-planner`, whatever the folder is called.
+Compose loads `docker-compose.yml` and `docker-compose.override.yml` (dev) automatically. PostgreSQL is defined in
+`infra/postgres/docker-compose.yml` and included from the root file.
 
 | Service | URL | Notes |
 |---|---|---|
@@ -102,17 +102,17 @@ Stop with `Ctrl+C`, or `docker compose down`. Add `-v` to also delete the databa
 
 ### Seed data (optional)
 
-Start the stack first and wait for the backend: Hibernate creates the tables on startup.
+Start the stack first and wait for the backend: Flyway creates the tables on startup.
 
 ```bash
-./seed.sh
+./scripts/seed/seed.sh
 ```
 
-```powershell
-.\seed.bat
-```
+Flyway (`backend/src/main/resources/db/migration`) owns the schema, so data now survives backend restarts and
+`docker compose down`. Seeding twice fails on duplicate keys; `docker compose down -v` wipes the database.
 
-The schema uses `ddl-auto=create-drop`, so the data is gone after every backend restart; seed again.
+> **Upgrading an existing checkout:** if your dev database was created by the old `create-drop` setup,
+> Flyway refuses to start on it. Run `docker compose down -v` once, then `docker compose up`.
 The seeded families have no known passwords, so they are for looking at data, not for logging in.
 
 ## Run parts on the host (without the app containers)
@@ -124,7 +124,6 @@ docker compose up postgres
 ```
 
 Backend (needs JDK 25). `application.properties` points at the compose host name `postgres`, so override
-the URL and password:
 
 ```bash
 cd backend
@@ -217,23 +216,27 @@ If the `production` environment requires reviewers, the deploy job waits for the
 
 ### Production
 
-Production runs on one server (`docker-compose.prod.yml`: `frontend` (nginx), `backend`, `postgres`). The
-images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
-the server.
+Production runs on one server: `docker-compose.yml` plus `docker-compose.prod.yml` give `frontend` (nginx),
+`backend` and `postgres` (defined in `infra/postgres/`). The images come from GHCR and are selected by the
+`TAG` variable (the release version); nothing is built on the server.
 
 nginx serves the SPA on ports 80/443, redirects HTTP to HTTPS, terminates TLS with the certificate in
-`./certs` (not in git), and proxies `/api/` and `/websocket` to the backend. PostgreSQL is only reachable
-from the other containers.
+`./certs` (not in git), and proxies `/api/` and `/websocket` to the backend. PostgreSQL only listens on
+the server's loopback address and accepts Docker's private networks (`infra/postgres/pg_hba.prod.conf`).
+Flyway creates and migrates the schema when the backend starts, so the data survives releases.
 
-The deploy job copies the compose file to `~/family-planner` on the server, writes a private `.env`
-(mode 600), logs in to `ghcr.io` with the job's token and runs:
+The deploy job copies `docker-compose.yml`, `docker-compose.prod.yml` and `infra/postgres/` to
+`~/family-planner` on the server, writes a private `.env` (mode 600), logs in to `ghcr.io` with the job's
+token and runs:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env pull
-docker compose -f docker-compose.prod.yml --env-file .env up -d --remove-orphans
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --remove-orphans
 ```
 
-The server needs Docker with the Compose plugin and an SSH user that may run it.
+The server needs Docker with the Compose plugin and an SSH user that may run it. On the first release,
+Flyway refuses to start if the production database still holds tables from the old Hibernate
+`create-drop` setup; remove the old `postgres-prod-data` volume once.
 
 ### Repository setup
 

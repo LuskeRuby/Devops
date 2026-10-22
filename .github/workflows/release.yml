@@ -90,10 +90,12 @@ jobs:
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
           REMOTE="$SSH_USER@$SSH_HOST"
-          COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env"
+          COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env"
 
-          ssh "$REMOTE" "mkdir -p ~/$DIR/certs"
-          scp docker-compose.prod.yml "$REMOTE:$DIR/"
+          ssh "$REMOTE" "mkdir -p ~/$DIR/certs ~/$DIR/infra"
+          # docker-compose.yml includes infra/postgres/docker-compose.yml, which mounts the pg_hba files
+          scp docker-compose.yml docker-compose.prod.yml "$REMOTE:$DIR/"
+          scp -r infra/postgres "$REMOTE:$DIR/infra/"
           printf '%s\n' "$SSL_CERTIFICATE" | ssh "$REMOTE" "cat > ~/$DIR/certs/cert.pem"
           printf '%s\n' "$SSL_PRIVATE_KEY" | ssh "$REMOTE" "umask 077; cat > ~/$DIR/certs/key.pem"
           # Secrets go through stdin into a private file, not onto a command line.

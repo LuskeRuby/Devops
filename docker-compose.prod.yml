@@ -1,32 +1,23 @@
-# Production, one server: nginx (the frontend image), the backend and the database. Standalone
-# (not layered on docker-compose.yml). Images come from GHCR; nothing is built on the server.
+# Production, one server. Layered on docker-compose.yml (which includes infra/postgres):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d
+# Images come from GHCR; nothing is built on the server.
 # Needs in the environment (the release workflow writes them to .env): TAG, PROD_DB_USER,
 # PROD_DB_PASSWORD. Optional: APP_CORS_ALLOWED_ORIGINS.
 # The TLS certificate and key are read from ./certs (cert.pem, key.pem; not in git).
-name: family-planner
-
 services:
   postgres:
-    image: postgres:17
     restart: always
     environment:
-      POSTGRES_DB: familyapp
       POSTGRES_USER: ${PROD_DB_USER}
       POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
     volumes:
       - postgres-prod-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d familyapp" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      # Same target as the base file, so this replaces the dev rules.
+      - ./infra/postgres/pg_hba.prod.conf:/etc/postgresql/pg_hba.conf:ro
 
   backend:
     image: ghcr.io/luskeruby/devops-backend:${TAG:?set TAG to the release version}
     restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/familyapp
       SPRING_DATASOURCE_USERNAME: ${PROD_DB_USER}
@@ -36,8 +27,6 @@ services:
   frontend:
     image: ghcr.io/luskeruby/devops-frontend:${TAG:?set TAG to the release version}
     restart: always
-    depends_on:
-      - backend
     ports:
       - "80:80"
       - "443:443"
