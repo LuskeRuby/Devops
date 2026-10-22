@@ -33,7 +33,7 @@
     "@angular/material": "^21.2.14",
     "@angular/platform-browser": "^21.2.25",
     "@angular/router": "^21.2.25",
-    "@angular/service-worker": "^21.2.25",
+    "@angular/service-worker": "^22.2.3",
     "@phosphor-icons/web": "^2.1.2",
     "@stomp/stompjs": "^7.5.0",
     "angular-calendar": "^0.32.2",
