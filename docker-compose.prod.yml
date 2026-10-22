@@ -1,9 +1,3 @@
-# Production, one server. Layered on docker-compose.yml (which includes infra/postgres):
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d
-# Images come from GHCR; nothing is built on the server.
-# Needs in the environment (the release workflow writes them to .env): TAG, PROD_DB_USER,
-# PROD_DB_PASSWORD. Optional: APP_CORS_ALLOWED_ORIGINS.
-# The TLS certificate and key are read from ./certs (cert.pem, key.pem; not in git).
 services:
   postgres:
     restart: always
@@ -22,6 +16,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/familyapp
       SPRING_DATASOURCE_USERNAME: ${PROD_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${PROD_DB_PASSWORD}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://130.225.170.60}
 
   frontend:

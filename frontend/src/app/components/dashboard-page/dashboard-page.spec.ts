@@ -123,9 +123,9 @@ describe('DashboardPage', () => {
   it('should add 7 days in week view', () => {
     component.isDayView = false;
     const before = new Date(component.viewDate);
+    before.setDate(before.getDate() + 7);
     component.next();
-    const diff = component.viewDate.getTime() - before.getTime();
-    expect(diff).toBe(7 * 24 * 60 * 60 * 1000);
+    expect(component.viewDate).toEqual(before);
   });
 
   // ---------------- goToToday ----------------

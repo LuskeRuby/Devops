@@ -34,7 +34,9 @@ public class RefreshTokenService {
         User user = userId != null ? userRepository.findById(userId).orElse(null) : null;
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(java.util.UUID.randomUUID().toString());
+        String rawToken = java.util.UUID.randomUUID().toString();
+        refreshToken.setToken(rawToken);
+        refreshToken.setTokenHash(sha256(rawToken));
         refreshToken.setFamily(family);
         refreshToken.setUser(user);
         refreshToken.setRole(role);
@@ -56,7 +58,7 @@ public class RefreshTokenService {
      */
     @Transactional
     public RefreshToken rotateRefreshToken(String token) {
-        RefreshToken existing = refreshTokenRepository.findByToken(token)
+        RefreshToken existing = refreshTokenRepository.findByTokenHash(sha256(token))
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
         if (existing.getExpiresAt().isBefore(Instant.now())) {
@@ -71,4 +73,20 @@ public class RefreshTokenService {
         refreshTokenRepository.delete(existing);
         return createRefreshToken(family, user.getId(), role);
     }
+
+    /**
+     * Helper function that hashes a token
+     * @param token
+     * @return 64-character lowercase hash digest
+     * @throws java.lang.IllegalStateException if SHA-256 is unavailable
+     */
+    private String sha256(String token) {
+       try {
+           byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                   .digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+           return java.util.HexFormat.of().formatHex(digest);
+       } catch (java.security.NoSuchAlgorithmException e) {
+           throw new IllegalStateException("SHA-256 is unavailable", e);
+       }
+   }
 }
