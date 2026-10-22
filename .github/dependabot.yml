@@ -52,7 +52,7 @@ updates:
           - "minor"
           - "patch"
 
-  # Base images in backend/Dockerfile and frontend/Dockerfile
+  # Base images in backend/docker-compose.monitoring.yml and frontend/docker-compose.monitoring.yml
   - package-ecosystem: "docker"
     directories:
       - "/backend"

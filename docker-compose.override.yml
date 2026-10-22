@@ -21,8 +21,21 @@ services:
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://0.0.0.0}
     # Overwrites any entrypoint to run the dev server
     command: mvn spring-boot:run
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://127.0.0.1:8081/actuator/health/readiness" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 240s
+
 
   frontend:
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://127.0.0.1:4200/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 180s     # npm install runs before ng serve
     image: node:24-bookworm
     ports:
       - "4200:4200"

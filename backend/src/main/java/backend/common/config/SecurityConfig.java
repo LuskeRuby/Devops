@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/families/register", "/api/families/login", "/api/families/refresh").permitAll()
                         .requestMatchers("/websocket/**").permitAll()
                         .requestMatchers("/api/images/**").permitAll() // Public access required for browser <img> tags
-                        .requestMatchers("/actuator/health/**").permitAll() // Public access required for health checks
+                        .requestMatchers("/actuator/health/**", "/actuator/prometheus").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
