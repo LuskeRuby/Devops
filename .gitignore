@@ -68,3 +68,5 @@ release.properties
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+e2e/test-results/
+e2e/playwright-report/

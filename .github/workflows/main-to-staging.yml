@@ -13,28 +13,79 @@ jobs:
         app: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
-      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: docker build -t $IMAGE-${{ matrix.app }}:${{ github.sha }} ./${{ matrix.app }}
       - run: docker push $IMAGE-${{ matrix.app }}:${{ github.sha }}
 
+  # Run Playwright against the images pushed above, not against a fresh build
   e2e:
     needs: image
     runs-on: ubuntu-latest
     env:
-      IMAGE_TAG: ${{ github.sha }}   # compose should use $IMAGE-backend:$IMAGE_TAG etc.
+      IMAGE_TAG: ${{ github.sha }}   # used by docker-compose.ci.yml
     steps:
       - uses: actions/checkout@v4
-      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
       - name: Wait for backend and frontend
+        # The backend has no actuator; any HTTP answer (even 401) means it is up.
         run: |
-          timeout 180 bash -c 'until curl -fs http://localhost:8080/actuator/health > /dev/null; do sleep 3; done'
-          timeout 60 bash -c 'until curl -fs http://localhost:4200 > /dev/null; do sleep 2; done'
-      - run: npm ci && npx playwright install --with-deps && npx playwright test
+          timeout 180 bash -c 'until curl -s -o /dev/null http://localhost:8080/api/families/login; do sleep 3; done'
+          timeout 60 bash -c 'until curl -fs -o /dev/null http://localhost:4200; do sleep 2; done'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: e2e/package-lock.json
+      - run: npm ci
+        working-directory: ./e2e
+      - run: npx playwright install --with-deps
+        working-directory: ./e2e
+      - run: npx playwright test
+        working-directory: ./e2e
+      - name: Show container logs
+        if: failure()
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: |
+            e2e/test-results
+            e2e/playwright-report
+          if-no-files-found: ignore
+      - name: Stop the stack
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
 
+  # Fast-forward staging to the commit that just passed. GITHUB_TOKEN (contents: write) is enough
+  # for a branch push; tags are never created here (the tag ruleset blocks it).
   promote-to-staging:
     needs: e2e
     runs-on: ubuntu-latest
+    # Only one promotion at a time; a run waiting behind another is replaced by the newest one.
+    concurrency:
+      group: promote-to-staging
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-      - run: git push origin HEAD:staging
+        with:
+          fetch-depth: 0   # full history so git can tell whether this is a fast-forward
+      - name: Fast-forward staging
+        run: |
+          git fetch origin staging || true
+          if git rev-parse --verify -q origin/staging > /dev/null; then
+            if git merge-base --is-ancestor HEAD origin/staging; then
+              echo "staging already contains $(git rev-parse --short HEAD), nothing to do"
+              exit 0
+            fi
+            if ! git merge-base --is-ancestor origin/staging HEAD; then
+              echo "::error::staging is not an ancestor of this commit, refusing to move it"
+              exit 1
+            fi
+          fi
+          git push origin HEAD:staging

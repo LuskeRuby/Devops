@@ -28,7 +28,7 @@ and one button.
 
 ## Architecture
 
-Production (`docker-compose.prod.yml`). In development, `ng serve` takes the place of nginx.
+Production (`docker-compose.prod.yml`, see [CI/CD and deployment](#cicd-and-deployment)). In development, `ng serve` takes the place of nginx.
 
 ```text
 browser ──HTTPS──> nginx (frontend container)
@@ -44,8 +44,8 @@ browser ──HTTPS──> nginx (frontend container)
 | Frontend | Angular 21 (standalone components), Angular Material, angular-calendar, STOMP client, service worker (production builds only) | `frontend/` |
 | Backend | Spring Boot 3.5, Java 25, Maven wrapper, Spring Security (stateless JWT + refresh-token cookie), Spring Data JPA, STOMP broker on `/topic` | `backend/` |
 | Database | PostgreSQL 17 | container `postgres` |
-| E2E tests | Playwright | `tests/`, `playwright.config.ts` |
-| CI/CD | GitHub Actions | `.github/workflows/ci-cd.yml` |
+| E2E tests | Playwright | `e2e/` |
+| CI/CD | GitHub Actions, images on GHCR | `.github/workflows/` |
 
 ### Code layout
 
@@ -175,6 +175,7 @@ End-to-end (Playwright). Start the dev stack first (`docker compose up`); Playwr
 ports 8080 and 4200 and registers its own test family through the API.
 
 ```bash
+cd e2e
 npm ci
 npx playwright install     # first time only: downloads the browsers
 npx playwright test
@@ -182,28 +183,77 @@ npx playwright test
 
 ## CI/CD and deployment
 
-`.github/workflows/ci-cd.yml` runs on every pull request and push to `main`:
+Workflows are in `.github/workflows/`. `ci-cd.yml` is the entry point for pull requests and pushes to
+`main`; it calls `pr.yml`, `main-to-staging.yml` and `staging.yml`. `release.yml` runs on version tags.
 
-1. **backend-build**: JDK 25, `./mvnw verify`.
-2. **frontend-build**: `npm ci`, lint, Prettier check, unit tests, production build.
-3. **deploy** (push to `main` only, after both builds pass): SSH to the VM, `git reset --hard origin/main`,
-   write the TLS certificate from secrets, then rebuild and restart the production stack:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```text
+feature/* or fix/* ──PR──> main ──push──> images ─> e2e ─> staging branch ─> load tests
+                                                                  │
+                                  tag vX.Y.Z (on a staging commit) ──> retag images ─> deploy to production
 ```
 
-**Merging to `main` deploys to production.** Work on a branch (`feature/…`, `fix/…`) and open a PR.
+| Step | Trigger | Workflow | What happens |
+|---|---|---|---|
+| 1. Pull request | PR to `main` | `pr.yml` | Backend `./mvnw verify` (unit + integration tests), frontend lint, Prettier, unit tests and production build. Required to merge. |
+| 2. Main | push to `main` | `main-to-staging.yml` | Build the backend and frontend images and push them to `ghcr.io/luskeruby/devops-<app>:<commit sha>`. Start exactly those images with `docker-compose.ci.yml` and run the Playwright tests (`e2e/`). If they pass, fast-forward the `staging` branch to the commit (`git push origin HEAD:staging` with `GITHUB_TOKEN`). One promotion runs at a time (`concurrency`); if `staging` already contains the commit, the step does nothing. |
+| 3. Staging | after step 2 | `staging.yml` | Load tests. Only a stub for now. |
+| 4. Release | push of a tag `vX.Y.Z` | `release.yml` | Check that the tag is a plain `vX.Y.Z` and that its commit is on `staging`. Add the version as a tag to the existing `:<sha>` images (`docker buildx imagetools create`, no rebuild). Deploy with `environment: production`. |
 
-The production stack (`docker-compose.prod.yml`) builds `backend/Dockerfile` and `frontend/Dockerfile`
-(multi-stage builds). nginx serves the SPA on ports 80/443, redirects HTTP to HTTPS, terminates TLS with
-the certificate in `./certs` (not in git), and proxies `/api/` and `/websocket` to the backend.
+Nothing is rebuilt after step 2: the image that passed the e2e tests is the image that is released.
 
-Repository secrets used by the deploy job: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSL_CERTIFICATE`,
-`SSL_PRIVATE_KEY`, `PROD_DB_USER`, `PROD_DB_PASSWORD`.
+### Releasing
 
-Known gaps in the pipeline and the deployment (the VM path still comes from the full stack course, no image
-registry, no health checks, and more) are known and not yet addressed.
+A release tag is created by a person, not by a workflow (the tag rulesets in `.github/rulesets/` limit
+who can create, move and delete `v*` tags, and `GITHUB_TOKEN` is never used to create tags). Pick a
+commit that is on `staging`:
+
+```bash
+git fetch origin
+git tag v1.2.3 origin/staging      # or any older commit that is on staging
+git push origin v1.2.3
+```
+
+If the `production` environment requires reviewers, the deploy job waits for their approval.
+
+### Production
+
+Production runs on one server (`docker-compose.prod.yml`: `frontend` (nginx), `backend`, `postgres`). The
+images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
+the server.
+
+nginx serves the SPA on ports 80/443, redirects HTTP to HTTPS, terminates TLS with the certificate in
+`./certs` (not in git), and proxies `/api/` and `/websocket` to the backend. PostgreSQL is only reachable
+from the other containers.
+
+The deploy job copies the compose file to `~/family-planner` on the server, writes a private `.env`
+(mode 600), logs in to `ghcr.io` with the job's token and runs:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env pull
+docker compose -f docker-compose.prod.yml --env-file .env up -d --remove-orphans
+```
+
+The server needs Docker with the Compose plugin and an SSH user that may run it.
+
+### Repository setup
+
+The images carry `org.opencontainers.image.source`, which links the GHCR packages to this repository so
+`GITHUB_TOKEN` can push and pull them. The branch and tag rulesets are in `.github/rulesets/` (import
+them under Settings, Rules): `main` needs a reviewed PR with the two `pr` checks, `staging` cannot be
+deleted or rewritten, and `v*` tags can only be created, moved or deleted by the listed users. The
+deploy reads these secrets (repository or `production` environment secrets):
+
+| Secret | Used for |
+|---|---|
+| `SSH_USER`, `SSH_PRIVATE_KEY` | SSH login on the server |
+| `SSH_HOST` | Address of the server |
+| `PROD_DB_USER`, `PROD_DB_PASSWORD` | Database user, used by `postgres` and the backend. Do not use a `'` in the password: the `.env` file written by the deploy cannot hold one. |
+| `SSL_CERTIFICATE`, `SSL_PRIVATE_KEY` | TLS certificate and key, written to `certs/cert.pem` and `certs/key.pem` |
+
+Known gaps: the deploy trusts the server's SSH host key on first use (`ssh-keyscan`) instead of a pinned
+key; the load test is a stub; and there is no automatic rollback (to go back, tag and release an older
+staging commit). A second server with several backends and a message broker is planned. Until then the
+backend keeps Spring's in-memory STOMP broker, so it must stay a single instance.
 
 ## Line endings
 
