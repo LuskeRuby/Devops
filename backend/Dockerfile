@@ -17,6 +17,9 @@ RUN mvn clean package -DskipTests
 
 # Stage 2: Run the JAR
 FROM eclipse-temurin:25-jre
+# curl is needed by the compose healthcheck (/actuator/health/readiness); the JRE image has no curl or wget.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
