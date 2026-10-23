@@ -1,0 +1,131 @@
+name: Release
+
+# A release is a tag vX.Y.Z pushed by a person (the tag ruleset blocks everything else).
+# The images were already built and tested for the commit on main, so nothing is rebuilt here:
+# the existing :<sha> images get the version as an extra tag, then that version is deployed.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+env:
+  IMAGE: ghcr.io/luskeruby/devops   # ghcr needs lowercase
+  VERSION: ${{ github.ref_name }}
+
+permissions:
+  contents: read
+
+# Never run two releases at the same time, and never cancel one that is half deployed.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # The tagged commit must have passed main -> staging
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # all branches and history, to check against origin/staging
+      - name: Check the tag name
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$VERSION' is not a version like v1.2.3"
+            exit 1
+          fi
+      - name: Check the tagged commit is on staging
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/staging; then
+            echo "::error::$GITHUB_SHA is not on staging. Only commits that passed e2e on main can be released."
+            exit 1
+          fi
+
+  # Add the version tag to the images that already exist for this commit (no rebuild)
+  retag:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Retag the sha images with the version
+        run: |
+          for app in backend frontend; do
+            docker buildx imagetools create -t "$IMAGE-$app:$VERSION" "$IMAGE-$app:$GITHUB_SHA"
+          done
+
+  deploy:
+    needs: retag
+    runs-on: ubuntu-latest
+    environment: production   # holds the secrets below and can require an approval
+    permissions:
+      contents: read
+      packages: read          # the server pulls the images with this token
+    env:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}     # one server for now
+      DIR: family-planner                   # folder on the server, relative to the SSH user's home
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          printf 'Host *\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
+
+      - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SSL_CERTIFICATE: ${{ secrets.SSL_CERTIFICATE }}
+          SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
+          PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+        run: |
+          REMOTE="$SSH_USER@$SSH_HOST"
+          COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env"
+
+          ssh "$REMOTE" "mkdir -p ~/$DIR/certs ~/$DIR/infra"
+          # docker-compose.yml includes infra/postgres/docker-compose.yml, which mounts the pg_hba files
+          scp docker-compose.yml docker-compose.prod.yml "$REMOTE:$DIR/"
+          scp -r infra/postgres "$REMOTE:$DIR/infra/"
+          printf '%s\n' "$SSL_CERTIFICATE" | ssh "$REMOTE" "cat > ~/$DIR/certs/cert.pem"
+          printf '%s\n' "$SSL_PRIVATE_KEY" | ssh "$REMOTE" "umask 077; cat > ~/$DIR/certs/key.pem"
+          # Secrets go through stdin into a private file, not onto a command line.
+          # Single quotes keep $ and # in passwords literal (a ' in a password is not supported).
+          {
+            echo "TAG=$VERSION"
+            echo "PROD_DB_USER='$PROD_DB_USER'"
+            echo "PROD_DB_PASSWORD='$PROD_DB_PASSWORD'"
+            echo "APP_JWT_SECRET='$APP_JWT_SECRET'"
+          } | ssh "$REMOTE" "umask 077; cat > ~/$DIR/.env"
+
+          printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --remove-orphans && $COMPOSE ps"
+          ssh "$REMOTE" "docker logout ghcr.io"   # the token is only valid for this run anyway
+
+      - name: Check that the site answers
+        run: ssh "$SSH_USER@$SSH_HOST" "curl -fsk -o /dev/null --retry 10 --retry-delay 3 --retry-connrefused https://localhost/"
+
+      # The page above is served by nginx alone. An empty login request goes through nginx to the
+      # backend: any 4xx means the backend is up; 502/503 means it is down (e.g. it refused to start).
+      - name: Check that the backend answers
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" bash -s <<'EOF'
+          for i in $(seq 1 20); do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' https://localhost/api/families/login)
+            case "$code" in 4*) echo "backend answers ($code)"; exit 0 ;; esac
+            echo "backend not ready yet (HTTP $code)"; sleep 3
+          done
+          echo "::error::backend did not answer after the deploy"
+          cd ~/family-planner && docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env logs --tail 40 backend
+          exit 1
+          EOF

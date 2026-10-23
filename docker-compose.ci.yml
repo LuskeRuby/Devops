@@ -1,0 +1,28 @@
+# CI: run the images built for this commit (ghcr.io/luskeruby/devops-<app>:<sha>) for the e2e tests.
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+# Only the two files above are used, so docker-compose.override.yml (dev) is not loaded.
+services:
+  postgres:
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: postgres
+
+  backend:
+    image: ghcr.io/luskeruby/devops-backend:${IMAGE_TAG:?set IMAGE_TAG to the commit sha}
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/familyapp
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: postgres
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:4200
+      # Throwaway value for the disposable CI stack only (HS256 needs >= 32 bytes); never a real secret.
+      APP_JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-else-0123456789
+
+  frontend:
+    image: ghcr.io/luskeruby/devops-frontend:${IMAGE_TAG:?set IMAGE_TAG to the commit sha}
+    ports:
+      - "4200:80"
+    volumes:
+      # The image's nginx.conf is TLS-only; replace it with a plain-HTTP one for CI.
+      - ./frontend/nginx.ci.conf:/etc/nginx/conf.d/default.conf:ro

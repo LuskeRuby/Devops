@@ -17,6 +17,7 @@ RUN mvn clean package -DskipTests
 
 # Stage 2: Run the JAR
 FROM eclipse-temurin:25-jre
+LABEL org.opencontainers.image.source=https://github.com/LuskeRuby/Devops
 # curl is needed by the compose healthcheck (/actuator/health/readiness); the JRE image has no curl or wget.
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
