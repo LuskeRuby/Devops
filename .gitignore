@@ -68,3 +68,6 @@ release.properties
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Local environment files (never commit)
+.env
