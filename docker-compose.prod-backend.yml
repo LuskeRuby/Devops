@@ -1,0 +1,23 @@
+name: family-planner-backend
+
+# x-* makes to so docker doesn't run it.
+# This makes it reusable for later
+x-backend: &backend
+  image: ghcr.io/luskeruby/devops-backend:${TAG:?set TAG to the release version}
+  restart: always
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://${IP_INFRA:?set IP_INFRA}:5432/familyapp
+    SPRING_DATASOURCE_USERNAME: ${PROD_DB_USER:?set PROD_DB_USER}
+    SPRING_DATASOURCE_PASSWORD: ${PROD_DB_PASSWORD:?set PROD_DB_PASSWORD}
+    APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET (at least 32 characters)}
+    APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://${PUBLIC_HOST}}
+
+services:
+  backend-1:
+    <<: *backend
+    ports:
+      - "${IP_BACKEND:?set IP_BACKEND}:8080:8080"
+  #backend-2:
+  #  <<: *backend
+  #  ports:
+  #    - "${IP_BACKEND:?set IP_BACKEND}:8082:8080"

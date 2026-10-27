@@ -1,0 +1,39 @@
+name: family-planner-infra
+
+# Postgres is still defined once, in infra/postgres. We only add prod settings on top.
+include:
+  - infra/postgres/docker-compose.yml
+
+services:
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_USER: ${PROD_DB_USER:?set PROD_DB_USER}
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD:?set PROD_DB_PASSWORD}
+    ports:
+      # The backend is on another host now, so 5432 must be published.
+      # Bind it ONLY to the private address (e.g. WireGuard), never 0.0.0.0.
+      # TODO route it through WireGuard instead
+      - "${IP_INFRA:?set IP_INFRA}:5432:5432"
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+      - ./infra/postgres/pg_hba.prod.conf:/etc/postgresql/pg_hba.conf:ro
+
+  frontend:
+    image: ghcr.io/luskeruby/devops-frontend:${TAG:?set TAG to the release version}
+    restart: always
+    environment:
+      # Used by the NGINX template
+      PUBLIC_HOST: ${PUBLIC_HOST:?set PUBLIC_HOST}
+      IP_BACKEND: ${IP_BACKEND:?set IP_BACKEND}
+      NGINX_ENVSUBST_FILTER: "^(PUBLIC_HOST|IP_BACKEND)$"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/ssl:ro
+
+volumes:
+  postgres-prod-data:
+    # Pinned to the old name so the existing data is reused
+    name: family-planner_postgres-prod-data
