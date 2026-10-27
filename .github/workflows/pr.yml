@@ -12,7 +12,9 @@ jobs:
           java-version: "25"
           distribution: "temurin"
           cache: "maven"
-      - run: chmod +x mvnw && ./mvnw verify
+      - run: | 
+          chmod +x mvnw
+          ./mvnw verify
         working-directory: ./backend
 
   frontend-test:
