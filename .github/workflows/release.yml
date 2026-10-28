@@ -75,6 +75,14 @@ jobs:
       - uses: actions/checkout@v7
 
 
+      # Sanity check on the env values
+      - name: Check the production variables are set
+        run: |
+          for v in SSH_USER IP_BACKEND_PUBLIC IP_FRONTEND_PUBLIC IP_BACKEND_WG IP_FRONTEND_WG; do
+            [ -n "${!v}" ] || { echo "::error::$v is empty. Check the 'production' environment settings."; exit 1; }
+          done
+
+
       - name: Set up SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -95,11 +103,11 @@ jobs:
           PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
-          REMOTE="$SSH_USER@$SSH_FRONTEND"
+          REMOTE="$SSH_USER@$IP_FRONTEND_PUBLIC"
           COMPOSE="docker compose -f docker-compose.prod-frontend.yml --env-file .env"
 
           ssh "$REMOTE" "mkdir -p ~/$DIR/certs ~/$DIR/infra"
-          scp docker-compose.prod-frontend_and_infra.yml "$REMOTE:$DIR/"
+          scp docker-compose.prod-frontend.yml "$REMOTE:$DIR/"
           scp -r infra/postgres "$REMOTE:$DIR/infra/"
           printf '%s\n' "$SSL_CERTIFICATE" | ssh "$REMOTE" "cat > ~/$DIR/certs/cert.pem"
           printf '%s\n' "$SSL_PRIVATE_KEY" | ssh "$REMOTE" "umask 077; cat > ~/$DIR/certs/key.pem"
