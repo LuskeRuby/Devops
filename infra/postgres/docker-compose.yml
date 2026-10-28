@@ -13,6 +13,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: familyapp
+      POSTGRES_USER: ${POSTGRES_USER:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     ports:
       - "${POSTGRES_BIND:-127.0.0.1}:5432:5432"
     command:
@@ -35,7 +37,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       # Dev rules by default; docker-compose.prod.yml mounts pg_hba.prod.conf instead.
-      - ./pg_hba.dev.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./${PG_HBA_FILE:-pg_hba.dev.conf}:/etc/postgresql/pg_hba.conf:ro
     shm_size: 256mb
     stop_grace_period: 30s
     healthcheck:
