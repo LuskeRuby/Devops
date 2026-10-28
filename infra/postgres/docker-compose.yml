@@ -1,12 +1,14 @@
 # The single definition of the PostgreSQL service.
 #
-# - Root docker-compose.yml pulls this in with `include:` (dev and single-server prod).
-#   Credentials are NOT set here: docker-compose.override.yml (dev) and
-#   docker-compose.prod.yml (prod, from PROD_DB_* exported by the deploy) add
-#   POSTGRES_USER and POSTGRES_PASSWORD.
-# - On a dedicated database server (Server B) run it standalone with the credentials in the
-#   environment, and pick the pg_hba profile (see README.md):
-#     POSTGRES_USER=... POSTGRES_PASSWORD=... docker compose -f infra/postgres/docker-compose.yml up -d
+# - Dev and CI: the root docker-compose.yml includes this file. docker-compose.override.yml (dev)
+#   and docker-compose.ci.yml (CI) set POSTGRES_USER and POSTGRES_PASSWORD.
+# - Production (Server B): docker-compose.prod-frontend.yml includes this file. What differs comes
+#   from variables in Server B's .env, written by the release workflow:
+#     POSTGRES_BIND                        address to publish 5432 on (Server B's WireGuard address)
+#     PG_HBA_FILE                          pg_hba file in this folder (pg_hba.prod.conf)
+#     POSTGRES_USER, POSTGRES_PASSWORD     database credentials
+#   The defaults used below (127.0.0.1, pg_hba.dev.conf, empty credentials) are for dev only.
+#   docker-compose.prod-frontend.yml refuses to start without the production values.
 services:
   postgres:
     image: postgres:17
@@ -36,7 +38,7 @@ services:
       # - ssl_min_protocol_version=TLSv1.2
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Dev rules by default; docker-compose.prod.yml mounts pg_hba.prod.conf instead.
+      # Dev rules by default; production sets PG_HBA_FILE (see the header).
       - ./${PG_HBA_FILE:-pg_hba.dev.conf}:/etc/postgresql/pg_hba.conf:ro
     shm_size: 256mb
     stop_grace_period: 30s

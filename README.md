@@ -28,15 +28,15 @@ and one button.
 
 ## Architecture
 
-Production (`docker-compose.yml` + `docker-compose.prod.yml`, see [CI/CD and deployment](#cicd-and-deployment)). In development, `ng serve` takes the place of nginx.
+Production runs on two servers joined by a WireGuard tunnel (see [CI/CD and deployment](#cicd-and-deployment)). In development, `ng serve` takes the place of nginx.
 
 ```text
-browser ──HTTPS──> nginx (frontend container)
+browser ──HTTPS──> Server B: nginx (frontend container)
                     ├── /            Angular SPA (static files, index.html fallback)
-                    ├── /api/        ──> backend:8080  Spring Boot REST API
-                    └── /websocket   ──> backend:8080  STOMP over WebSocket (chat)
-                                              │
-                                              └──> postgres:5432  PostgreSQL 17
+                    ├── /api/        ──WireGuard──> Server A: backend:8080  Spring Boot REST API
+                    └── /websocket   ──WireGuard──> Server A: backend:8080  STOMP over WebSocket (chat)
+                                                          │
+                    Server B: postgres:5432  <──WireGuard─┘  (JDBC)
 ```
 
 | Part | Tech | Folder |
@@ -196,7 +196,7 @@ feature/* or fix/* ──PR──> main ──push──> images ─> e2e ─> s
 | 1. Pull request | PR to `main` | `pr.yml` | Backend `./mvnw verify` (unit + integration tests), frontend lint, Prettier, unit tests and production build. Required to merge. |
 | 2. Main | push to `main` | `main-to-staging.yml` | Build the backend and frontend images and push them to `ghcr.io/luskeruby/devops-<app>:<commit sha>`. Start exactly those images with `docker-compose.ci.yml` and run the Playwright tests (`e2e/`). If they pass, fast-forward the `staging` branch to the commit (`git push origin HEAD:staging` with `GITHUB_TOKEN`). One promotion runs at a time (`concurrency`); if `staging` already contains the commit, the step does nothing. |
 | 3. Staging | after step 2 | `staging.yml` | Load tests. Only a stub for now. |
-| 4. Release | push of a tag `vX.Y.Z` | `release.yml` | Check that the tag is a plain `vX.Y.Z` and that its commit is on `staging`. Add the version as a tag to the existing `:<sha>` images (`docker buildx imagetools create`, no rebuild). Deploy with `environment: production`. |
+| 4. Release | push of a tag `vX.Y.Z` | `release.yml` | Check that the tag is a plain `vX.Y.Z` and that its commit is on `staging`. Add the version as a tag to the existing `:<sha>` images (`docker buildx imagetools create`, no rebuild). Deploy to both production servers with `environment: production`. |
 
 Nothing is rebuilt after step 2: the image that passed the e2e tests is the image that is released.
 
@@ -216,27 +216,41 @@ If the `production` environment requires reviewers, the deploy job waits for the
 
 ### Production
 
-Production runs on one server: `docker-compose.yml` plus `docker-compose.prod.yml` give `frontend` (nginx),
-`backend` and `postgres` (defined in `infra/postgres/`). The images come from GHCR and are selected by the
-`TAG` variable (the release version); nothing is built on the server.
+Production runs on two servers joined by a WireGuard tunnel:
+
+| Server | Runs | Compose file |
+|---|---|---|
+| B (frontend) | `frontend` (nginx) on ports 80/443 and `postgres` (defined in `infra/postgres/`) | `docker-compose.prod-frontend.yml` |
+| A (backend) | `backend-1` (Spring Boot) on port 8080, published only on its WireGuard address | `docker-compose.prod-backend.yml` |
+
+The images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
+the servers.
 
 nginx serves the SPA on ports 80/443, redirects HTTP to HTTPS, terminates TLS with the certificate in
-`./certs` (not in git), and proxies `/api/` and `/websocket` to the backend. PostgreSQL only listens on
-the server's loopback address and accepts Docker's private networks (`infra/postgres/pg_hba.prod.conf`).
-Flyway creates and migrates the schema when the backend starts, so the data survives releases.
+`./certs` (not in git), and proxies `/api/` and `/websocket` to the backend on Server A through the tunnel.
+Its config is `frontend/nginx.conf.template`; the container fills in `IP_FRONTEND_PUBLIC` and
+`IP_BACKEND_WG` when it starts. PostgreSQL is published only on Server B's WireGuard address, and
+`infra/postgres/pg_hba.prod.conf` accepts only the backend's address, with a password. Flyway creates and
+migrates the schema when the backend starts, so the data survives releases.
 
-The deploy job copies `docker-compose.yml`, `docker-compose.prod.yml` and `infra/postgres/` to
-`~/family-planner` on the server, writes a private `.env` (mode 600), logs in to `ghcr.io` with the job's
-token and runs:
+The deploy job (`release.yml`) works in this order:
+
+1. **Server B:** copies `docker-compose.prod-frontend.yml`, `infra/postgres/` and the certificates, writes a
+   private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`.
+2. **Server A:** copies `docker-compose.prod-backend.yml`, writes its `.env`, pulls and starts the backend.
+   A check calls the backend on its WireGuard address and stops the deploy if it does not answer.
+3. **Server B:** starts the frontend. A final check goes through nginx to the backend.
+
+On a server, the equivalent commands are (Server A shown):
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env pull
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --remove-orphans
+docker compose -f docker-compose.prod-backend.yml --env-file .env pull
+docker compose -f docker-compose.prod-backend.yml --env-file .env up -d --remove-orphans
 ```
 
-The server needs Docker with the Compose plugin and an SSH user that may run it. On the first release,
-Flyway refuses to start if the production database still holds tables from the old Hibernate
-`create-drop` setup; remove the old `postgres-prod-data` volume once.
+Both servers need Docker with the Compose plugin and an SSH user that may run it, the deploy public key in
+that user's `authorized_keys`, port 22 reachable from GitHub, and the WireGuard tunnel up before Docker
+starts (the backend and Postgres publish ports on the tunnel addresses).
 
 ### Repository setup
 
@@ -244,19 +258,27 @@ The images carry `org.opencontainers.image.source`, which links the GHCR package
 `GITHUB_TOKEN` can push and pull them. The branch and tag rulesets are in `.github/rulesets/` (import
 them under Settings, Rules): `main` needs a reviewed PR with the two `pr` checks, `staging` cannot be
 deleted or rewritten, and `v*` tags can only be created, moved or deleted by the listed users. The
-deploy reads these secrets (repository or `production` environment secrets):
+deploy reads these secrets and variables (repository or `production` environment):
 
 | Secret | Used for |
 |---|---|
-| `SSH_USER`, `SSH_PRIVATE_KEY` | SSH login on the server |
-| `SSH_HOST` | Address of the server |
+| `SSH_USER` | SSH login name on both servers |
+| `SSH_PRIVATE_KEY` | Deploy key; its public half is in `authorized_keys` on both servers |
 | `PROD_DB_USER`, `PROD_DB_PASSWORD` | Database user, used by `postgres` and the backend. Do not use a `'` in the password: the `.env` file written by the deploy cannot hold one. |
+| `APP_JWT_SECRET` | Signing key for the backend's JWTs (at least 32 characters) |
 | `SSL_CERTIFICATE`, `SSL_PRIVATE_KEY` | TLS certificate and key, written to `certs/cert.pem` and `certs/key.pem` |
 
-Known gaps: the deploy trusts the server's SSH host key on first use (`ssh-keyscan`) instead of a pinned
-key; the load test is a stub; and there is no automatic rollback (to go back, tag and release an older
-staging commit). A second server with several backends and a message broker is planned. Until then the
-backend keeps Spring's in-memory STOMP broker, so it must stay a single instance.
+| Variable | Used for |
+|---|---|
+| `IP_FRONTEND_PUBLIC` | Server B's public address: SSH target, nginx `server_name`, allowed CORS origin |
+| `IP_BACKEND_PUBLIC` | Server A's public address: SSH target |
+| `IP_FRONTEND_WG` | Server B's WireGuard address: Postgres bind (`POSTGRES_BIND`) and the backend's database host |
+| `IP_BACKEND_WG` | Server A's WireGuard address: the backend's bind address and nginx's upstream |
+
+Known gaps: the deploy trusts the servers' SSH host keys on first use (`ssh-keyscan`) instead of pinned
+keys; the load test is a stub; and there is no automatic rollback (to go back, tag and release an older
+staging commit). A message broker is still missing, so the backend keeps Spring's in-memory STOMP broker
+and must stay a single instance.
 
 ## Line endings
 
