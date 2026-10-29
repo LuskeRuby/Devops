@@ -45,7 +45,7 @@ describe('ChatComponent', () => {
   beforeEach(async () => {
     wsService = {
       connect: vi.fn(),
-      send: vi.fn(),
+      send: vi.fn().mockReturnValue(true),
       disconnect: vi.fn(),
     };
 
@@ -87,7 +87,21 @@ describe('ChatComponent', () => {
         'test@family.com',
         expect.any(Function), // onMessage callback
         expect.any(Function), // onConnected callback
+        expect.any(Function), // onDisconnected callback
       );
+    });
+
+    it('clears isConnected when the WebSocket connection is lost', () => {
+      wsService.connect.mockImplementation(
+        (_email: string, _onMsg: any, onConnected: () => void, onDisconnected: () => void) => {
+          onConnected();
+          onDisconnected();
+        },
+      );
+
+      fixture.detectChanges();
+
+      expect(component.isConnected).toBe(false);
     });
 
     it('does not connect when no user is selected', () => {
@@ -151,6 +165,15 @@ describe('ChatComponent', () => {
 
       expect(wsService.send).toHaveBeenCalledWith(1, 'Hej fra test!', 'test@family.com');
       expect(component.messageText).toBe('');
+    });
+
+    it('keeps the typed text when the message could not be sent', () => {
+      wsService.send.mockReturnValue(false);
+      component.messageText = 'Hej fra test!';
+
+      component.send();
+
+      expect(component.messageText).toBe('Hej fra test!');
     });
   });
 
