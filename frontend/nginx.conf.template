@@ -50,6 +50,10 @@ server {
     location /websocket {
         proxy_pass http://backend;
         proxy_http_version 1.1;
+        # nginx closes a proxied connection that carries no data for 60 s by default. STOMP
+        # heartbeats (every 10 s) keep it busy; this is the safety net if they ever stop.
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;

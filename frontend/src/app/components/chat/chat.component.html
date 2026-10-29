@@ -29,7 +29,9 @@
 <div class="chat-input">
   <input
     [(ngModel)]="messageText"
-    [placeholder]="isConnected ? 'Skriv en hyggelig besked her... 😊' : 'Genopretter forbindelsen...'"
+    [placeholder]="
+      isConnected ? 'Skriv en hyggelig besked her... 😊' : 'Genopretter forbindelsen...'
+    "
     (keyup.enter)="send()"
   />
   <button (click)="send()" [disabled]="!isConnected || !messageText.trim()">
