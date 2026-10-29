@@ -235,8 +235,11 @@ migrates the schema when the backend starts, so the data survives releases.
 
 The deploy job (`release.yml`) works in this order:
 
+0. **Before any server is touched:** checks that the production variables are set and that
+   `infra/postgres/pg_hba.prod.conf` allows `IP_BACKEND_WG` (that file cannot read variables).
 1. **Server B:** copies `docker-compose.prod-frontend.yml`, `infra/postgres/` and the certificates, writes a
-   private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`.
+   private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`,
+   waiting until it is healthy (`--wait`, 2 minutes) before going on.
 2. **Server A:** copies `docker-compose.prod-backend.yml`, writes its `.env`, pulls and starts the backend.
    A check calls the backend on its WireGuard address and stops the deploy if it does not answer.
 3. **Server B:** starts the frontend. A final check goes through nginx to the backend.
@@ -251,6 +254,35 @@ docker compose -f docker-compose.prod-backend.yml --env-file .env up -d --remove
 Both servers need Docker with the Compose plugin and an SSH user that may run it, the deploy public key in
 that user's `authorized_keys`, port 22 reachable from GitHub, and the WireGuard tunnel up before Docker
 starts (the backend and Postgres publish ports on the tunnel addresses).
+
+#### Cutover from the single-server setup (one time)
+
+Before this setup, one server ran `frontend`, `backend` and `postgres` in the compose project `family-planner`
+(containers `family-planner-frontend-1`, `family-planner-backend-1`, `family-planner-postgres-1`). That stack
+is **not** removed by the new deploy: it is a different compose project, so it keeps running on Server A,
+serves the old address with its own database, and the new Postgres on Server B starts empty.
+
+1. **Before the first release:**
+   - The `production` variables and secrets are set, the deploy key is in `authorized_keys` on both
+     servers, and the WireGuard tunnel is up on both (`sudo wg show` shows a recent handshake).
+   - The TLS certificate (`SSL_CERTIFICATE`, `SSL_PRIVATE_KEY`) covers Server B's public address; browsers
+     warn otherwise.
+   - Optional, if the old data matters, dump it on Server A:
+     `docker exec family-planner-postgres-1 sh -c 'pg_dump -U "$POSTGRES_USER" -d familyapp -Fc' > ~/old-familyapp.dump`
+2. **Release.** The new backend runs on Server A next to the old stack (it publishes only on the tunnel
+   address, so ports do not clash). The new site is served from Server B's address.
+3. **Check the new site** on Server B: register, log in, send a chat message.
+4. **Retire the old stack** on Server A. Never use `down -v`; the old database volume stays as a rollback copy:
+
+   ```bash
+   docker stop family-planner-frontend-1 family-planner-backend-1 family-planner-postgres-1
+   ```
+
+   To roll back to it, `docker start` the same three containers. Note that the deploy rewrites
+   `~/family-planner/.env` on Server A with the new variables.
+5. **Clean up afterwards:** delete the unused `SSH_HOST` secret and `PG_HBA_FILE` variable, remove the old
+   `github-actions` key from Server A's `authorized_keys`, and turn off SSH password login on both servers
+   once your own key works.
 
 ### Repository setup
 

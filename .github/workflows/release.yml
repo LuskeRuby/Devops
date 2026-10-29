@@ -82,6 +82,13 @@ jobs:
             [ -n "${!v}" ] || { echo "::error::$v is empty. Check the 'production' environment settings."; exit 1; }
           done
 
+      # pg_hba.prod.conf cannot read variables, so check that it allows the backend's tunnel address.
+      # This runs before any server is touched.
+      - name: Check pg_hba.prod.conf allows the backend
+        run: |
+          addr="${IP_BACKEND_WG//./\\.}"
+          grep -Eq "^host[[:space:]]+all[[:space:]]+all[[:space:]]+${addr}/32[[:space:]]+scram-sha-256" infra/postgres/pg_hba.prod.conf \
+            || { echo "::error::infra/postgres/pg_hba.prod.conf must allow $IP_BACKEND_WG/32 (the IP_BACKEND_WG variable). Edit the file or the variable."; exit 1; }
 
       - name: Set up SSH
         env:
@@ -122,7 +129,8 @@ jobs:
           } | ssh "$REMOTE" "umask 077; cat > ~/$DIR/.env"
 
           printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
-          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d postgres"   # pulls the frontend image too
+          # --wait stops the release here, before the backend is touched, if Postgres is not healthy.
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --wait --wait-timeout 120 postgres"   # pulls the frontend image too
           ssh "$REMOTE" "docker logout ghcr.io"
 
 
