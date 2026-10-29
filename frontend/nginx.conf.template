@@ -1,6 +1,14 @@
+# This is for scaling across multiple servers. NGINX round robins requests across them.
+upstream backend {
+    server ${IP_BACKEND_WG}:8080; # remove this once we transfer to multiple backends
+   #server ${IP_BACKEND_WG}:8081;
+   #server ${IP_BACKEND_WG}:8082;
+    keepalive 16;
+}
+
 server {
     listen 80;
-    server_name 130.225.170.60;
+    server_name ${IP_FRONTEND_PUBLIC};
 
     # Automatically redirect to HTTPS
     return 301 https://$host$request_uri;
@@ -9,7 +17,7 @@ server {
 # The actual HTTPS server
 server {
     listen 443 ssl;
-    server_name 130.225.170.60;
+    server_name ${IP_FRONTEND_PUBLIC};
 
     # Point to the certificates mounted via docker-compose
     ssl_certificate /etc/nginx/ssl/cert.pem;
@@ -29,7 +37,7 @@ server {
 
     # Proxy API requests to the backend service to avoid CORS
     location /api/ {
-        proxy_pass http://backend:8080;
+        proxy_pass http://backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -40,7 +48,7 @@ server {
 
     # Proxy WebSocket requests to backend
     location /websocket {
-        proxy_pass http://backend:8080/websocket;
+        proxy_pass http://backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

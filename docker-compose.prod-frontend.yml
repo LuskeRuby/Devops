@@ -1,0 +1,28 @@
+name: family-planner-infra
+
+# Server B must never start with the dev defaults from infra/postgres. Compose stops with
+# an error if one of these is missing.
+x-required:
+  - ${POSTGRES_BIND:?set POSTGRES_BIND to Server B's WireGuard address}
+  - ${PG_HBA_FILE:?set PG_HBA_FILE to pg_hba.prod.conf}
+  - ${POSTGRES_USER:?set POSTGRES_USER}
+  - ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+
+# Postgres is still defined once, in infra/postgres. We only add prod settings on top.
+include:
+  - infra/postgres/docker-compose.yml
+
+services:
+  frontend:
+    image: ghcr.io/luskeruby/devops-frontend:${TAG:?set TAG to the release version}
+    restart: always
+    environment:
+      # Used by the NGINX template
+      IP_FRONTEND_PUBLIC: ${IP_FRONTEND_PUBLIC:?set IP_FRONTEND_PUBLIC}
+      IP_BACKEND_WG: ${IP_BACKEND_WG:?set IP_BACKEND_WG}
+      NGINX_ENVSUBST_FILTER: "^(IP_FRONTEND_PUBLIC|IP_BACKEND_WG)$"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/ssl:ro

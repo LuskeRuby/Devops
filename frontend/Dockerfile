@@ -10,5 +10,5 @@ RUN npm run build
 FROM nginx:alpine
 LABEL org.opencontainers.image.source=https://github.com/LuskeRuby/Devops
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 EXPOSE 80
