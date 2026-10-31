@@ -69,6 +69,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.isConnected = true;
         this.cd.detectChanges();
       },
+      () => {
+        console.log('Chat connection lost, reconnecting...');
+        this.isConnected = false;
+        this.cd.detectChanges();
+      },
     );
   }
 
@@ -86,8 +91,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   send() {
     const familyEmail = this.familyEmail;
     if (this.messageText.trim() && this.isConnected && familyEmail) {
-      this.ws.send(this.selectedUserId!, this.messageText, familyEmail);
-      this.messageText = '';
+      // Keep the text if the message could not be sent (connection just dropped).
+      if (this.ws.send(this.selectedUserId!, this.messageText, familyEmail)) {
+        this.messageText = '';
+      }
     }
   }
 

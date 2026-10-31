@@ -66,10 +66,29 @@ jobs:
       packages: read          # the server pulls the images with this token
     env:
       SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_HOST: ${{ secrets.SSH_HOST }}     # one server for now
+      IP_BACKEND_PUBLIC: ${{ vars.IP_BACKEND_PUBLIC }}
+      IP_FRONTEND_PUBLIC: ${{ vars.IP_FRONTEND_PUBLIC }}
       DIR: family-planner                   # folder on the server, relative to the SSH user's home
+      IP_BACKEND_WG: ${{ vars.IP_BACKEND_WG }}
+      IP_FRONTEND_WG: ${{ vars.IP_FRONTEND_WG }}
     steps:
       - uses: actions/checkout@v7
+
+
+      # Sanity check on the env values
+      - name: Check the production variables are set
+        run: |
+          for v in SSH_USER IP_BACKEND_PUBLIC IP_FRONTEND_PUBLIC IP_BACKEND_WG IP_FRONTEND_WG; do
+            [ -n "${!v}" ] || { echo "::error::$v is empty. Check the 'production' environment settings."; exit 1; }
+          done
+
+      # pg_hba.prod.conf cannot read variables, so check that it allows the backend's tunnel address.
+      # This runs before any server is touched.
+      - name: Check pg_hba.prod.conf allows the backend
+        run: |
+          addr="${IP_BACKEND_WG//./\\.}"
+          grep -Eq "^host[[:space:]]+all[[:space:]]+all[[:space:]]+${addr}/32[[:space:]]+scram-sha-256" infra/postgres/pg_hba.prod.conf \
+            || { echo "::error::infra/postgres/pg_hba.prod.conf must allow $IP_BACKEND_WG/32 (the IP_BACKEND_WG variable). Edit the file or the variable."; exit 1; }
 
       - name: Set up SSH
         env:
@@ -78,31 +97,61 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$IP_BACKEND_PUBLIC" "$IP_FRONTEND_PUBLIC" >> ~/.ssh/known_hosts
           printf 'Host *\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
 
-      - name: Deploy
+
+      # Database first (Server B): the backend needs it, and on the very first deploy it does not exist yet.
+      - name: Deploy DB
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SSL_CERTIFICATE: ${{ secrets.SSL_CERTIFICATE }}
           SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
           PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
-          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
         run: |
-          REMOTE="$SSH_USER@$SSH_HOST"
-          COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env"
+          REMOTE="$SSH_USER@$IP_FRONTEND_PUBLIC"
+          COMPOSE="docker compose -f docker-compose.prod-frontend.yml --env-file .env"
 
           ssh "$REMOTE" "mkdir -p ~/$DIR/certs ~/$DIR/infra"
-          # docker-compose.yml includes infra/postgres/docker-compose.yml, which mounts the pg_hba files
-          scp docker-compose.yml docker-compose.prod.yml "$REMOTE:$DIR/"
+          scp docker-compose.prod-frontend.yml "$REMOTE:$DIR/"
           scp -r infra/postgres "$REMOTE:$DIR/infra/"
           printf '%s\n' "$SSL_CERTIFICATE" | ssh "$REMOTE" "cat > ~/$DIR/certs/cert.pem"
           printf '%s\n' "$SSL_PRIVATE_KEY" | ssh "$REMOTE" "umask 077; cat > ~/$DIR/certs/key.pem"
-          # Secrets go through stdin into a private file, not onto a command line.
-          # Single quotes keep $ and # in passwords literal (a ' in a password is not supported).
           {
             echo "TAG=$VERSION"
+            echo "IP_FRONTEND_PUBLIC=$IP_FRONTEND_PUBLIC"
+            echo "IP_BACKEND_WG=$IP_BACKEND_WG"
+            echo "POSTGRES_BIND=$IP_FRONTEND_WG"
+            echo "PG_HBA_FILE=pg_hba.prod.conf"
+            echo "POSTGRES_USER='$PROD_DB_USER'"
+            echo "POSTGRES_PASSWORD='$PROD_DB_PASSWORD'"
+          } | ssh "$REMOTE" "umask 077; cat > ~/$DIR/.env"
+
+          printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          # --wait stops the release here, before the backend is touched, if Postgres is not healthy.
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --wait --wait-timeout 120 postgres"   # pulls the frontend image too
+          ssh "$REMOTE" "docker logout ghcr.io"
+
+
+      # Backend before frontend (Server A)
+      - name: Deploy backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+        run: |
+          REMOTE="$SSH_USER@$IP_BACKEND_PUBLIC"
+          COMPOSE="docker compose -f docker-compose.prod-backend.yml --env-file .env"
+
+          ssh "$REMOTE" "mkdir -p ~/$DIR"
+          scp docker-compose.prod-backend.yml "$REMOTE:$DIR/"
+          {
+            echo "TAG=$VERSION"
+            echo "IP_FRONTEND_PUBLIC=$IP_FRONTEND_PUBLIC"
+            echo "IP_BACKEND_WG=$IP_BACKEND_WG"
+            echo "IP_FRONTEND_WG=$IP_FRONTEND_WG"
             echo "PROD_DB_USER='$PROD_DB_USER'"
             echo "PROD_DB_PASSWORD='$PROD_DB_PASSWORD'"
             echo "APP_JWT_SECRET='$APP_JWT_SECRET'"
@@ -110,22 +159,43 @@ jobs:
 
           printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
           ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --remove-orphans && $COMPOSE ps"
-          ssh "$REMOTE" "docker logout ghcr.io"   # the token is only valid for this run anyway
+          ssh "$REMOTE" "docker logout ghcr.io"
 
-      - name: Check that the site answers
-        run: ssh "$SSH_USER@$SSH_HOST" "curl -fsk -o /dev/null --retry 10 --retry-delay 3 --retry-connrefused https://localhost/"
 
-      # The page above is served by nginx alone. An empty login request goes through nginx to the
-      # backend: any 4xx means the backend is up; 502/503 means it is down (e.g. it refused to start).
-      - name: Check that the backend answers
+      # Check that the backend answers
+      # Stop here if the backend is down, before the frontend is touched.
+      - name: Backend test
         run: |
-          ssh "$SSH_USER@$SSH_HOST" bash -s <<'EOF'
+          ssh "$SSH_USER@$IP_BACKEND_PUBLIC" "IP_BACKEND_WG=$IP_BACKEND_WG bash -s" <<'EOF'
           for i in $(seq 1 20); do
-            code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' https://localhost/api/families/login)
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "http://$IP_BACKEND_WG:8080/api/families/login")
             case "$code" in 4*) echo "backend answers ($code)"; exit 0 ;; esac
             echo "backend not ready yet (HTTP $code)"; sleep 3
           done
           echo "::error::backend did not answer after the deploy"
-          cd ~/family-planner && docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env logs --tail 40 backend
+          cd ~/family-planner && docker compose -f docker-compose.prod-backend.yml --env-file .env logs --tail 40 backend-1
+          exit 1
+          EOF
+
+      # Frontend (Server B)
+      # The image was already pulled together with the DB
+      - name: Deploy frontend
+        run: |
+          REMOTE="$SSH_USER@$IP_FRONTEND_PUBLIC"
+          COMPOSE="docker compose -f docker-compose.prod-frontend.yml --env-file .env"
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE up -d --remove-orphans && $COMPOSE ps"
+
+
+      # Test endpoints (nginx on B -> backend on A)
+      - name: Front + Backend test
+        run: |
+          ssh "$SSH_USER@$IP_FRONTEND_PUBLIC" "curl -fsk -o /dev/null --retry 10 --retry-delay 3 --retry-connrefused https://localhost/"
+          ssh "$SSH_USER@$IP_FRONTEND_PUBLIC" bash -s <<'EOF'
+          for i in $(seq 1 20); do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' https://localhost/api/families/login)
+            case "$code" in 4*) echo "backend answers through nginx ($code)"; exit 0 ;; esac
+            echo "not ready yet (HTTP $code)"; sleep 3
+          done
+          echo "::error::nginx cannot reach the backend (check WireGuard and IP_BACKEND_WG)"
           exit 1
           EOF

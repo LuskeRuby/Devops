@@ -19,6 +19,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.simp.stomp.*;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -172,6 +173,40 @@ class ChatWebSocketIT extends AbstractIntegrationTest {
                 .hasSize(1);
 
         session.disconnect();
+    }
+
+    @Test
+    @DisplayName("server offers 10 s heartbeats so an idle connection is not closed by a proxy")
+    void serverOffersHeartbeats() throws Exception {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setThreadNamePrefix("test-heartbeat-");
+        scheduler.initialize();
+        stompClient.setTaskScheduler(scheduler);
+        stompClient.setDefaultHeartbeat(new long[]{10_000, 10_000});
+
+        BlockingQueue<StompHeaders> connected = new LinkedBlockingQueue<>();
+        StompHeaders connectHeaders = new StompHeaders();
+        connectHeaders.add("Authorization", "Bearer " + jwtUtil.generateAccessToken(familyEmail));
+
+        StompSession session = stompClient.connectAsync(
+                getWsUrl(),
+                new WebSocketHttpHeaders(),
+                connectHeaders,
+                new StompSessionHandlerAdapter() {
+                    @Override
+                    public void afterConnected(@NonNull StompSession session, @NonNull StompHeaders connectedHeaders) {
+                        connected.add(connectedHeaders);
+                    }
+                }
+        ).get(5, TimeUnit.SECONDS);
+
+        StompHeaders connectedHeaders = connected.poll(5, TimeUnit.SECONDS);
+
+        assertThat(connectedHeaders).as("CONNECTED frame").isNotNull();
+        assertThat(connectedHeaders.getHeartbeat()).containsExactly(10_000L, 10_000L);
+
+        session.disconnect();
+        scheduler.shutdown();
     }
 
     @Test
