@@ -38,6 +38,15 @@ services:
       - /:/host:ro
     restart: always
 
+  loki:
+    image: grafana/loki:3.7.9
+    ports:
+        - "127.0.0.1:3100:3100"
+    volumes:
+      - loki-data:/loki
+    restart: always
+
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
