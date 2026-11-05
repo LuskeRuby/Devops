@@ -3,6 +3,58 @@ name: PR tests
 on: workflow_call
 
 jobs:
+  # Renders every compose file combination with dummy values. A typo, a missing variable or a broken
+  # include fails here, not in the middle of a release (the production files are otherwise only
+  # evaluated on the servers).
+  compose-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dev (base + override)
+        run: docker compose config -q
+      - name: CI (base + ci)
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml config -q
+        env:
+          IMAGE_TAG: dummy
+      - name: Server B (prod-frontend)
+        run: docker compose -f docker-compose.prod-frontend.yml config -q
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_BACKEND_WG: 10.8.0.2
+          POSTGRES_BIND: 10.8.0.1
+          PG_HBA_FILE: pg_hba.prod.conf
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          RABBITMQ_BIND: 10.8.0.1
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+      - name: Server B refuses to render without the broker login
+        run: |
+          if docker compose -f docker-compose.prod-frontend.yml config -q 2>/dev/null; then
+            echo "::error::prod-frontend rendered without RABBITMQ_USER/RABBITMQ_PASSWORD"
+            exit 1
+          fi
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_BACKEND_WG: 10.8.0.2
+          POSTGRES_BIND: 10.8.0.1
+          PG_HBA_FILE: pg_hba.prod.conf
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          RABBITMQ_BIND: 10.8.0.1
+      - name: Server A (prod-backend)
+        run: docker compose -f docker-compose.prod-backend.yml config -q
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_FRONTEND_WG: 10.8.0.1
+          IP_BACKEND_WG: 10.8.0.2
+          PROD_DB_USER: user
+          PROD_DB_PASSWORD: password
+          APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+
   backend-test:
     runs-on: ubuntu-latest
     steps:

@@ -1,16 +1,20 @@
 name: family-planner-infra
 
-# Server B must never start with the dev defaults from infra/postgres. Compose stops with
-# an error if one of these is missing.
+# Server B must never start with the dev defaults from infra/postgres, or without a broker login.
+# Compose stops with an error if one of these is missing.
 x-required:
   - ${POSTGRES_BIND:?set POSTGRES_BIND to Server B's WireGuard address}
   - ${PG_HBA_FILE:?set PG_HBA_FILE to pg_hba.prod.conf}
   - ${POSTGRES_USER:?set POSTGRES_USER}
   - ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+  - ${RABBITMQ_BIND:?set RABBITMQ_BIND to Server B's WireGuard address}
+  - ${RABBITMQ_USER:?set RABBITMQ_USER}
+  - ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD}
 
-# Postgres is still defined once, in infra/postgres. We only add prod settings on top.
+# Postgres and RabbitMQ are each defined once, in infra/. We only add prod settings on top.
 include:
   - infra/postgres/docker-compose.yml
+  - infra/rabbitmq/docker-compose.yml
 
 services:
   frontend:
