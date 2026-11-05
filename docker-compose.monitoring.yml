@@ -38,14 +38,6 @@ services:
       - /:/host:ro
     restart: always
 
-  loki:
-    image: grafana/loki:3.7.9
-    ports:
-        - "127.0.0.1:3100:3100"
-    volumes:
-      - loki-data:/loki
-    restart: always
-
   alloy:
     image: grafana/alloy:v1.21.3
     command:
@@ -60,6 +52,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - loki
+    restart: always
+
+  loki:
+    image: grafana/loki:3.7.9
+    command: [ "-config.file=/etc/loki/loki.yml" ]
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
     restart: always
 
 volumes:
