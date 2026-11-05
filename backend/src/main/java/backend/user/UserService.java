@@ -102,7 +102,7 @@ public class UserService {
     public ProfileAuthResponseDto validatePin(Long id, String pin, jakarta.servlet.http.HttpServletResponse response) {
         User user = getUserEntityById(id);
         if (user.getPincode() == null || !user.getPincode().equals(pin)) {
-            throw new backend.common.exception.InvalidCredentialsException();
+            throw new backend.common.exception.InvalidPinException();
         }
 
         java.util.Map<String, Object> claims = new java.util.HashMap<>();
