@@ -61,7 +61,9 @@ export class WebSocketService {
       this.connected = true;
       onConnected();
 
-      this.client.subscribe(`/topic/messages/${familyEmail}`, (message) => {
+      // "messages.<email>", not "messages/<email>": RabbitMQ rejects a slash in a topic name. The backend
+      // publishes to the same name (MessageSocketController).
+      this.client.subscribe(`/topic/messages.${familyEmail}`, (message) => {
         const body = JSON.parse(message.body);
         onMessage(body);
       });

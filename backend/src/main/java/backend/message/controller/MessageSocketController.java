@@ -21,6 +21,9 @@ public class MessageSocketController {
     @MessageMapping("/chat")
     public void handleChat(MessageRequestDto dto) {
         MessageResponseDto response = messageService.saveMessage(dto);
-        messagingTemplate.convertAndSend("/topic/messages/" + dto.familyEmail(), response);
+        // One path segment after /topic/ ("messages.<email>", not "messages/<email>"): RabbitMQ's STOMP
+        // plugin rejects a topic name that contains a slash ("Invalid destination"). Clients subscribe
+        // to the same name (frontend web-socket.service.ts).
+        messagingTemplate.convertAndSend("/topic/messages." + dto.familyEmail(), response);
     }
 }

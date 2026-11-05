@@ -81,7 +81,7 @@ describe('WebSocketService', () => {
       service.connect('test@family.com', onMessage, onConnected);
 
       expect(subscribeSpy).toHaveBeenCalledWith(
-        '/topic/messages/test@family.com',
+        '/topic/messages.test@family.com',
         expect.any(Function),
       );
     });

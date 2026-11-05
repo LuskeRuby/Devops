@@ -134,7 +134,7 @@ class ChatWebSocketIT extends AbstractIntegrationTest {
                 errorCapturingHandler()
         ).get(5, TimeUnit.SECONDS);
 
-        session.subscribe("/topic/messages/" + familyEmail, new StompFrameHandler() {
+        session.subscribe("/topic/messages." + familyEmail, new StompFrameHandler() {
             @Override
             @NonNull
             public Type getPayloadType(@NonNull StompHeaders headers) {
