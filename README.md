@@ -42,7 +42,7 @@ browser ──HTTPS──> Server B: nginx (frontend container)
 | Part | Tech | Folder |
 |---|---|---|
 | Frontend | Angular 21 (standalone components), Angular Material, angular-calendar, STOMP client, service worker (production builds only) | `frontend/` |
-| Backend | Spring Boot 3.5, Java 25, Maven wrapper, Spring Security (stateless JWT + refresh-token cookie), Spring Data JPA, STOMP broker on `/topic` | `backend/` |
+| Backend | Spring Boot 4.1, Java 25, Maven wrapper, Spring Security (stateless JWT + refresh-token cookie), Spring Data JPA, STOMP broker on `/topic` | `backend/` |
 | Database | PostgreSQL 17 | container `postgres` |
 | E2E tests | Playwright | `e2e/` |
 | CI/CD | GitHub Actions, images on GHCR | `.github/workflows/` |
@@ -220,7 +220,7 @@ Production runs on two servers joined by a WireGuard tunnel:
 
 | Server | Runs | Compose file |
 |---|---|---|
-| B (frontend) | `frontend` (nginx) on ports 80/443 and `postgres` (defined in `infra/postgres/`) | `docker-compose.prod-frontend.yml` |
+| B (frontend) | `frontend` (nginx) on ports 80/443, `postgres` (defined in `infra/postgres/`) and `rabbitmq` (the message broker, `infra/rabbitmq/`) | `docker-compose.prod-frontend.yml` |
 | A (backend) | `backend-1` (Spring Boot) on port 8080, published only on its WireGuard address | `docker-compose.prod-backend.yml` |
 
 The images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
@@ -238,8 +238,8 @@ The deploy job (`release.yml`) works in this order:
 0. **Before any server is touched:** checks that the production variables are set and that
    `infra/postgres/pg_hba.prod.conf` allows `IP_BACKEND_WG` (that file cannot read variables).
 1. **Server B:** copies `docker-compose.prod-frontend.yml`, `infra/postgres/` and the certificates, writes a
-   private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`,
-   waiting until it is healthy (`--wait`, 2 minutes) before going on.
+   private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`
+   and `rabbitmq`, waiting until both are healthy (`--wait`, 2 minutes) before going on.
 2. **Server A:** copies `docker-compose.prod-backend.yml`, writes its `.env`, pulls and starts the backend.
    A check calls the backend on its WireGuard address and stops the deploy if it does not answer.
 3. **Server B:** starts the frontend. A final check goes through nginx to the backend.
@@ -253,7 +253,7 @@ docker compose -f docker-compose.prod-backend.yml --env-file .env up -d --remove
 
 Both servers need Docker with the Compose plugin and an SSH user that may run it, the deploy public key in
 that user's `authorized_keys`, port 22 reachable from GitHub, and the WireGuard tunnel up before Docker
-starts (the backend and Postgres publish ports on the tunnel addresses).
+starts (the backend, Postgres and RabbitMQ publish ports on the tunnel addresses).
 
 #### Cutover from the single-server setup (one time)
 
@@ -297,6 +297,7 @@ deploy reads these secrets and variables (repository or `production` environment
 | `SSH_USER` | SSH login name on both servers |
 | `SSH_PRIVATE_KEY` | Deploy key; its public half is in `authorized_keys` on both servers |
 | `PROD_DB_USER`, `PROD_DB_PASSWORD` | Database user, used by `postgres` and the backend. Do not use a `'` in the password: the `.env` file written by the deploy cannot hold one. |
+| `RABBITMQ_USER`, `RABBITMQ_PASSWORD` | Login for the message broker on Server B (never `guest`). Same `'` restriction as the database password; the release stops before touching a server if one is missing or contains a `'`. |
 | `APP_JWT_SECRET` | Signing key for the backend's JWTs (at least 32 characters) |
 | `SSL_CERTIFICATE`, `SSL_PRIVATE_KEY` | TLS certificate and key, written to `certs/cert.pem` and `certs/key.pem` |
 
