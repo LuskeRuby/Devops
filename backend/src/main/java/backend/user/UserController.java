@@ -39,13 +39,13 @@ public class UserController {
     }
 
     @GetMapping("/family/{familyEmail}")
-    @PreAuthorize("userAuthorization.canListFamily(#familyEmail)")
+    @PreAuthorize("@userAuthorization.canListFamily(#familyEmail)")
     public ResponseEntity<List<UserResponseDto>> getUsersByFamily(@PathVariable String familyEmail) {
         return ResponseEntity.ok(userService.getUsersByFamilyEmail(familyEmail));
     }
 
     @GetMapping("/{id}/tasks")
-    @PreAuthorize("userAuthorization.canAccessUser(#id)")
+    @PreAuthorize("@userAuthorization.canAccessUser(#id)")
     public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id) {
         List<Task> tasks = taskService.getTasksByUserId(id);
         List<TaskDto> taskDTOs = tasks.stream()
