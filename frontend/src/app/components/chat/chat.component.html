@@ -1,5 +1,5 @@
 <div class="chat-messages" #scrollContainer>
-  @for (message of messages; track i; let i = $index) {
+  @for (message of messages; track message.id; let i = $index) {
     @if (i === 0 || isDifferentDay(messages[i - 1].timestamp, message.timestamp)) {
       <div class="date-separator">
         <span>{{ formatDateLabel(message.timestamp) }}</span>

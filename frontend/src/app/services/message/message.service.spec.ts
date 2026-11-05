@@ -25,7 +25,16 @@ describe('MessageService', () => {
     it('sends GET with familyEmail as query parameter', () => {
       service.getMessages('test@family.com').subscribe();
 
-      const req = httpTesting.expectOne('/api/messages?familyEmail=test@family.com');
+      const req = httpTesting.expectOne('/api/messages?familyEmail=test%40family.com');
+      expect(req.request.method).toBe('GET');
+      req.flush([]);
+    });
+
+    it('encodes special characters of the email in the query string', () => {
+      service.getMessages('anna+chat@family.com').subscribe();
+
+      // '+' must stay %2B: left as it is, the server would read it as a space.
+      const req = httpTesting.expectOne('/api/messages?familyEmail=anna%2Bchat%40family.com');
       expect(req.request.method).toBe('GET');
       req.flush([]);
     });
@@ -56,7 +65,7 @@ describe('MessageService', () => {
         expect(messages[1].imageId).toBeUndefined();
       });
 
-      httpTesting.expectOne('/api/messages?familyEmail=test@family.com').flush(mockMessages);
+      httpTesting.expectOne('/api/messages?familyEmail=test%40family.com').flush(mockMessages);
     });
 
     it('returns empty array when no messages exist', () => {
@@ -64,7 +73,7 @@ describe('MessageService', () => {
         expect(messages).toEqual([]);
       });
 
-      httpTesting.expectOne('/api/messages?familyEmail=empty@family.com').flush([]);
+      httpTesting.expectOne('/api/messages?familyEmail=empty%40family.com').flush([]);
     });
   });
 });

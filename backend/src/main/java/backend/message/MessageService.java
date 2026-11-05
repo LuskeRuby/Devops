@@ -3,6 +3,7 @@ package backend.message;
 import backend.message.dto.MessageRequestDto;
 import backend.user.User;
 import backend.user.UserService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import backend.message.dto.MessageResponseDto;
 import java.util.stream.Collectors;
@@ -21,9 +22,13 @@ public class MessageService {
         this.userService = userService;
     }
 
-    public MessageResponseDto saveMessage(MessageRequestDto dto) {
+    /** Saves a message from {@code dto.userId()}, who must be a member of the caller's family. */
+    public MessageResponseDto saveMessage(MessageRequestDto dto, String callerFamilyEmail) {
 
         User user = userService.getUserEntityById(dto.userId());
+        if (user.getFamily() == null || !user.getFamily().getEmail().equals(callerFamilyEmail)) {
+            throw new AccessDeniedException("User " + dto.userId() + " is not in the caller's family");
+        }
 
         Message message = new Message();
         message.setUser(user);

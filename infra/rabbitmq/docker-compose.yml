@@ -1,0 +1,48 @@
+# RabbitMQ with the STOMP plugin: the message broker that the backends relay chat messages
+# through (Spring's STOMP broker relay), so that several backend instances share one broker.
+#
+# - Production (Server B): docker-compose.prod-frontend.yml includes this file. The values come
+#   from Server B's .env, written by the release workflow:
+#     RABBITMQ_BIND                      address to publish STOMP (61613) on: Server B's WireGuard address
+#     RABBITMQ_USER, RABBITMQ_PASSWORD   the login the backends use (never guest)
+# - Local test of the broker alone:
+#     RABBITMQ_BIND=127.0.0.1 RABBITMQ_USER=dev RABBITMQ_PASSWORD=dev \
+#       docker compose -f infra/rabbitmq/docker-compose.yml up
+#
+# There are no defaults for the three values: a missing one stops Compose with an error, so the
+# broker never starts open to the network or with a default login.
+services:
+  rabbitmq:
+    image: rabbitmq:4.4-management-alpine
+    # RabbitMQ keys its data directory on the node name, which defaults to the container id.
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      # Create this user on the first start of an empty volume. Changing the secret later does not
+      # change an existing broker (use rabbitmqctl change_password), same as the Postgres credentials.
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?set RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD}
+    ports:
+      # STOMP, for the backends on Server A, over the WireGuard tunnel only.
+      - "${RABBITMQ_BIND:?set RABBITMQ_BIND to the address to publish STOMP on}:61613:61613"
+      # Management UI: this machine only (reach it with an SSH tunnel). AMQP (5672) is not published.
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      # Enables rabbitmq_stomp (and the management UI); the plugin is not enabled in the image.
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  rabbitmq-data:
