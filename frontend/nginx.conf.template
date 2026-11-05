@@ -1,8 +1,8 @@
-# This is for scaling across multiple servers. NGINX round robins requests across them.
+# The backends all run on Server A, one port each. NGINX round robins requests across them and stops
+# using one that fails 3 times in a row for 10 s. The server lines come from BACKEND_SERVERS, which the
+# release builds from the BACKEND_COUNT variable.
 upstream backend {
-    server ${IP_BACKEND_WG}:8080; # remove this once we transfer to multiple backends
-   #server ${IP_BACKEND_WG}:8081;
-   #server ${IP_BACKEND_WG}:8082;
+    ${BACKEND_SERVERS}
     keepalive 16;
 }
 
@@ -39,6 +39,11 @@ server {
     location /api/ {
         proxy_pass http://backend;
         proxy_http_version 1.1;
+        # If one backend is down or answers 502/503 (for example while it restarts in a release), try the
+        # other one. POST is not retried after the request was sent (nginx default), so nothing is posted twice.
+        proxy_connect_timeout 3s;
+        proxy_next_upstream error timeout http_502 http_503;
+        proxy_next_upstream_tries 2;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -50,6 +55,9 @@ server {
     location /websocket {
         proxy_pass http://backend;
         proxy_http_version 1.1;
+        proxy_connect_timeout 3s;
+        proxy_next_upstream error timeout http_502 http_503;
+        proxy_next_upstream_tries 2;
         # nginx closes a proxied connection that carries no data for 60 s by default. STOMP
         # heartbeats (every 10 s) keep it busy; this is the safety net if they ever stop.
         proxy_read_timeout 3600s;

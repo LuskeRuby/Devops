@@ -23,8 +23,10 @@ services:
     environment:
       # Used by the NGINX template
       IP_FRONTEND_PUBLIC: ${IP_FRONTEND_PUBLIC:?set IP_FRONTEND_PUBLIC}
-      IP_BACKEND_WG: ${IP_BACKEND_WG:?set IP_BACKEND_WG}
-      NGINX_ENVSUBST_FILTER: "^(IP_FRONTEND_PUBLIC|IP_BACKEND_WG)$"
+      # One `server <address>:<port> ...;` per backend instance, built by release.yml from BACKEND_COUNT
+      # (.github/scripts/backend-servers.sh).
+      BACKEND_SERVERS: ${BACKEND_SERVERS:?set BACKEND_SERVERS}
+      NGINX_ENVSUBST_FILTER: "^(IP_FRONTEND_PUBLIC|BACKEND_SERVERS)$"
     ports:
       - "80:80"
       - "443:443"

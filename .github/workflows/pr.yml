@@ -21,7 +21,7 @@ jobs:
         env:
           TAG: v0.0.0
           IP_FRONTEND_PUBLIC: 203.0.113.10
-          IP_BACKEND_WG: 10.8.0.2
+          BACKEND_SERVERS: "server 10.8.0.2:8080;"
           POSTGRES_BIND: 10.8.0.1
           PG_HBA_FILE: pg_hba.prod.conf
           POSTGRES_USER: user
@@ -38,7 +38,7 @@ jobs:
         env:
           TAG: v0.0.0
           IP_FRONTEND_PUBLIC: 203.0.113.10
-          IP_BACKEND_WG: 10.8.0.2
+          BACKEND_SERVERS: "server 10.8.0.2:8080;"
           POSTGRES_BIND: 10.8.0.1
           PG_HBA_FILE: pg_hba.prod.conf
           POSTGRES_USER: user
@@ -46,6 +46,29 @@ jobs:
           RABBITMQ_BIND: 10.8.0.1
       - name: Server A (prod-backend)
         run: docker compose -f docker-compose.prod-backend.yml config -q
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_FRONTEND_WG: 10.8.0.1
+          IP_BACKEND_WG: 10.8.0.2
+          PROD_DB_USER: user
+          PROD_DB_PASSWORD: password
+          APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+      - name: Server A instances (profile scale)
+        run: |
+          # release.yml, nginx and the check script assume instance N is backend-N on port 8079+N
+          max=$(sed -n 's/^ *MAX_BACKENDS: *\([0-9]*\).*/\1/p' .github/workflows/release.yml)
+          expected=$(seq -f 'backend-%g' 1 "$max" | tr '\n' ' ')
+          services=$(docker compose --profile scale -f docker-compose.prod-backend.yml config --services | sort | tr '\n' ' ')
+          [ "$services" = "$expected" ] || { echo "::error::MAX_BACKENDS is $max but compose has: $services"; exit 1; }
+          ports=$(docker compose --profile scale -f docker-compose.prod-backend.yml config | sed -n 's/.*published: "\([0-9]*\)".*/\1/p' | sort | tr '\n' ' ')
+          expected_ports=$(seq 8080 $((8079 + max)) | tr '\n' ' ')
+          [ "$ports" = "$expected_ports" ] || { echo "::error::ports must be $expected_ports, got: $ports"; exit 1; }
+          # without the profile only backend-1 may start
+          services=$(docker compose -f docker-compose.prod-backend.yml config --services | tr '\n' ' ')
+          [ "$services" = "backend-1 " ] || { echo "::error::only backend-1 may start without the scale profile, got: $services"; exit 1; }
         env:
           TAG: v0.0.0
           IP_FRONTEND_PUBLIC: 203.0.113.10
@@ -70,6 +93,23 @@ jobs:
           PROD_DB_USER: user
           PROD_DB_PASSWORD: password
           APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+
+  # Renders the nginx template the way the container does (envsubst with the production filter) and lets
+  # nginx check the result, for different numbers of backend instances.
+  nginx-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Self-signed certificate (only so that nginx -t can load one)
+        run: |
+          mkdir certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=localhost" -keyout certs/key.pem -out certs/cert.pem
+      - name: One backend
+        run: bash .github/scripts/check-nginx.sh 1
+      - name: Two backends
+        run: bash .github/scripts/check-nginx.sh 2
+      - name: Four backends
+        run: bash .github/scripts/check-nginx.sh 4
 
   backend-test:
     runs-on: ubuntu-latest

@@ -71,6 +71,10 @@ jobs:
       DIR: family-planner                   # folder on the server, relative to the SSH user's home
       IP_BACKEND_WG: ${{ vars.IP_BACKEND_WG }}
       IP_FRONTEND_WG: ${{ vars.IP_FRONTEND_WG }}
+      # How many backend instances run on Server A (1 .. MAX_BACKENDS). More than 1 needs the RabbitMQ relay,
+      # which is the default in production. Unset means 1.
+      BACKEND_COUNT: ${{ vars.BACKEND_COUNT || '1' }}
+      MAX_BACKENDS: 4                       # the number of backend-N services in docker-compose.prod-backend.yml
     steps:
       - uses: actions/checkout@v7
 
@@ -85,6 +89,9 @@ jobs:
           for v in SSH_USER IP_BACKEND_PUBLIC IP_FRONTEND_PUBLIC IP_BACKEND_WG IP_FRONTEND_WG RABBITMQ_USER RABBITMQ_PASSWORD; do
             [ -n "${!v}" ] || { echo "::error::$v is empty. Check the 'production' environment settings."; exit 1; }
           done
+          if ! [[ "$BACKEND_COUNT" =~ ^[1-9]$ ]] || [ "$BACKEND_COUNT" -gt "$MAX_BACKENDS" ]; then
+            echo "::error::BACKEND_COUNT must be a number from 1 to $MAX_BACKENDS (or unset), not '$BACKEND_COUNT'."; exit 1
+          fi
           # The .env file written by the deploy single-quotes these values, so a ' would break it.
           for v in RABBITMQ_USER RABBITMQ_PASSWORD; do
             case "${!v}" in *\'*) echo "::error::$v contains a single quote, which the .env file cannot hold."; exit 1 ;; esac
@@ -124,6 +131,9 @@ jobs:
           REMOTE="$SSH_USER@$IP_FRONTEND_PUBLIC"
           COMPOSE="docker compose -f docker-compose.prod-frontend.yml --env-file .env"
 
+          # The server lines of nginx's upstream, one per backend instance.
+          BACKEND_SERVERS=$(bash .github/scripts/backend-servers.sh "$IP_BACKEND_WG" "$BACKEND_COUNT")
+
           ssh "$REMOTE" "mkdir -p ~/$DIR/certs ~/$DIR/infra"
           scp docker-compose.prod-frontend.yml "$REMOTE:$DIR/"
           scp -r infra/postgres "$REMOTE:$DIR/infra/"
@@ -133,7 +143,7 @@ jobs:
           {
             echo "TAG=$VERSION"
             echo "IP_FRONTEND_PUBLIC=$IP_FRONTEND_PUBLIC"
-            echo "IP_BACKEND_WG=$IP_BACKEND_WG"
+            echo "BACKEND_SERVERS='$BACKEND_SERVERS'"
             echo "POSTGRES_BIND=$IP_FRONTEND_WG"
             echo "PG_HBA_FILE=pg_hba.prod.conf"
             echo "POSTGRES_USER='$PROD_DB_USER'"
@@ -149,8 +159,11 @@ jobs:
           ssh "$REMOTE" "docker logout ghcr.io"
 
 
-      # Backend before frontend (Server A)
-      - name: Deploy backend
+      # Backend before frontend (Server A). Rolling: the instances are replaced one at a time, and each must
+      # answer and be connected to RabbitMQ before the next is touched, so the others keep serving the old
+      # version meanwhile. Flyway migrations therefore must work for the old and the new version at once
+      # (add first, remove in a later release).
+      - name: Deploy the backends
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
@@ -160,7 +173,7 @@ jobs:
           RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
         run: |
           REMOTE="$SSH_USER@$IP_BACKEND_PUBLIC"
-          COMPOSE="docker compose -f docker-compose.prod-backend.yml --env-file .env"
+          COMPOSE="docker compose --profile scale -f docker-compose.prod-backend.yml --env-file .env"
 
           ssh "$REMOTE" "mkdir -p ~/$DIR"
           scp docker-compose.prod-backend.yml "$REMOTE:$DIR/"
@@ -177,44 +190,24 @@ jobs:
           } | ssh "$REMOTE" "umask 077; cat > ~/$DIR/.env"
 
           printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
-          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --remove-orphans && $COMPOSE ps"
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull"   # all instances use the same image
           ssh "$REMOTE" "docker logout ghcr.io"
 
-
-      # Check that the backend answers
-      # Stop here if the backend is down, before the frontend is touched.
-      - name: Backend test
-        run: |
-          ssh "$SSH_USER@$IP_BACKEND_PUBLIC" "IP_BACKEND_WG=$IP_BACKEND_WG bash -s" <<'EOF'
-          for i in $(seq 1 20); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "http://$IP_BACKEND_WG:8080/api/families/login")
-            case "$code" in 4*) echo "backend answers ($code)"; exit 0 ;; esac
-            echo "backend not ready yet (HTTP $code)"; sleep 3
+          # Instance N listens on port 8079+N. The check script stops the release if the instance does not
+          # answer on its own port or is not connected to RabbitMQ (see .github/scripts/check-backend.sh).
+          for i in $(seq 1 "$BACKEND_COUNT"); do
+            echo "::group::backend-$i"
+            ssh "$REMOTE" "cd ~/$DIR && $COMPOSE up -d --remove-orphans backend-$i"
+            ssh "$REMOTE" "DIR=$DIR IP_BACKEND_WG=$IP_BACKEND_WG bash -s -- backend-$i $((8079 + i))" < .github/scripts/check-backend.sh
+            echo "::endgroup::"
           done
-          echo "::error::backend did not answer after the deploy"
-          cd ~/family-planner && docker compose -f docker-compose.prod-backend.yml --env-file .env logs --tail 40 backend-1
-          exit 1
-          EOF
 
-      # The login probe above does not touch the message broker. A wrong broker password, a closed tunnel
-      # port or a stopped RabbitMQ leaves the backend up but chat dead, so check the connection to the
-      # broker too, still before the frontend is touched.
-      - name: Backend reaches the message broker
-        run: |
-          ssh "$SSH_USER@$IP_BACKEND_PUBLIC" bash -s <<'EOF'
-          cd ~/family-planner
-          COMPOSE="docker compose -f docker-compose.prod-backend.yml --env-file .env"
-          for i in $(seq 1 20); do
-            if $COMPOSE logs backend-1 2>/dev/null | grep -q '"System" session connected'; then
-              echo "backend is connected to the message broker"
-              exit 0
-            fi
-            echo "waiting for the connection to the message broker..."; sleep 3
+          # Instances above the count are stopped and removed, so lowering BACKEND_COUNT is the way back.
+          for i in $(seq $((BACKEND_COUNT + 1)) "$MAX_BACKENDS"); do
+            ssh "$REMOTE" "cd ~/$DIR && $COMPOSE rm -sf backend-$i"
           done
-          echo "::error::backend did not connect to RabbitMQ (check the RABBITMQ_* secrets, the tunnel and that rabbitmq is healthy on Server B)"
-          $COMPOSE logs --tail 40 backend-1
-          exit 1
-          EOF
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE ps"
+
 
       # Frontend (Server B)
       # The image was already pulled together with the DB

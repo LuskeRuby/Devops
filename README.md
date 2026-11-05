@@ -33,8 +33,8 @@ Production runs on two servers joined by a WireGuard tunnel (see [CI/CD and depl
 ```text
 browser ──HTTPS──> Server B: nginx (frontend container)
                     ├── /            Angular SPA (static files, index.html fallback)
-                    ├── /api/        ──WireGuard──> Server A: backend:8080  Spring Boot REST API
-                    └── /websocket   ──WireGuard──> Server A: backend:8080  STOMP over WebSocket (chat)
+                    ├── /api/        ──WireGuard──> Server A: backend-1 .. backend-N, ports 8080 ..
+                    └── /websocket   ──WireGuard──> Server A: (round robin)  REST API and STOMP chat
                                                           │
                     Server B: postgres:5432  <──WireGuard─┤  (JDBC)
                     Server B: rabbitmq:61613 <──WireGuard─┘  (STOMP relay: chat messages)
@@ -226,15 +226,28 @@ Production runs on two servers joined by a WireGuard tunnel:
 | Server | Runs | Compose file |
 |---|---|---|
 | B (frontend) | `frontend` (nginx) on ports 80/443, `postgres` (defined in `infra/postgres/`) and `rabbitmq` (the message broker, `infra/rabbitmq/`) | `docker-compose.prod-frontend.yml` |
-| A (backend) | `backend-1` (Spring Boot) on port 8080, published only on its WireGuard address; chat goes through RabbitMQ on Server B | `docker-compose.prod-backend.yml` |
+| A (backend) | `BACKEND_COUNT` backend instances (`backend-1` on port 8080, `backend-2` on 8081, ...; 1 to 4), published only on Server A's WireGuard address; chat goes through RabbitMQ on Server B | `docker-compose.prod-backend.yml` |
+
+**Several backends.** The repository variable `BACKEND_COUNT` (1 to 4, default 1) says how many instances of the
+backend image run on Server A: instance N is `backend-N` on port 8079+N. nginx spreads requests over all of
+them (round robin) and stops using one that fails three times in a row; a request that hits a backend that is
+down or answers 502/503 is retried on another one (POST is not repeated once it was sent). Chat works across
+the instances because they all publish through RabbitMQ, and each browser reconnects and reloads the history
+if its backend goes away. To change the number, set `BACKEND_COUNT` and release: raising it adds instances and
+nginx upstream lines, lowering it stops and removes the extra instances. More than one needs the RabbitMQ relay
+(the production default). A fifth instance needs one more `backend-N` block in
+`docker-compose.prod-backend.yml`, `MAX_BACKENDS` in `release.yml` and the port list in the `pr.yml` check
+(which fails if they disagree). All instances share Server A: this spreads load and survives a crashed or
+restarting backend, not the loss of the server.
 
 The images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
 the servers.
 
 nginx serves the SPA on ports 80/443, redirects HTTP to HTTPS, terminates TLS with the certificate in
 `./certs` (not in git), and proxies `/api/` and `/websocket` to the backend on Server A through the tunnel.
-Its config is `frontend/nginx.conf.template`; the container fills in `IP_FRONTEND_PUBLIC` and
-`IP_BACKEND_WG` when it starts. PostgreSQL is published only on Server B's WireGuard address, and
+Its config is `frontend/nginx.conf.template`; the container fills in `IP_FRONTEND_PUBLIC`,
+`BACKEND_SERVERS` (the `server` lines of the upstream, built from `BACKEND_COUNT` by
+`.github/scripts/backend-servers.sh`) when it starts. PostgreSQL is published only on Server B's WireGuard address, and
 `infra/postgres/pg_hba.prod.conf` accepts only the backend's address, with a password. Flyway creates and
 migrates the schema when the backend starts, so the data survives releases.
 
@@ -245,18 +258,25 @@ The deploy job (`release.yml`) works in this order:
 1. **Server B:** copies `docker-compose.prod-frontend.yml`, `infra/postgres/` and the certificates, writes a
    private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`
    and `rabbitmq`, waiting until both are healthy (`--wait`, 2 minutes) before going on.
-2. **Server A:** copies `docker-compose.prod-backend.yml`, writes its `.env`, pulls and starts the backend.
-   A check calls the backend on its WireGuard address, and a second check waits for the backend's log to
-   show that it is connected to RabbitMQ (a wrong broker login or a closed tunnel leaves the backend up
-   but chat dead). The deploy stops if either fails.
-3. **Server B:** starts the frontend. A final check goes through nginx to the backend.
+2. **Server A, one backend at a time (rolling):** copies `docker-compose.prod-backend.yml`, writes its `.env`,
+   pulls the image and replaces `backend-1`. `.github/scripts/check-backend.sh` then calls it on its own port
+   and waits for its log to show the connection to RabbitMQ (a wrong broker login or a closed tunnel leaves a
+   backend up but chat dead). Only then is the next instance replaced and checked the same way, so the others
+   keep serving the old version during the release. Instances above `BACKEND_COUNT` are removed. The deploy
+   stops at the first failing check. Because versions overlap, a database migration must work for the old
+   and the new version (add first, remove in a later release).
+3. **Server B:** starts the frontend (nginx picks up the upstream). A final check goes through nginx to the backend;
+   it cannot tell the instances apart, which is why the checks in step 2 call each port directly.
 
 On a server, the equivalent commands are (Server A shown):
 
 ```bash
 docker compose -f docker-compose.prod-backend.yml --env-file .env pull
-docker compose -f docker-compose.prod-backend.yml --env-file .env up -d --remove-orphans
+docker compose --profile scale -f docker-compose.prod-backend.yml --env-file .env up -d backend-1 backend-2
 ```
+
+Name the instances you want: a bare `up -d` starts only `backend-1`, because `backend-2` to `backend-4` are in
+the `scale` profile. Use `--profile scale` for `ps`, `logs` and `restart` of those.
 
 Both servers need Docker with the Compose plugin and an SSH user that may run it, the deploy public key in
 that user's `authorized_keys`, port 22 reachable from GitHub, and the WireGuard tunnel up before Docker
@@ -313,7 +333,8 @@ deploy reads these secrets and variables (repository or `production` environment
 | `IP_FRONTEND_PUBLIC` | Server B's public address: SSH target, nginx `server_name`, allowed CORS origin |
 | `IP_BACKEND_PUBLIC` | Server A's public address: SSH target |
 | `IP_FRONTEND_WG` | Server B's WireGuard address: Postgres and RabbitMQ bind, and the backend's database and broker host |
-| `IP_BACKEND_WG` | Server A's WireGuard address: the backend's bind address and nginx's upstream |
+| `IP_BACKEND_WG` | Server A's WireGuard address: the backends' bind address, and the address in nginx's upstream |
+| `BACKEND_COUNT` | Number of backend instances, 1 to 4. Optional, default 1. |
 
 Known gaps: the deploy trusts the servers' SSH host keys on first use (`ssh-keyscan`) instead of pinned
 keys; the load test is a stub; and there is no automatic rollback (to go back, tag and release an older
