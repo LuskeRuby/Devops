@@ -101,6 +101,8 @@ class ChatRelayWebSocketIT extends AbstractIntegrationTest {
     private ReactorNettyTcpStompClient brokerClient;
     private String familyEmail;
     private Long userId;
+    private String otherFamilyEmail;
+    private Long otherUserId;
 
     @BeforeEach
     void setUp() {
@@ -128,6 +130,21 @@ class ChatRelayWebSocketIT extends AbstractIntegrationTest {
         user.setImage(avatar);
         userRepository.save(user);
         userId = user.getId();
+
+        otherFamilyEmail = "other-relay-test@family.com";
+        Family otherFamily = new Family();
+        otherFamily.setEmail(otherFamilyEmail);
+        otherFamily.setPassword("hashed-password");
+        familyRepository.save(otherFamily);
+
+        User otherUser = new User();
+        otherUser.setName("Svend");
+        otherUser.setEmail("s@test.com");
+        otherUser.setRole("PARENT");
+        otherUser.setFamily(otherFamily);
+        otherUser.setImage(avatar);
+        userRepository.save(otherUser);
+        otherUserId = otherUser.getId();
 
         // The STOMP clients need a scheduler to track receipts (the confirmation of a subscription).
         scheduler = new ThreadPoolTaskScheduler();
@@ -200,6 +217,43 @@ class ChatRelayWebSocketIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("in relay mode a browser still cannot subscribe to another family's topic")
+    void rejectsForeignSubscriptionInRelayMode() throws Exception {
+        BlockingQueue<StompHeaders> intruderErrors = new LinkedBlockingQueue<>();
+        StompSession intruder = connectBrowser(jwtUtil.generateAccessToken(otherFamilyEmail), intruderErrors);
+        intruder.subscribe("/topic/messages." + familyEmail, new StompFrameHandler() {
+            @Override
+            @NonNull
+            public Type getPayloadType(@NonNull StompHeaders headers) {
+                return MessageResponseDto.class;
+            }
+
+            @Override
+            public void handleFrame(@NonNull StompHeaders headers, Object payload) { }
+        });
+
+        assertThat(intruderErrors.poll(5, TimeUnit.SECONDS)).as("ERROR frame").isNotNull();
+    }
+
+    @Test
+    @DisplayName("in relay mode a browser cannot publish straight to the broker topic of another family")
+    void rejectsDirectPublishInRelayMode() throws Exception {
+        String destination = "/topic/messages." + familyEmail;
+        StompSession brokerSession = connectToBroker();
+        BlockingQueue<MessageResponseDto> victimInbox = subscribe(brokerSession, destination);
+
+        BlockingQueue<StompHeaders> intruderErrors = new LinkedBlockingQueue<>();
+        StompSession intruder = connectBrowser(jwtUtil.generateAccessToken(otherFamilyEmail), intruderErrors);
+        intruder.send(destination,
+                new MessageResponseDto(99L, "Falsk besked", LocalDateTime.now(), "Svend", otherUserId, null));
+
+        assertThat(intruderErrors.poll(5, TimeUnit.SECONDS)).as("ERROR frame").isNotNull();
+        assertThat(victimInbox.poll(1, TimeUnit.SECONDS)).as("nothing reached the broker topic").isNull();
+
+        brokerSession.disconnect();
+    }
+
+    @Test
     @DisplayName("a connection without a JWT is still rejected in relay mode")
     void rejectsConnectionWithoutTokenInRelayMode() {
         try {
@@ -217,13 +271,23 @@ class ChatRelayWebSocketIT extends AbstractIntegrationTest {
     }
 
     private StompSession connectBrowser(String token) throws Exception {
+        return connectBrowser(token, new LinkedBlockingQueue<>());
+    }
+
+    /** Connects a browser; any ERROR frame the server sends is put into {@code errorFrames}. */
+    private StompSession connectBrowser(String token, BlockingQueue<StompHeaders> errorFrames) throws Exception {
         StompHeaders connectHeaders = new StompHeaders();
         connectHeaders.add("Authorization", "Bearer " + token);
         return browserClient.connectAsync(
                 wsUrl(),
                 new WebSocketHttpHeaders(),
                 connectHeaders,
-                new StompSessionHandlerAdapter() { }
+                new StompSessionHandlerAdapter() {
+                    @Override
+                    public void handleFrame(@NonNull StompHeaders headers, Object payload) {
+                        errorFrames.add(headers);
+                    }
+                }
         ).get(10, TimeUnit.SECONDS);
     }
 
