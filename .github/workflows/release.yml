@@ -156,6 +156,8 @@ jobs:
           PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
         run: |
           REMOTE="$SSH_USER@$IP_BACKEND_PUBLIC"
           COMPOSE="docker compose -f docker-compose.prod-backend.yml --env-file .env"
@@ -170,6 +172,8 @@ jobs:
             echo "PROD_DB_USER='$PROD_DB_USER'"
             echo "PROD_DB_PASSWORD='$PROD_DB_PASSWORD'"
             echo "APP_JWT_SECRET='$APP_JWT_SECRET'"
+            echo "RABBITMQ_USER='$RABBITMQ_USER'"
+            echo "RABBITMQ_PASSWORD='$RABBITMQ_PASSWORD'"
           } | ssh "$REMOTE" "umask 077; cat > ~/$DIR/.env"
 
           printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
@@ -189,6 +193,26 @@ jobs:
           done
           echo "::error::backend did not answer after the deploy"
           cd ~/family-planner && docker compose -f docker-compose.prod-backend.yml --env-file .env logs --tail 40 backend-1
+          exit 1
+          EOF
+
+      # The login probe above does not touch the message broker. A wrong broker password, a closed tunnel
+      # port or a stopped RabbitMQ leaves the backend up but chat dead, so check the connection to the
+      # broker too, still before the frontend is touched.
+      - name: Backend reaches the message broker
+        run: |
+          ssh "$SSH_USER@$IP_BACKEND_PUBLIC" bash -s <<'EOF'
+          cd ~/family-planner
+          COMPOSE="docker compose -f docker-compose.prod-backend.yml --env-file .env"
+          for i in $(seq 1 20); do
+            if $COMPOSE logs backend-1 2>/dev/null | grep -q '"System" session connected'; then
+              echo "backend is connected to the message broker"
+              exit 0
+            fi
+            echo "waiting for the connection to the message broker..."; sleep 3
+          done
+          echo "::error::backend did not connect to RabbitMQ (check the RABBITMQ_* secrets, the tunnel and that rabbitmq is healthy on Server B)"
+          $COMPOSE logs --tail 40 backend-1
           exit 1
           EOF
 

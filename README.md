@@ -36,8 +36,13 @@ browser ──HTTPS──> Server B: nginx (frontend container)
                     ├── /api/        ──WireGuard──> Server A: backend:8080  Spring Boot REST API
                     └── /websocket   ──WireGuard──> Server A: backend:8080  STOMP over WebSocket (chat)
                                                           │
-                    Server B: postgres:5432  <──WireGuard─┘  (JDBC)
+                    Server B: postgres:5432  <──WireGuard─┤  (JDBC)
+                    Server B: rabbitmq:61613 <──WireGuard─┘  (STOMP relay: chat messages)
 ```
+
+Chat messages are saved in PostgreSQL and then published through RabbitMQ (Spring's STOMP broker relay),
+so every backend instance shares one broker and all browsers see all messages. In development and in the
+tests the backend uses Spring's in-memory broker instead (`APP_BROKER_MODE=simple`, the default).
 
 | Part | Tech | Folder |
 |---|---|---|
@@ -221,7 +226,7 @@ Production runs on two servers joined by a WireGuard tunnel:
 | Server | Runs | Compose file |
 |---|---|---|
 | B (frontend) | `frontend` (nginx) on ports 80/443, `postgres` (defined in `infra/postgres/`) and `rabbitmq` (the message broker, `infra/rabbitmq/`) | `docker-compose.prod-frontend.yml` |
-| A (backend) | `backend-1` (Spring Boot) on port 8080, published only on its WireGuard address | `docker-compose.prod-backend.yml` |
+| A (backend) | `backend-1` (Spring Boot) on port 8080, published only on its WireGuard address; chat goes through RabbitMQ on Server B | `docker-compose.prod-backend.yml` |
 
 The images come from GHCR and are selected by the `TAG` variable (the release version); nothing is built on
 the servers.
@@ -241,7 +246,9 @@ The deploy job (`release.yml`) works in this order:
    private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`
    and `rabbitmq`, waiting until both are healthy (`--wait`, 2 minutes) before going on.
 2. **Server A:** copies `docker-compose.prod-backend.yml`, writes its `.env`, pulls and starts the backend.
-   A check calls the backend on its WireGuard address and stops the deploy if it does not answer.
+   A check calls the backend on its WireGuard address, and a second check waits for the backend's log to
+   show that it is connected to RabbitMQ (a wrong broker login or a closed tunnel leaves the backend up
+   but chat dead). The deploy stops if either fails.
 3. **Server B:** starts the frontend. A final check goes through nginx to the backend.
 
 On a server, the equivalent commands are (Server A shown):
@@ -305,13 +312,13 @@ deploy reads these secrets and variables (repository or `production` environment
 |---|---|
 | `IP_FRONTEND_PUBLIC` | Server B's public address: SSH target, nginx `server_name`, allowed CORS origin |
 | `IP_BACKEND_PUBLIC` | Server A's public address: SSH target |
-| `IP_FRONTEND_WG` | Server B's WireGuard address: Postgres bind (`POSTGRES_BIND`) and the backend's database host |
+| `IP_FRONTEND_WG` | Server B's WireGuard address: Postgres and RabbitMQ bind, and the backend's database and broker host |
 | `IP_BACKEND_WG` | Server A's WireGuard address: the backend's bind address and nginx's upstream |
 
 Known gaps: the deploy trusts the servers' SSH host keys on first use (`ssh-keyscan`) instead of pinned
 keys; the load test is a stub; and there is no automatic rollback (to go back, tag and release an older
-staging commit). A message broker is still missing, so the backend keeps Spring's in-memory STOMP broker
-and must stay a single instance.
+staging commit). RabbitMQ is a single node: if it stops, chat stops until it is back (the backend and the
+browsers reconnect by themselves).
 
 ## Line endings
 

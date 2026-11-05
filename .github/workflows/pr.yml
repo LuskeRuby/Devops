@@ -54,6 +54,22 @@ jobs:
           PROD_DB_USER: user
           PROD_DB_PASSWORD: password
           APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+      - name: Server A refuses to render without the broker login
+        run: |
+          if docker compose -f docker-compose.prod-backend.yml config -q 2>/dev/null; then
+            echo "::error::prod-backend rendered without RABBITMQ_USER/RABBITMQ_PASSWORD"
+            exit 1
+          fi
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_FRONTEND_WG: 10.8.0.1
+          IP_BACKEND_WG: 10.8.0.2
+          PROD_DB_USER: user
+          PROD_DB_PASSWORD: password
+          APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
 
   backend-test:
     runs-on: ubuntu-latest
