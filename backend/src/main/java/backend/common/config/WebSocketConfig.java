@@ -4,6 +4,7 @@ import backend.common.security.WebSocketAuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -15,6 +16,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@EnableConfigurationProperties(BrokerProperties.class)
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
@@ -26,6 +28,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	static final long HEARTBEAT_MS = 10_000;
 
 	private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+
+	private final BrokerProperties brokerProperties;
 
 	private TaskScheduler messageBrokerTaskScheduler;
 
@@ -45,10 +49,32 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.enableSimpleBroker("/topic")
-				.setHeartbeatValue(new long[] { HEARTBEAT_MS, HEARTBEAT_MS })
-				.setTaskScheduler(messageBrokerTaskScheduler);
+		switch (brokerProperties.mode()) {
+			case SIMPLE -> registry.enableSimpleBroker("/topic")
+					.setHeartbeatValue(new long[] { HEARTBEAT_MS, HEARTBEAT_MS })
+					.setTaskScheduler(messageBrokerTaskScheduler);
+			case RELAY -> enableRelay(registry, brokerProperties.relay());
+		}
 		registry.setApplicationDestinationPrefixes("/app");
+	}
+
+	private static void enableRelay(MessageBrokerRegistry registry, BrokerProperties.Relay relay) {
+		String missing = relay.missing();
+		if (!missing.isEmpty()) {
+			// Fail at startup with a clear message instead of a broker that silently never connects.
+			throw new IllegalStateException("app.broker.mode=relay needs: " + missing);
+		}
+		registry.enableStompBrokerRelay("/topic")
+				.setRelayHost(relay.host())
+				.setRelayPort(relay.port())
+				.setClientLogin(relay.login())
+				.setClientPasscode(relay.passcode())
+				.setSystemLogin(relay.login())
+				.setSystemPasscode(relay.passcode())
+				// Heartbeats of the backend's own connection to the broker; the browsers' heartbeats are
+				// negotiated end to end with the broker.
+				.setSystemHeartbeatSendInterval(HEARTBEAT_MS)
+				.setSystemHeartbeatReceiveInterval(HEARTBEAT_MS);
 	}
 
 	@Override
