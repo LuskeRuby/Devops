@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { WebSocketService } from './web-socket.service';
 import { AuthService } from '../../auth/auth.service';
+import { ReconnectionTimeMode } from '@stomp/stompjs';
 import { of, throwError } from 'rxjs';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 /*Mock the @stomp/stompjs Client at module level
 since vi.mock doesn't work with Angular*/
@@ -81,7 +82,7 @@ describe('WebSocketService', () => {
       service.connect('test@family.com', onMessage, onConnected);
 
       expect(subscribeSpy).toHaveBeenCalledWith(
-        '/topic/messages/test@family.com',
+        '/topic/messages.test@family.com',
         expect.any(Function),
       );
     });
@@ -108,6 +109,80 @@ describe('WebSocketService', () => {
   });
 
   describe('reconnect', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    it('backs off exponentially from 1 s up to 30 s', () => {
+      const client = (service as any).client;
+
+      expect(client.reconnectDelay).toBe(1000);
+      expect(client.maxReconnectDelay).toBe(30000);
+      expect(client.reconnectTimeMode).toBe(ReconnectionTimeMode.EXPONENTIAL);
+    });
+
+    it('does not delay the first connect', async () => {
+      vi.useFakeTimers();
+      const client = (service as any).client;
+
+      // would never resolve under fake timers if it waited
+      await client.beforeConnect(client);
+
+      expect(client.connectHeaders).toEqual({ Authorization: 'Bearer test-jwt-token' });
+    });
+
+    it('adds a random wait before a reconnect so clients do not retry in step', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      const client = (service as any).client;
+      client.onWebSocketClose();
+
+      let done = false;
+      const attempt = client.beforeConnect(client).then(() => (done = true));
+
+      await vi.advanceTimersByTimeAsync(499);
+      expect(done).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      await attempt;
+      expect(done).toBe(true);
+    });
+
+    it('stops adding the wait once the connection is back', async () => {
+      vi.useFakeTimers();
+      const client = (service as any).client;
+      vi.spyOn(client, 'activate').mockImplementation(() => {
+        client.onConnect?.();
+      });
+      vi.spyOn(client, 'subscribe').mockImplementation(() => ({
+        id: 'sub-0',
+        unsubscribe: vi.fn(),
+      }));
+      service.connect('test@family.com', vi.fn(), vi.fn());
+      client.onWebSocketClose();
+      client.onConnect();
+
+      await client.beforeConnect(client);
+
+      expect(client.connectHeaders).toEqual({ Authorization: 'Bearer test-jwt-token' });
+    });
+
+    it('subscribes before it reports the connection, so listeners can load the history safely', () => {
+      const client = (service as any).client;
+      const order: string[] = [];
+      vi.spyOn(client, 'activate').mockImplementation(() => {
+        client.onConnect?.();
+      });
+      vi.spyOn(client, 'subscribe').mockImplementation(() => {
+        order.push('subscribe');
+        return { id: 'sub-0', unsubscribe: vi.fn() };
+      });
+
+      service.connect('test@family.com', vi.fn(), () => order.push('connected'));
+
+      expect(order).toEqual(['subscribe', 'connected']);
+    });
+
     it('offers 10 s heartbeats so an idle socket is not closed by the proxy', () => {
       const client = (service as any).client;
 

@@ -12,7 +12,11 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,15 +41,19 @@ class WebSocketAuthInterceptorTest {
 
     private Message<?> buildConnectMessage(String authHeader) {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+        accessor.setLeaveMutable(true); // like the messages of a real session
         if (authHeader != null) {
             accessor.addNativeHeader("Authorization", authHeader);
         }
         return MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
     }
 
-    private Message<?> buildSendMessage() {
-        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SEND);
-        accessor.setDestination("/app/chat");
+    private Message<?> buildFrame(StompCommand command, String destination, String user) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(command);
+        accessor.setDestination(destination);
+        if (user != null) {
+            accessor.setUser(new UsernamePasswordAuthenticationToken(user, null, List.of()));
+        }
         return MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
     }
 
@@ -63,6 +71,11 @@ class WebSocketAuthInterceptorTest {
             Message<?> result = interceptor.preSend(connectMessage, channel);
 
             assertThat(result).isNotNull();
+            // The user must end up on the message itself: the session keeps it for all later frames.
+            StompHeaderAccessor after = MessageHeaderAccessor.getAccessor(connectMessage, StompHeaderAccessor.class);
+            assertThat(after).isNotNull();
+            assertThat(after.getUser()).isNotNull();
+            assertThat(after.getUser().getName()).isEqualTo(TEST_EMAIL);
             verify(jwtUtil).isTokenValid(VALID_TOKEN);
             verify(jwtUtil).extractEmail(VALID_TOKEN);
         }
@@ -101,16 +114,98 @@ class WebSocketAuthInterceptorTest {
     }
 
     @Nested
-    @DisplayName("Non-CONNECT frames")
-    class NonConnectFrames {
+    @DisplayName("SUBSCRIBE frame")
+    class SubscribeFrame {
 
         @Test
-        @DisplayName("passes SEND frames through without authentication check")
-        void passesSendFramesThrough() {
-            Message<?> sendMessage = buildSendMessage();
-            Message<?> result = interceptor.preSend(sendMessage, channel);
+        @DisplayName("allows the family's own topic")
+        void allowsOwnTopic() {
+            Message<?> frame = buildFrame(StompCommand.SUBSCRIBE, "/topic/messages." + TEST_EMAIL, TEST_EMAIL);
 
-            assertThat(result).isNotNull();
+            assertThat(interceptor.preSend(frame, channel)).isSameAs(frame);
+        }
+
+        @Test
+        @DisplayName("rejects another family's topic")
+        void rejectsOtherFamilyTopic() {
+            Message<?> frame = buildFrame(StompCommand.SUBSCRIBE, "/topic/messages.other@test.com", TEST_EMAIL);
+
+            assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("rejects a topic that only starts with the family's own name")
+        void rejectsPrefixMatch() {
+            Message<?> frame = buildFrame(StompCommand.SUBSCRIBE, "/topic/messages." + TEST_EMAIL + ".evil", TEST_EMAIL);
+
+            assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("rejects wildcards and any other destination")
+        void rejectsOtherDestinations() {
+            for (String destination : List.of("/topic/messages.*", "/topic/#", "/topic/other", "/queue/x")) {
+                Message<?> frame = buildFrame(StompCommand.SUBSCRIBE, destination, TEST_EMAIL);
+
+                assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                        .as(destination)
+                        .isInstanceOf(AccessDeniedException.class);
+            }
+        }
+
+        @Test
+        @DisplayName("rejects a subscription without an authenticated user")
+        void rejectsWithoutUser() {
+            Message<?> frame = buildFrame(StompCommand.SUBSCRIBE, "/topic/messages." + TEST_EMAIL, null);
+
+            assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("SEND frame")
+    class SendFrame {
+
+        @Test
+        @DisplayName("allows the application destination")
+        void allowsApplicationDestination() {
+            Message<?> frame = buildFrame(StompCommand.SEND, "/app/chat", TEST_EMAIL);
+
+            assertThat(interceptor.preSend(frame, channel)).isSameAs(frame);
+        }
+
+        @Test
+        @DisplayName("rejects publishing straight to a topic, which would impersonate the server")
+        void rejectsDirectTopicPublish() {
+            Message<?> frame = buildFrame(StompCommand.SEND, "/topic/messages.other@test.com", TEST_EMAIL);
+
+            assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("rejects a SEND without an authenticated user")
+        void rejectsWithoutUser() {
+            Message<?> frame = buildFrame(StompCommand.SEND, "/app/chat", null);
+
+            assertThatThrownBy(() -> interceptor.preSend(frame, channel))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Other frames")
+    class OtherFrames {
+
+        @Test
+        @DisplayName("passes frames such as UNSUBSCRIBE through")
+        void passesOtherFramesThrough() {
+            Message<?> frame = buildFrame(StompCommand.UNSUBSCRIBE, null, TEST_EMAIL);
+
+            assertThat(interceptor.preSend(frame, channel)).isSameAs(frame);
         }
     }
 }

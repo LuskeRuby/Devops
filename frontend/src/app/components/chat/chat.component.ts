@@ -47,27 +47,22 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     const familyEmail = this.familyEmail;
     if (!familyEmail) return;
 
-    this.messageService.getMessages(familyEmail).subscribe((data) => {
-      console.log(`Chat history loaded: ${data.length} messages.`);
-      this.messages = data;
-      this.shouldScroll = true;
-      this.cd.detectChanges();
-      setTimeout(() => this.scrollToBottom(), 0);
-    });
+    // Show the history right away, also when the WebSocket cannot connect.
+    this.loadHistory(familyEmail);
 
     this.ws.connect(
       familyEmail,
       (msg) => {
         console.log('New message received via WebSocket:', msg);
-        this.messages = [...this.messages, msg];
-        this.shouldScroll = true;
-        this.cd.detectChanges();
-        setTimeout(() => this.scrollToBottom(), 0);
+        this.addMessages([msg]);
       },
       () => {
         console.log('Chat system connected and ready.');
         this.isConnected = true;
         this.cd.detectChanges();
+        // Runs after the first connect and after every reconnect. The socket is subscribed by now, so
+        // loading the history here picks up the messages sent while the connection was down.
+        this.loadHistory(familyEmail);
       },
       () => {
         console.log('Chat connection lost, reconnecting...');
@@ -96,6 +91,30 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.messageText = '';
       }
     }
+  }
+
+  private loadHistory(familyEmail: string) {
+    this.messageService.getMessages(familyEmail).subscribe((data) => {
+      console.log(`Chat history loaded: ${data.length} messages.`);
+      this.addMessages(data);
+    });
+  }
+
+  /**
+   * Merges messages into the list by id. The history and the live messages overlap (a message can arrive
+   * both ways), and either can arrive first, so nothing is overwritten and nothing is shown twice.
+   */
+  private addMessages(incoming: MessageResponse[]) {
+    const byId = new Map<number, MessageResponse>();
+    for (const message of [...this.messages, ...incoming]) {
+      byId.set(message.id, message);
+    }
+    this.messages = [...byId.values()].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime() || a.id - b.id,
+    );
+    this.shouldScroll = true;
+    this.cd.detectChanges();
+    setTimeout(() => this.scrollToBottom(), 0);
   }
 
   private scrollToBottom() {

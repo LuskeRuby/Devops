@@ -20,6 +20,9 @@ export class MessageService {
   private apiUrl = '/api/messages';
 
   getMessages(familyEmail: string): Observable<MessageResponse[]> {
-    return this.http.get<MessageResponse[]>(`${this.apiUrl}?familyEmail=${familyEmail}`);
+    // Encoded by hand: a '+' in an email would otherwise arrive as a space.
+    return this.http.get<MessageResponse[]>(
+      `${this.apiUrl}?familyEmail=${encodeURIComponent(familyEmail)}`,
+    );
   }
 }

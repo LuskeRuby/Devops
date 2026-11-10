@@ -19,7 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -68,7 +71,7 @@ class MessageServiceTest {
                 return msg;
             });
 
-            MessageResponseDto result = messageService.saveMessage(request);
+            MessageResponseDto result = messageService.saveMessage(request, "t@t.com");
 
             assertThat(result.id()).isEqualTo(10L);
             assertThat(result.content()).isEqualTo("Hej med dig!");
@@ -79,6 +82,31 @@ class MessageServiceTest {
         }
 
         @Test
+        @DisplayName("rejects a sender who belongs to another family, and saves nothing")
+        void rejectsSenderFromAnotherFamily() {
+            MessageRequestDto request = new MessageRequestDto(1L, "Fake", "other@t.com");
+            when(userService.getUserEntityById(1L)).thenReturn(testUser);
+
+            assertThatThrownBy(() -> messageService.saveMessage(request, "other@t.com"))
+                    .isInstanceOf(AccessDeniedException.class);
+
+            verify(messageRepository, never()).save(any(Message.class));
+        }
+
+        @Test
+        @DisplayName("rejects a sender who has no family")
+        void rejectsSenderWithoutFamily() {
+            testUser.setFamily(null);
+            MessageRequestDto request = new MessageRequestDto(1L, "Fake", "t@t.com");
+            when(userService.getUserEntityById(1L)).thenReturn(testUser);
+
+            assertThatThrownBy(() -> messageService.saveMessage(request, "t@t.com"))
+                    .isInstanceOf(AccessDeniedException.class);
+
+            verify(messageRepository, never()).save(any(Message.class));
+        }
+
+        @Test
         @DisplayName("sets timestamp at save time, not from the DTO")
         void setsTimestampAtSaveTime() {
             MessageRequestDto request = new MessageRequestDto(1L, "Test", "t@t.com");
@@ -86,7 +114,7 @@ class MessageServiceTest {
             when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
 
             LocalDateTime before = LocalDateTime.now().minusSeconds(1);
-            messageService.saveMessage(request);
+            messageService.saveMessage(request, "t@t.com");
             LocalDateTime after = LocalDateTime.now().plusSeconds(1);
 
             ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
@@ -106,7 +134,7 @@ class MessageServiceTest {
                 return msg;
             });
 
-            MessageResponseDto result = messageService.saveMessage(request);
+            MessageResponseDto result = messageService.saveMessage(request, "t@t.com");
 
             assertThat(result.imageId()).isNull();
         }
