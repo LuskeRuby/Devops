@@ -19,8 +19,6 @@ server {
     listen 443 ssl;
     server_name ${IP_FRONTEND_PUBLIC};
 
-
-
     # Point to the certificates mounted via docker-compose
     ssl_certificate /etc/nginx/ssl/cert.pem;
     ssl_certificate_key /etc/nginx/ssl/key.pem;
