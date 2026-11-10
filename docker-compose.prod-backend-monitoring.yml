@@ -1,0 +1,21 @@
+# Monitoring on Server A (backend). Used together with docker-compose.prod-backend.yml, so it is part of
+# the same compose project and can reach backend-1 .. backend-4 by name. Everything is pushed to Server B.
+
+services:
+  alloy:
+    image: grafana/alloy:v1.21.3
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    environment:
+      IP_FRONTEND_WG: ${IP_FRONTEND_WG:?set IP_FRONTEND_WG}   # Server B, where Loki and Prometheus run
+    volumes:
+      - ./monitoring/config.prod-backend.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:v1.10.2
+    command: ["--path.rootfs=/host"]
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    restart: always

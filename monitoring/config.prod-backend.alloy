@@ -1,0 +1,85 @@
+// Server A (backend). Collects the logs of all containers and the metrics of the backends and of the
+// machine, and pushes both to Server B over WireGuard.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// ---------- Logs: the same as config.alloy, but sent to Loki on Server B ----------
+
+discovery.relabel "logs" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.logs.rules
+  forward_to    = [loki.write.server_b.receiver]
+}
+
+loki.write "server_b" {
+  endpoint {
+    url = "http://" + sys.env("IP_FRONTEND_WG") + ":3100/loki/api/v1/push"
+  }
+}
+
+// ---------- Metrics: find the running backends and send their metrics to Prometheus on Server B ----------
+
+discovery.relabel "backends" {
+  targets = discovery.docker.containers.targets
+
+  // Keep only backend-1, backend-2, ... (however many the release started)
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "backend-[0-9]+"
+    action        = "keep"
+  }
+
+  // One target per backend: the one for its app port 8080
+  rule {
+    source_labels = ["__meta_docker_port_private"]
+    regex         = "8080"
+    action        = "keep"
+  }
+
+  // The metrics are on the management port 8081, not on 8080
+  rule {
+    source_labels = ["__address__"]
+    regex         = "([^:]+):[0-9]+"
+    replacement   = "$1:8081"
+    target_label  = "__address__"
+  }
+
+  // Show "backend-1" in Grafana instead of a container IP
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "backends" {
+  targets         = discovery.relabel.backends.output
+  job_name        = "backend"
+  metrics_path    = "/actuator/prometheus"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.server_b.receiver]
+}
+
+prometheus.scrape "node" {
+  targets         = [{"__address__" = "node-exporter:9100", "instance" = "backend-server"}]
+  job_name        = "node"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.server_b.receiver]
+}
+
+prometheus.remote_write "server_b" {
+  endpoint {
+    url = "http://" + sys.env("IP_FRONTEND_WG") + ":9090/api/v1/write"
+  }
+}
