@@ -18,8 +18,7 @@ server {
 server {
     listen 443 ssl;
     server_name ${IP_FRONTEND_PUBLIC};
-    listen 8080;
-    location = /healthz { access_log off; return 200 "ok\n"; }
+
 
 
     # Point to the certificates mounted via docker-compose
@@ -71,5 +70,20 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Internal only: port 8080 is not published. Docker's health check and the nginx exporter use it.
+server {
+    listen 8080;
+
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    location = /stub_status {
+        stub_status;
+        access_log off;
     }
 }
