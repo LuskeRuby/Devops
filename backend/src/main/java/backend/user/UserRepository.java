@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByFamilyEmail(String familyEmail);
-    boolean existsByIdAndEmail(Long id, String email);
+    boolean existsByIdAndFamilyEmail(Long id, String email);
 }
