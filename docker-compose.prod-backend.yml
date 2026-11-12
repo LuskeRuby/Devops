@@ -1,10 +1,19 @@
 name: family-planner-backend
 
+# Docker keeps every container's output in a file that grows without a limit unless it is capped. Server B's
+# disk once ran full; every production service uses this cap (a CI check fails if one does not).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 # x-* makes to so docker doesn't run it.
 # This makes it reusable for later
 x-backend: &backend
   image: ghcr.io/luskeruby/devops-backend:${TAG:?set TAG to the release version}
   restart: always
+  logging: *logging
   healthcheck:
     test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/actuator/health/readiness"]
     interval: 10s

@@ -253,11 +253,14 @@ migrates the schema when the backend starts, so the data survives releases.
 
 The deploy job (`release.yml`) works in this order:
 
-0. **Before any server is touched:** checks that the production variables are set and that
-   `infra/postgres/pg_hba.prod.conf` allows `IP_BACKEND_WG` (that file cannot read variables).
+0. **Before anything is pulled:** checks that the production variables are set, that
+   `infra/postgres/pg_hba.prod.conf` allows `IP_BACKEND_WG` (that file cannot read variables), and that both
+   servers have enough free disk space (5 GB on Server B, 3 GB on Server A; `check-disk.sh`). A full disk once
+   crashed RabbitMQ in the middle of a release.
 1. **Server B:** copies `docker-compose.prod-frontend.yml`, `infra/postgres/` and the certificates, writes a
    private `.env` (mode 600), logs in to `ghcr.io` with the job's token, pulls the images and starts `postgres`
-   and `rabbitmq`, waiting until both are healthy (`--wait`, 2 minutes) before going on.
+   and `rabbitmq`, waiting until both are healthy (`--wait`, 2 minutes) before going on. Prometheus and Loki
+   start here too, so they are up before Server A starts sending to them.
 2. **Server A, one backend at a time (rolling):** copies `docker-compose.prod-backend.yml`, writes its `.env`,
    pulls the image and replaces `backend-1`. `.github/scripts/check-backend.sh` then calls it on its own port
    and waits for its log to show the connection to RabbitMQ (a wrong broker login or a closed tunnel leaves a
@@ -265,22 +268,55 @@ The deploy job (`release.yml`) works in this order:
    keep serving the old version during the release. Instances above `BACKEND_COUNT` are removed. The deploy
    stops at the first failing check. Because versions overlap, a database migration must work for the old
    and the new version (add first, remove in a later release).
-3. **Server B:** starts the frontend (nginx picks up the upstream). A final check goes through nginx to the backend;
-   it cannot tell the instances apart, which is why the checks in step 2 call each port directly.
+3. **Server B:** starts the frontend and the rest of the monitoring (nginx picks up the upstream). A final check
+   goes through nginx to the backend; it cannot tell the instances apart, which is why the checks in step 2
+   call each port directly.
+4. **Clean-up:** removes this project's release images that no container uses and that are over a week old, on
+   both servers (only images with this repository's source label; a failure here does not fail the release).
 
-On a server, the equivalent commands are (Server A shown):
+On a server, the equivalent commands are (Server A shown). **Always list both compose files**: the monitoring
+file is part of the same compose project, and `--remove-orphans` (or a command that leaves it out) treats the
+monitoring containers as strangers and removes them.
 
 ```bash
-docker compose -f docker-compose.prod-backend.yml --env-file .env pull
-docker compose --profile scale -f docker-compose.prod-backend.yml --env-file .env up -d backend-1 backend-2
+COMPOSE="docker compose --profile scale -f docker-compose.prod-backend.yml -f docker-compose.prod-backend-monitoring.yml --env-file .env"
+$COMPOSE pull
+$COMPOSE up -d backend-1 backend-2
 ```
 
-Name the instances you want: a bare `up -d` starts only `backend-1`, because `backend-2` to `backend-4` are in
-the `scale` profile. Use `--profile scale` for `ps`, `logs` and `restart` of those.
+Name the instances you want: a bare `up -d` starts only `backend-1` (plus the monitoring), because `backend-2`
+to `backend-4` are in the `scale` profile. Server B is the same with `docker-compose.prod-frontend.yml` and
+`docker-compose.prod-frontend-monitoring.yml`.
 
 Both servers need Docker with the Compose plugin and an SSH user that may run it, the deploy public key in
 that user's `authorized_keys`, port 22 reachable from GitHub, and the WireGuard tunnel up before Docker
 starts (the backend, Postgres and RabbitMQ publish ports on the tunnel addresses).
+
+#### Monitoring and disk space
+
+| Server | Runs | Reachable from |
+|---|---|---|
+| B | Prometheus (metrics, 7 days, at most 2 GB), Loki (logs, 7 days), Grafana, Alloy, node-exporter, nginx-exporter | Prometheus (`9090`) and Loki (`3100`) on Server B's WireGuard address, for Server A. Grafana only on `127.0.0.1:3000`. |
+| A | Alloy (ships Server A's logs and the backends' metrics to Server B), node-exporter | nothing is published |
+
+Open Grafana through an SSH tunnel and log in as `admin` with the `GRAFANA_ADMIN_PASSWORD` secret (it only
+takes effect on Grafana's first start; change it later in Grafana):
+
+```bash
+ssh -L 3000:127.0.0.1:3000 <user>@<Server B>
+```
+
+then browse to `http://localhost:3000`. The backends expose their metrics on the management port 8081 *inside*
+their container (not published, and not the same as backend-2's published port 8081); Alloy scrapes them there.
+
+Disk space matters on Server B (about 19 GB in total at the time of writing, and it runs Postgres, RabbitMQ,
+nginx and the monitoring). Several things keep it from filling up again: every production container's log is
+capped at 3 × 10 MB (a CI check fails if a service has no cap), Prometheus is limited by size as well as by
+age, the release stops early if a server is nearly full, and old release images are removed after a release.
+Loki has no size limit, only the 7 days. If space runs out anyway: `docker builder prune`, `docker image prune -a`
+and `sudo journalctl --vacuum-size=200M` are safe; **never** `docker volume prune` or `docker system prune
+--volumes` (Postgres' data lives in a volume). Capping the system journal permanently (`SystemMaxUse=200M` in
+`/etc/systemd/journald.conf`) is a setting on the server itself, not in this repository.
 
 #### Cutover from the single-server setup (one time)
 
@@ -325,6 +361,7 @@ deploy reads these secrets and variables (repository or `production` environment
 | `SSH_PRIVATE_KEY` | Deploy key; its public half is in `authorized_keys` on both servers |
 | `PROD_DB_USER`, `PROD_DB_PASSWORD` | Database user, used by `postgres` and the backend. Do not use a `'` in the password: the `.env` file written by the deploy cannot hold one. |
 | `RABBITMQ_USER`, `RABBITMQ_PASSWORD` | Login for the message broker on Server B (never `guest`). Same `'` restriction as the database password; the release stops before touching a server if one is missing or contains a `'`. |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana's admin password on Server B. Same `'` restriction as the others; the release stops before touching a server if it is missing. |
 | `APP_JWT_SECRET` | Signing key for the backend's JWTs (at least 32 characters) |
 | `SSL_CERTIFICATE`, `SSL_PRIVATE_KEY` | TLS certificate and key, written to `certs/cert.pem` and `certs/key.pem` |
 

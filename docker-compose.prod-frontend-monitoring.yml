@@ -1,12 +1,21 @@
 # Monitoring on Server B (frontend). Used together with docker-compose.prod-frontend.yml, so it is part of
 # the same compose project. Server A's Alloy pushes its logs and metrics here over WireGuard.
 
+# Docker keeps every container's output in a file that grows without a limit unless it is capped. Server B's
+# disk once ran full; every production service uses this cap (a CI check fails if one does not).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   prometheus:
     image: prom/prometheus:v3.5.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=2GB   # whichever limit is reached first; the data is dropped, not the disk filled
       - --web.enable-remote-write-receiver
     volumes:
       - ./monitoring/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
@@ -14,6 +23,7 @@ services:
     ports:
       - "${IP_FRONTEND_WG:?set IP_FRONTEND_WG}:9090:9090"   # Server A's Alloy pushes metrics here
     restart: always
+    logging: *logging
 
   loki:
     image: grafana/loki:3.7.9
@@ -24,6 +34,7 @@ services:
     ports:
       - "${IP_FRONTEND_WG:?set IP_FRONTEND_WG}:3100:3100"   # Server A's Alloy pushes logs here
     restart: always
+    logging: *logging
 
   grafana:
     image: grafana/grafana:12.0.0
@@ -37,6 +48,7 @@ services:
       - "127.0.0.1:3000:3000"   # opened through an SSH tunnel
     depends_on: [prometheus, loki]
     restart: always
+    logging: *logging
 
   alloy:
     image: grafana/alloy:v1.21.3
@@ -46,6 +58,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on: [loki]
     restart: always
+    logging: *logging
 
   node-exporter:
     image: prom/node-exporter:v1.10.2
@@ -54,12 +67,14 @@ services:
     volumes:
       - /:/host:ro,rslave
     restart: always
+    logging: *logging
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.5.1
     command: ["--nginx.scrape-uri=http://frontend:8080/stub_status"]
     depends_on: [frontend]
     restart: always
+    logging: *logging
 
 volumes:
   prometheus-data:

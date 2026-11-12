@@ -143,6 +143,37 @@ jobs:
           RABBITMQ_USER: user
           RABBITMQ_PASSWORD: password
 
+      - name: Every production service caps its logs
+        run: |
+          # A service without log limits can fill the disk (it did once). This lists the ones without.
+          check='
+          import json, sys
+          services = json.load(sys.stdin)["services"]
+          bad = [n for n, s in services.items() if not (s.get("logging") or {}).get("options", {}).get("max-size")]
+          if bad:
+              print("::error::no log limit (max-size) on: " + ", ".join(sorted(bad))); sys.exit(1)
+          print("log limits set on", len(services), "services")
+          '
+          docker compose -f docker-compose.prod-frontend.yml -f docker-compose.prod-frontend-monitoring.yml config --format json | python3 -c "$check"
+          docker compose --profile scale -f docker-compose.prod-backend.yml -f docker-compose.prod-backend-monitoring.yml config --format json | python3 -c "$check"
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          BACKEND_SERVERS: "server 10.8.0.2:8080;"
+          POSTGRES_BIND: 10.8.0.1
+          PG_HBA_FILE: pg_hba.prod.conf
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          RABBITMQ_BIND: 10.8.0.1
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+          IP_FRONTEND_WG: 10.8.0.1
+          IP_BACKEND_WG: 10.8.0.2
+          GRAFANA_ADMIN_PASSWORD: password
+          PROD_DB_USER: user
+          PROD_DB_PASSWORD: password
+          APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+
   # Lets Prometheus, Alloy and Loki check their own config files, so a typo fails here and not on the servers.
   # alloy fmt only checks the syntax; a misspelled setting is first found when Alloy starts.
   monitoring-config:

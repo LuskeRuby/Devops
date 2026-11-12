@@ -1,6 +1,14 @@
 # Monitoring on Server A (backend). Used together with docker-compose.prod-backend.yml, so it is part of
 # the same compose project and can reach backend-1 .. backend-4 by name. Everything is pushed to Server B.
 
+# Docker keeps every container's output in a file that grows without a limit unless it is capped. Server B's
+# disk once ran full; every production service uses this cap (a CI check fails if one does not).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   alloy:
     image: grafana/alloy:v1.21.3
@@ -11,6 +19,7 @@ services:
       - ./monitoring/config.prod-backend.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: always
+    logging: *logging
 
   node-exporter:
     image: prom/node-exporter:v1.10.2
@@ -19,3 +28,4 @@ services:
     volumes:
       - /:/host:ro,rslave
     restart: always
+    logging: *logging

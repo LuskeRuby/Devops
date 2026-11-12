@@ -11,6 +11,14 @@ x-required:
   - ${RABBITMQ_USER:?set RABBITMQ_USER}
   - ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD}
 
+# Docker keeps every container's output in a file that grows without a limit unless it is capped. Server B's
+# disk once ran full; every production service uses this cap (a CI check fails if one does not).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 # Postgres and RabbitMQ are each defined once, in infra/. We only add prod settings on top.
 include:
   - infra/postgres/docker-compose.yml
@@ -20,6 +28,7 @@ services:
   frontend:
     image: ghcr.io/luskeruby/devops-frontend:${TAG:?set TAG to the release version}
     restart: always
+    logging: *logging
     environment:
       # Used by the NGINX template
       IP_FRONTEND_PUBLIC: ${IP_FRONTEND_PUBLIC:?set IP_FRONTEND_PUBLIC}
