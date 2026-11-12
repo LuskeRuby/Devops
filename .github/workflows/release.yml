@@ -75,6 +75,10 @@ jobs:
       # which is the default in production. Unset means 1.
       BACKEND_COUNT: ${{ vars.BACKEND_COUNT || '1' }}
       MAX_BACKENDS: 4                       # the number of backend-N services in docker-compose.prod-backend.yml
+      # The release stops before pulling anything if a server has less free disk space than this (GB).
+      # Server B runs the monitoring data too.
+      MIN_FREE_GB_B: 5
+      MIN_FREE_GB_A: 3
     steps:
       - uses: actions/checkout@v7
 
@@ -116,6 +120,11 @@ jobs:
           ssh-keyscan -H "$IP_BACKEND_PUBLIC" "$IP_FRONTEND_PUBLIC" >> ~/.ssh/known_hosts
           printf 'Host *\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
 
+      # A full disk crashes RabbitMQ and can hurt Postgres, and a half-finished pull makes it worse, so look first.
+      - name: Check free disk space on both servers
+        run: |
+          ssh "$SSH_USER@$IP_FRONTEND_PUBLIC" "bash -s -- 'Server B' $MIN_FREE_GB_B" < .github/scripts/check-disk.sh
+          ssh "$SSH_USER@$IP_BACKEND_PUBLIC" "bash -s -- 'Server A' $MIN_FREE_GB_A" < .github/scripts/check-disk.sh
 
       # Database and message broker first (Server B): the backend needs them, and on the very first
       # deploy they do not exist yet.
@@ -245,3 +254,14 @@ jobs:
           echo "::error::nginx cannot reach the backend (check WireGuard and IP_BACKEND_WG)"
           exit 1
           EOF
+
+      # Every release pulls new image tags, and the old ones stay on disk. Removes the images of this project that
+      # no container uses and that are over a week old (the running ones and the newest release are kept).
+      # Only images with this repository's source label are touched, never other projects on the same servers.
+      # A failure here must not fail a release that already worked.
+      - name: Remove old release images
+        continue-on-error: true
+        run: |
+          for host in "$IP_FRONTEND_PUBLIC" "$IP_BACKEND_PUBLIC"; do
+            ssh "$SSH_USER@$host" "docker image prune -a -f --filter 'until=168h' --filter 'label=org.opencontainers.image.source=https://github.com/LuskeRuby/Devops'"
+          done
