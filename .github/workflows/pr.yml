@@ -93,6 +93,74 @@ jobs:
           PROD_DB_USER: user
           PROD_DB_PASSWORD: password
           APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+      - name: Dev with monitoring (base + override + monitoring)
+        run: docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.monitoring.yml config -q
+        env:
+          GRAFANA_ADMIN_PASSWORD: password
+      - name: Server B with monitoring
+        run: docker compose -f docker-compose.prod-frontend.yml -f docker-compose.prod-frontend-monitoring.yml config -q
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          BACKEND_SERVERS: "server 10.8.0.2:8080;"
+          POSTGRES_BIND: 10.8.0.1
+          PG_HBA_FILE: pg_hba.prod.conf
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          RABBITMQ_BIND: 10.8.0.1
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+          IP_FRONTEND_WG: 10.8.0.1
+          GRAFANA_ADMIN_PASSWORD: password
+      - name: Server B refuses to render without the Grafana password
+        run: |
+          if docker compose -f docker-compose.prod-frontend.yml -f docker-compose.prod-frontend-monitoring.yml config -q 2>/dev/null; then
+            echo "::error::the monitoring on Server B rendered without GRAFANA_ADMIN_PASSWORD"
+            exit 1
+          fi
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          BACKEND_SERVERS: "server 10.8.0.2:8080;"
+          POSTGRES_BIND: 10.8.0.1
+          PG_HBA_FILE: pg_hba.prod.conf
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          RABBITMQ_BIND: 10.8.0.1
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+          IP_FRONTEND_WG: 10.8.0.1
+      - name: Server A with monitoring
+        run: docker compose --profile scale -f docker-compose.prod-backend.yml -f docker-compose.prod-backend-monitoring.yml config -q
+        env:
+          TAG: v0.0.0
+          IP_FRONTEND_PUBLIC: 203.0.113.10
+          IP_FRONTEND_WG: 10.8.0.1
+          IP_BACKEND_WG: 10.8.0.2
+          PROD_DB_USER: user
+          PROD_DB_PASSWORD: password
+          APP_JWT_SECRET: 0123456789abcdef0123456789abcdef
+          RABBITMQ_USER: user
+          RABBITMQ_PASSWORD: password
+
+  # Lets Prometheus, Alloy and Loki check their own config files, so a typo fails here and not on the servers.
+  # alloy fmt only checks the syntax; a misspelled setting is first found when Alloy starts.
+  monitoring-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prometheus
+        run: |
+          for f in prometheus.yml prometheus.prod.yml; do
+            docker run --rm -v "$PWD/monitoring:/m:ro" --entrypoint promtool prom/prometheus:v3.5.0 check config "/m/$f"
+          done
+      - name: Alloy
+        run: |
+          for f in config.alloy config.prod-backend.alloy; do
+            docker run --rm -v "$PWD/monitoring:/m:ro" grafana/alloy:v1.21.3 fmt "/m/$f" > /dev/null
+          done
+      - name: Loki
+        run: docker run --rm -v "$PWD/monitoring:/m:ro" grafana/loki:3.7.9 -config.file=/m/loki.yml -verify-config
 
   # Renders the nginx template the way the container does (envsubst with the production filter) and lets
   # nginx check the result, for different numbers of backend instances.

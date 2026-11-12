@@ -1,0 +1,30 @@
+// 1. Find the running containers through the docker socket
+discovery.docker "containers" {
+    host = "unix:///var/run/docker.sock"
+}
+
+// 2. Turn docker metadata into loki labels
+discovery.relabel "containers" {
+ targets = []
+
+ // The compose name, e.g. "backend" or "frontend"
+ rule {
+  source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+  target_label = "service"
+    }
+ }
+
+ // Read the logs of those containers
+loki.source.docker "containers" {
+    host = "unix:///var/run/docker.sock"
+    targets = discovery.docker.containers.targets
+    relabel_rules = discovery.relabel.containers.rules
+    forward_to = [loki.write.local.receiver]
+}
+
+// Send the logs to the local Loki instance
+loki.write "local" {
+    endpoint {
+        url = "http://loki:3100/loki/api/v1/push"
+    }
+}

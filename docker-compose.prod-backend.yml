@@ -5,6 +5,12 @@ name: family-planner-backend
 x-backend: &backend
   image: ghcr.io/luskeruby/devops-backend:${TAG:?set TAG to the release version}
   restart: always
+  healthcheck:
+    test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/actuator/health/readiness"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 60s
   environment:
     SPRING_DATASOURCE_URL: jdbc:postgresql://${IP_FRONTEND_WG:?set IP_FRONTEND_WG}:5432/familyapp
     SPRING_DATASOURCE_USERNAME: ${PROD_DB_USER:?set PROD_DB_USER}

@@ -1,0 +1,67 @@
+# Monitoring on Server B (frontend). Used together with docker-compose.prod-frontend.yml, so it is part of
+# the same compose project. Server A's Alloy pushes its logs and metrics here over WireGuard.
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-remote-write-receiver
+    volumes:
+      - ./monitoring/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${IP_FRONTEND_WG:?set IP_FRONTEND_WG}:9090:9090"   # Server A's Alloy pushes metrics here
+    restart: always
+
+  loki:
+    image: grafana/loki:3.7.9
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    ports:
+      - "${IP_FRONTEND_WG:?set IP_FRONTEND_WG}:3100:3100"   # Server A's Alloy pushes logs here
+    restart: always
+
+  grafana:
+    image: grafana/grafana:12.0.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"   # opened through an SSH tunnel
+    depends_on: [prometheus, loki]
+    restart: always
+
+  alloy:
+    image: grafana/alloy:v1.21.3
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on: [loki]
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:v1.10.2
+    command: ["--path.rootfs=/host"]
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    restart: always
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.1
+    command: ["--nginx.scrape-uri=http://frontend:8080/stub_status"]
+    depends_on: [frontend]
+    restart: always
+
+volumes:
+  prometheus-data:
+  loki-data:
+  grafana-data:
