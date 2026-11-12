@@ -296,14 +296,14 @@ starts (the backend, Postgres and RabbitMQ publish ports on the tunnel addresses
 
 | Server | Runs | Reachable from |
 |---|---|---|
-| B | Prometheus (metrics, 7 days, at most 2 GB), Loki (logs, 7 days), Grafana, Alloy, node-exporter, nginx-exporter | Prometheus (`9090`) and Loki (`3100`) on Server B's WireGuard address, for Server A. Grafana only on `127.0.0.1:3000`. |
+| B | Prometheus (metrics, 7 days, at most 2 GB), Loki (logs, 7 days), Grafana, Alloy, node-exporter, nginx-exporter | Prometheus (`9090`) and Loki (`3100`) on Server B's WireGuard address, for Server A. Grafana only on `127.0.0.1:3300`. |
 | A | Alloy (ships Server A's logs and the backends' metrics to Server B), node-exporter | nothing is published |
 
 Open Grafana through an SSH tunnel and log in as `admin` with the `GRAFANA_ADMIN_PASSWORD` secret (it only
 takes effect on Grafana's first start; change it later in Grafana):
 
 ```bash
-ssh -L 3000:127.0.0.1:3000 <user>@<Server B>
+ssh -L 3000:127.0.0.1:3300 <user>@<Server B>
 ```
 
 then browse to `http://localhost:3000`. The backends expose their metrics on the management port 8081 *inside*
