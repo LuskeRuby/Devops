@@ -112,7 +112,7 @@ class UserServiceTest {
 
             jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
             assertThatThrownBy(() -> userService.validatePin(1L, "0000", response))
-                    .isInstanceOf(backend.common.exception.InvalidCredentialsException.class);
+                    .isInstanceOf(backend.common.exception.InvalidPinException.class);
         }
 
         @Test
@@ -123,7 +123,7 @@ class UserServiceTest {
 
             jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
             assertThatThrownBy(() -> userService.validatePin(1L, "1234", response))
-                    .isInstanceOf(backend.common.exception.InvalidCredentialsException.class);
+                    .isInstanceOf(backend.common.exception.InvalidPinException.class);
         }
     }
 

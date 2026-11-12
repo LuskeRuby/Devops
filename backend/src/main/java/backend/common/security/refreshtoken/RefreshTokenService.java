@@ -71,7 +71,9 @@ public class RefreshTokenService {
         String role = existing.getRole();
 
         refreshTokenRepository.delete(existing);
-        return createRefreshToken(family, user.getId(), role);
+
+        Long userId = user != null ? user.getId() : null;
+        return createRefreshToken(family, userId, role);
     }
 
     /**

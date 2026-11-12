@@ -6,6 +6,7 @@ import backend.task.Task;
 import backend.task.TaskController;
 import backend.task.TaskDto;
 import backend.task.TaskService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,21 +27,25 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@userAuthorization.canAccessUser(#id)")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PostMapping("/{id}/add-points/{points}")
+    @PreAuthorize("@userAuthorization.canManageUser(#id)")
     public ResponseEntity<UserResponseDto> addPoints(@PathVariable Long id, @PathVariable int points) {
         return ResponseEntity.ok(userService.addPoints(id, points));
     }
 
     @GetMapping("/family/{familyEmail}")
+    @PreAuthorize("@userAuthorization.canListFamily(#familyEmail)")
     public ResponseEntity<List<UserResponseDto>> getUsersByFamily(@PathVariable String familyEmail) {
         return ResponseEntity.ok(userService.getUsersByFamilyEmail(familyEmail));
     }
 
     @GetMapping("/{id}/tasks")
+    @PreAuthorize("@userAuthorization.canAccessUser(#id)")
     public ResponseEntity<List<TaskDto>> getTasksByUserId(@PathVariable Long id) {
         List<Task> tasks = taskService.getTasksByUserId(id);
         List<TaskDto> taskDTOs = tasks.stream()
@@ -50,16 +55,19 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@userAuthorization.canManageUser(#id)")
     public ResponseEntity<UserResponseDto> editUser(@PathVariable Long id, @RequestBody EditUserRequest user) {
         return ResponseEntity.ok(userService.editUser(id, user));
     }
 
     @PostMapping
+    @PreAuthorize("@userAuthorization.canCreateUser()")
     public ResponseEntity<UserResponseDto> createUser(@RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
     @PostMapping("/{id}/validate-pin")
+    @PreAuthorize("@userAuthorization.canValidatePin(#id)")
     public ResponseEntity<ProfileAuthResponseDto> validatePin(
             @PathVariable Long id, 
             @RequestBody PinValidationRequest request,
@@ -68,6 +76,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/profile-image/{imageId}")
+    @PreAuthorize("@userAuthorization.canAccessUser(#id)")
     public ResponseEntity<UserResponseDto> setProfileImage(
             @PathVariable Long id,
             @PathVariable Long imageId) {
@@ -75,6 +84,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@userAuthorization.canManageUser(#id)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
