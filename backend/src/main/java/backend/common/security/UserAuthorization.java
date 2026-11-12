@@ -24,7 +24,7 @@ public class UserAuthorization {
     public boolean canAccessUser(Long id) {
         UserPrincipal caller = principal();
         if (caller == null
-                || !userRepository.existsByIdAndEmail(id, caller.email())) {
+                || !userRepository.existsByIdAndFamilyEmail(id, caller.email())) {
             return false;
         }
 
@@ -35,7 +35,7 @@ public class UserAuthorization {
         UserPrincipal caller = principal();
         return caller != null
                 && isParent(caller)
-                && userRepository.existsByIdAndEmail(id, caller.email());
+                && userRepository.existsByIdAndFamilyEmail(id, caller.email());
     }
 
     public boolean canListFamily(String familyEmail) {
@@ -54,7 +54,7 @@ public class UserAuthorization {
     public boolean canValidatePin(Long id) {
         UserPrincipal caller = principal();
         return caller != null
-                && userRepository.existsByIdAndEmail(id, caller.email());
+                && userRepository.existsByIdAndFamilyEmail(id, caller.email());
     }
 
     private boolean isParent(UserPrincipal caller) {
