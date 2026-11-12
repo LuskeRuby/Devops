@@ -161,6 +161,9 @@ jobs:
           printf '%s' "$GITHUB_TOKEN" | ssh "$REMOTE" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
           # --wait stops the release here, before the backend is touched, if Postgres or RabbitMQ is not healthy.
           ssh "$REMOTE" "cd ~/$DIR && $COMPOSE pull && $COMPOSE up -d --wait --wait-timeout 120 postgres rabbitmq"   # pulls the frontend image too
+          # Start Prometheus and Loki now, so they are up before Alloy on Server A starts sending to them.
+          # Without --wait: a problem in the monitoring should not stop the release of the application.
+          ssh "$REMOTE" "cd ~/$DIR && $COMPOSE up -d prometheus loki"
           ssh "$REMOTE" "docker logout ghcr.io"
 
 
