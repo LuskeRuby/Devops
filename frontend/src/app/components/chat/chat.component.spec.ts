@@ -4,7 +4,7 @@ import { ChatComponent } from './chat.component';
 import { WebSocketService } from '../../services/websocket/web-socket.service';
 import { MessageService, MessageResponse } from '../../services/message/message.service';
 import { UserService } from '../../services/user.service';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('ChatComponent', () => {
@@ -124,6 +124,84 @@ describe('ChatComponent', () => {
       fixture.detectChanges();
 
       expect(component.isConnected).toBe(true);
+    });
+
+    it('reloads the history after every (re)connect, so messages missed while offline show up', () => {
+      const missed: MessageResponse = {
+        id: 3,
+        content: 'Sendt mens du var offline',
+        timestamp: '2026-03-28T10:20:00',
+        username: 'Ida',
+        userId: 3,
+        imageId: 3,
+      };
+      messageService.getMessages
+        .mockReturnValueOnce(of(mockMessages))
+        .mockReturnValueOnce(of([...mockMessages, missed]));
+      let onConnected!: () => void;
+      wsService.connect.mockImplementation((_email: string, _onMsg: any, connected: () => void) => {
+        onConnected = connected;
+      });
+
+      fixture.detectChanges();
+      expect(component.messages).toHaveLength(2);
+
+      onConnected(); // the socket (re)connects and is subscribed
+
+      expect(messageService.getMessages).toHaveBeenCalledTimes(2);
+      expect(component.messages).toHaveLength(3);
+      expect(component.messages[2].content).toBe('Sendt mens du var offline');
+    });
+
+    it('shows a message once, even when it arrives both live and in the history', () => {
+      wsService.connect.mockImplementation((_email: string, onMsg: (msg: any) => void) => {
+        onMsg(mockMessages[1]); // id 2 is also in the history
+      });
+
+      fixture.detectChanges();
+
+      expect(component.messages.map((m) => m.id)).toEqual([1, 2]);
+    });
+
+    it('keeps a live message that arrives before the history has loaded', () => {
+      const history$ = new Subject<MessageResponse[]>();
+      messageService.getMessages.mockReturnValue(history$);
+      const live: MessageResponse = {
+        id: 3,
+        content: 'Ny besked!',
+        timestamp: '2026-03-28T10:10:00',
+        username: 'Ida',
+        userId: 3,
+        imageId: 3,
+      };
+      wsService.connect.mockImplementation((_email: string, onMsg: (msg: any) => void) => {
+        onMsg(live);
+      });
+
+      fixture.detectChanges();
+      expect(component.messages.map((m) => m.id)).toEqual([3]);
+
+      history$.next(mockMessages); // the history arrives later and must not overwrite the live message
+
+      expect(component.messages.map((m) => m.id)).toEqual([1, 2, 3]);
+    });
+
+    it('orders messages by time, not by arrival', () => {
+      const earlier: MessageResponse = {
+        id: 9,
+        content: 'Tidligere',
+        timestamp: '2026-03-28T09:00:00',
+        username: 'Ida',
+        userId: 3,
+        imageId: 3,
+      };
+      wsService.connect.mockImplementation((_email: string, onMsg: (msg: any) => void) => {
+        onMsg(earlier);
+      });
+
+      fixture.detectChanges();
+
+      expect(component.messages.map((m) => m.id)).toEqual([9, 1, 2]);
     });
 
     it('appends incoming WebSocket messages to the list', () => {

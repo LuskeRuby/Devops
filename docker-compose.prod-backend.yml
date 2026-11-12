@@ -11,13 +11,36 @@ x-backend: &backend
     SPRING_DATASOURCE_PASSWORD: ${PROD_DB_PASSWORD:?set PROD_DB_PASSWORD}
     APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET (at least 32 characters)}
     APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://${IP_FRONTEND_PUBLIC:?set IP_FRONTEND_PUBLIC}}
+    # Chat messages go through RabbitMQ on Server B (STOMP relay), so every backend instance shares one
+    # broker. Putting APP_BROKER_MODE=simple in this server's .env falls back to the in-memory broker,
+    # which is only correct while exactly one backend runs (BACKEND_COUNT=1).
+    APP_BROKER_MODE: ${APP_BROKER_MODE:-relay}
+    APP_BROKER_RELAY_HOST: ${IP_FRONTEND_WG:?set IP_FRONTEND_WG}
+    APP_BROKER_RELAY_PORT: "61613"
+    APP_BROKER_RELAY_LOGIN: ${RABBITMQ_USER:?set RABBITMQ_USER}
+    APP_BROKER_RELAY_PASSCODE: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD}
 
 services:
   backend-1:
     <<: *backend
     ports:
       - "${IP_BACKEND_WG:?set IP_BACKEND_WG}:8080:8080"
-  #backend-2:
-  #  <<: *backend
-  #  ports:
-  #    - "${IP_BACKEND_WG:?set IP_BACKEND_WG}:8082:8080"
+  # More instances of the same image. The release starts backend-1 .. backend-<BACKEND_COUNT> by name and
+  # removes the rest; the profile only keeps a bare `docker compose up -d` from starting all of them.
+  # Instance N listens on port 8079+N (8080, 8081, ...); release.yml, nginx and the PR check rely on that.
+  # A fifth instance = one more block like these, MAX_BACKENDS in release.yml and a port in the PR check.
+  backend-2:
+    <<: *backend
+    profiles: ["scale"]
+    ports:
+      - "${IP_BACKEND_WG:?set IP_BACKEND_WG}:8081:8080"
+  backend-3:
+    <<: *backend
+    profiles: ["scale"]
+    ports:
+      - "${IP_BACKEND_WG:?set IP_BACKEND_WG}:8082:8080"
+  backend-4:
+    <<: *backend
+    profiles: ["scale"]
+    ports:
+      - "${IP_BACKEND_WG:?set IP_BACKEND_WG}:8083:8080"
